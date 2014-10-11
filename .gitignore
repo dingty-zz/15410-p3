@@ -1,0 +1,21 @@
+*.o
+*.a
+*.dep
+*.swp
+410user/
+# 410user/exec2obj
+# 410user/progs/idle
+# 410user/progs/init
+# 410user/progs/shell
+bootfd.img
+bootcd.iso
+kernel
+kernel.log
+kernel.strip
+temp/
+.md5s
+user/progs/*
+!user/progs/*.c
+*.ignore
+doc/
+doxygen.warn
