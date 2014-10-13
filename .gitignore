@@ -19,3 +19,5 @@ user/progs/*
 *.ignore
 doc/
 doxygen.warn
+.*
+g.sh

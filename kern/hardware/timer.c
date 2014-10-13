@@ -6,7 +6,7 @@
  *  @bug No known bugs
  */
 
-#include <p1kern.h>
+// #include <p1kern.h>
 #include <stdio.h>
 #include <seg.h>
 #include <asm.h>

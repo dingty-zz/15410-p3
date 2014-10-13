@@ -86,7 +86,7 @@ STUDENTFILES =
 ###########################################################################
 # Object files for your thread library
 ###########################################################################
-THREAD_OBJS = malloc.o panic.o
+ THREAD_OBJS = malloc.o atomic_xchange.o panic.o getesp.o linked_list.o t_fork.o  mutex.o spinlock.o cond_var.o semaphore.o thread_mgmt.o rwlock.o
 
 # Thread Group Library Support.
 #
@@ -99,7 +99,7 @@ THREAD_OBJS = malloc.o panic.o
 ###########################################################################
 # Object files for your syscall wrappers
 ###########################################################################
-SYSCALL_OBJS = syscall.o
+SYSCALL_OBJS = set_status.o vanish.o print.o fork.o new_pages.o readline.o gettid.o yield.o sleep.o exec.o wait.o task_vanish.o misbehave.o readfile.o set_term_color.o set_cursor_pos.o deschedule.o make_runnable.o misbehave.o get_ticks.o getchar.o remove_pages.o swexn.o halt.o get_cursor_pos.o
 
 ###########################################################################
 # Object files for your automatic stack handling
@@ -116,7 +116,12 @@ AUTOSTACK_OBJS = autostack.o
 #
 # Kernel object files you provide in from kern/
 #
-KERNEL_OBJS = fake_console.o kernel.o loader.o malloc_wrappers.o
+KERNEL_OBJS = console.o kernel.o loader.o malloc_wrappers.o datastructure/linked_list.o \
+exception/exception_handlers.o \
+exception/exception_handler_wrappers.o syscall/consoleIO.o handler_install.o \
+hardware/hardware_handler_wrappers.o hardware/keyboard.o hardware/timer.o \
+syscall/thread.o syscall/_thread.o syscall/_consoleIO.o
+
 
 ###########################################################################
 # WARNING: Do not put **test** programs into the REQPROGS variables.  Your

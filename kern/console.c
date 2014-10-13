@@ -11,7 +11,7 @@
  *  @bug No known bugs
  */
 
-#include <p1kern.h>
+#include <console.h>
 #include <stdio.h>
 #include <asm.h>
 #include <simics.h>

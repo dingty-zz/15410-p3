@@ -13,7 +13,7 @@
  */
 
 #include <multiboot.h> 
-#include <p1kern.h>
+// #include <s.h>
 #include <stdio.h>
 #include <seg.h>
 #include <asm.h>

@@ -15,7 +15,7 @@ int make_runnable(int pid)
 	return -1;
 }
 
-int gettid(void)
+int _gettid(void)
 {
 	// return the tid from the currenspoding entry in tid
 	return -1;

@@ -8,17 +8,18 @@
  *  @bug No known bugs
  */
 
-#include <p1kern.h>
+#include <syscall_int.h>
+#include "syscall.h"
 #include <stdio.h>
 #include <seg.h>
 #include <asm.h>
 #include <timer_defines.h>
 #include <keyhelp.h>
 #include <simics.h>
-#include "handler_wrappers.h"
+#include "hardware/hardware_handler_wrappers.h"
 #include "timer.h"
 #include "keyboard.h"
-
+#include "exception/exception_handler_wrappers.h"
 /* Configure the timer to generate interrupts every 10 milliseconds. */
 #define FREQ 100
 
@@ -27,10 +28,22 @@ extern void keyboard_wrapper();
 extern void setup_timer(void (*tickback)(unsigned int));
 extern void setup_keyboard();
 
-static void install_handler(int idt_entry, void (*handler)());
+static void _handler_install(int idt_entry, void (*handler)());
 
 int handler_install(void (*tickback)(unsigned int))
 {
+	/* Initialize the fault handlers */
+
+	// for instance,
+	_handler_install(0x0, DE);
+
+
+
+
+
+
+	/* Initialize the hardware handlers */
+
 	/* Initialize the timer */
 	uint32_t period = TIMER_RATE / FREQ;
 	outb(TIMER_MODE_IO_PORT, TIMER_SQUARE_WAVE);
@@ -38,14 +51,19 @@ int handler_install(void (*tickback)(unsigned int))
 	outb(TIMER_PERIOD_IO_PORT, (period >> 8) & 0xFF);
 
 	/* Setup timer handler and pass the callback function */
-	setup_timer(tickback);
+	//setup_timer(tickback);
 	
 	/* Setup keyboard handler */
-	setup_keyboard();
+	//setup_keyboard();
 
 	/* Install timer handlers */
-	install_handler(TIMER_IDT_ENTRY, timer_wrapper);
-	install_handler(KEY_IDT_ENTRY, keyboard_wrapper);
+	_handler_install(TIMER_IDT_ENTRY, timer_wrapper);
+	_handler_install(KEY_IDT_ENTRY, keyboard_wrapper);
+
+
+	/* initialize system call handlers */
+	_handler_install(GETTID_INT, (void *)gettid);
+
   	return 0;
 }
 
@@ -58,7 +76,7 @@ int handler_install(void (*tickback)(unsigned int))
  *  
  *  @return void
  **/
-static void install_handler(int idt_entry, void (*handler)()) {
+static void _handler_install(int idt_entry, void (*handler)()) {
 
 	/* Build the trap gate */ 
 	unsigned int* idtbase = (unsigned int *)idt_base();
