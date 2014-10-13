@@ -14,7 +14,7 @@
 /* libc includes. */
 #include <stdio.h>
 #include <simics.h>                 /* lprintf() */
-
+#include <elf/elf_410.h>
 /* multiboot header file */
 #include <multiboot.h>              /* boot_info */
 
@@ -40,6 +40,12 @@ handler_install(tick);
     lprintf( "Hello from a brand new kernel! %lu",get_esp0());
     
     clear_console();
+    simple_elf_t se_hdr;
+    elf_load_helper(&se_hdr, "init");
+    lprintf("%lu",se_hdr.e_entry);
+   // void *memspace = smemalign(4, 4096);
+
+
     while (1) {
         continue;
     }

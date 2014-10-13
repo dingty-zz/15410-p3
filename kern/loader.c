@@ -18,10 +18,9 @@
 #include <exec2obj.h>
 #include <loader.h>
 #include <elf_410.h>
-
+#include "simics.h"
 
 /* --- Local function prototypes --- */ 
-
 
 /**
  * Copies data from a file into a buffer.
@@ -36,9 +35,17 @@
 int getbytes( const char *filename, int offset, int size, char *buf )
 {
 
+	int i = 0;
+	for (i = 0; i<exec2obj_userapp_count;i++) {
+		if (!strcmp(exec2obj_userapp_TOC[i].execname , filename))
+		{
+			break;
+		}
+	}
+	memcpy(buf, (void *)exec2obj_userapp_TOC[i].execbytes + offset,size);
     
 
-  return -1;
+  return size;
 }
 
 /*@}*/
