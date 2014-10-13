@@ -185,7 +185,7 @@ elf_check_header(const char *fname)
         return ELF_NOTELF;
     }
 
-    if (memcmp(elf_hdr.e_ident, ELFMAG, sizeof(elf_hdr.e_ident)) != 0) {
+    if (memcmp(elf_hdr.e_ident, ELFMAG, SELFMAG) != 0) {
         return ELF_NOTELF;
     }
 
