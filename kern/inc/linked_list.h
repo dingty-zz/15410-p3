@@ -23,13 +23,15 @@ typedef struct node_t
 	int 	tid;  	// thread's tid
 	struct node_t	*prev;	// Previous node
 	struct node_t	*next;	// Next node
-} node ;
+} node;
 
+
+// very very generic doubly linked list
 typedef struct list_t
 {
 	int 	length; 	// Length of the list
-	node 	*head;		// Header element
-    node 	*tail;		// Tail element
+	void 	*head;		// Header element
+    void 	*tail;		// Tail element
 } list;
 
 

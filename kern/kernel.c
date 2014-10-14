@@ -52,16 +52,17 @@ handler_install(tick);
     simple_elf_t se_hdr;
     elf_load_helper(&se_hdr, "init");
     lprintf("%lx",se_hdr.e_entry);
-    MAGIC_BREAK;
-    set_ss(213123);
+    lprintf("%d",machine_phys_frames());
+    // MAGIC_BREAK;
+    //set_ss(213123);
 
-    MAGIC_BREAK;
+    // MAGIC_BREAK;
 
 
 
-    f = (void *)(se_hdr.e_entry);
-    lprintf("%p",f);
-    f();
+    // f = (void *)(se_hdr.e_entry);
+    // lprintf("%p",f);
+    // f();
     //int i =0;
     // for (i=0;i<1000;i++) lprintf("%adsf", *((int *)se_hdr.e_entry+(1<<24)+i));
 //     /* --- Simplified ELF header --- */
@@ -84,8 +85,7 @@ handler_install(tick);
     lprintf("e_txtstart: %lx",se_hdr.e_txtstart);
     lprintf("e_txtoff: %lu",se_hdr.e_txtoff);
     lprintf("e_txtlen: %lu",se_hdr.e_txtlen);
-
-   void *memspace = smemalign(4, 4096);
+    void *memspace=0;
 
    memcpy(memspace, (void *)se_hdr.e_txtstart, se_hdr.e_txtlen);
    //lprintf("%d",i);
@@ -95,7 +95,11 @@ handler_install(tick);
    //     lprintf("%p", memspace+i);
    //     lprintf("itis %s", (char *)(memspace+i));
    // }
-   lprintf("%s",(char *)memspace);
+   //lprintf("memspace%d",*((int*)0x10000000));
+   int * k = (int *)0x129393;
+   *k= 3;
+   lprintf("memspace%p",memspace);
+   lprintf("memspace%d",*k);
     while (1) {
         continue;
     }

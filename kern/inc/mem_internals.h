@@ -11,21 +11,28 @@ typedef struct mem_type
 	uint size;
 } mem_t;
 
-struct page_table
+typedef struct page_directory
 {
-	uint index
-	uint32_t first10bit;
-};
+	PT page_tables[1024];
+} PD ;
 
-struct page_directory
+typedef struct page_table_t
 {
-	uint index;
-	uint32_t first10bit;
-};
+	uint32_t entry;
+} PT;
 
-struct page_entry
+typedef struct page_t
 {
-	/* data */
-};
+	int valid;
+	void *address;
+} page;
+
+// a node that keeps track of allocated physical frames
+typedef struct kernel_frame
+{
+	void *address;
+	uint8_t flag;
+} KF;
+
 
 #endif /* _MEM_INTERNALS_H */
