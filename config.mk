@@ -120,7 +120,8 @@ KERNEL_OBJS = console.o kernel.o loader.o malloc_wrappers.o datastructure/linked
 exception/exception_handlers.o \
 exception/exception_handler_wrappers.o syscall/consoleIO.o handler_install.o \
 hardware/hardware_handler_wrappers.o hardware/keyboard.o hardware/timer.o \
-syscall/thread.o syscall/_thread.o syscall/_consoleIO.o
+syscall/thread.o syscall/_thread.o syscall/_consoleIO.o set_ss.o set_cs.o \
+set_ds.o set_es.o set_esp.o
 
 
 ###########################################################################

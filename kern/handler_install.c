@@ -51,10 +51,10 @@ int handler_install(void (*tickback)(unsigned int))
 	outb(TIMER_PERIOD_IO_PORT, (period >> 8) & 0xFF);
 
 	/* Setup timer handler and pass the callback function */
-	//setup_timer(tickback);
+	setup_timer(tickback);
 	
 	/* Setup keyboard handler */
-	//setup_keyboard();
+	setup_keyboard();
 
 	/* Install timer handlers */
 	_handler_install(TIMER_IDT_ENTRY, timer_wrapper);
