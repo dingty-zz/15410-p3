@@ -64,6 +64,7 @@ int handler_install(void (*tickback)(unsigned int))
 	/* initialize system call handlers */
 	_handler_install(GETTID_INT, (void *)gettid);
 
+
   	return 0;
 }
 

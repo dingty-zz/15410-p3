@@ -30,8 +30,8 @@ typedef struct node_t
 typedef struct list_t
 {
 	int 	length; 	// Length of the list
-	void 	*head;		// Header element
-    void 	*tail;		// Tail element
+	node 	*head;		// Header element
+    node 	*tail;		// Tail element
 } list;
 
 

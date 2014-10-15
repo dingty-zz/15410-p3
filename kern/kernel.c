@@ -20,7 +20,7 @@
 #include <elf/elf_410.h>
 /* multiboot header file */
 #include <multiboot.h>              /* boot_info */
-
+ #include "mem_internals.h"
 /* x86 specific includes */
 #include <x86/asm.h>                /* enable_interrupts() */
 extern int handler_install(void (*tickback)(unsigned int));
@@ -29,9 +29,11 @@ extern void set_ds(int i);
 extern void set_es(int i);
 extern void set_cs(int i);
 extern void set_esp(int i);
+extern KF* mm_init();
 static void tick(unsigned int numTicks);
-void (*f)(void);
 uint64_t seconds;
+
+static KF *frame_base = 0;
 /** @brief Kernel entrypoint.
  *  
  *  This is the entrypoint for the kernel.
@@ -48,7 +50,7 @@ int kernel_main(mbinfo_t *mbinfo, int argc, char **argv, char **envp)
 handler_install(tick);
     lprintf( "Hello from a brand new kernel! %lu",get_esp0());
     
-    clear_console();
+    //clear_console();
     simple_elf_t se_hdr;
     elf_load_helper(&se_hdr, "init");
     lprintf("%lx",se_hdr.e_entry);
@@ -57,7 +59,7 @@ handler_install(tick);
     //set_ss(213123);
 
     // MAGIC_BREAK;
-
+frame_base = mm_init();
 
 
     // f = (void *)(se_hdr.e_entry);
@@ -85,21 +87,16 @@ handler_install(tick);
     lprintf("e_txtstart: %lx",se_hdr.e_txtstart);
     lprintf("e_txtoff: %lu",se_hdr.e_txtoff);
     lprintf("e_txtlen: %lu",se_hdr.e_txtlen);
-    void *memspace=0;
 
-   memcpy(memspace, (void *)se_hdr.e_txtstart, se_hdr.e_txtlen);
-   //lprintf("%d",i);
-   // int i=0;
-   // for (i =0; i < se_hdr.e_txtlen; ++i)
-   // {
-   //     lprintf("%p", memspace+i);
-   //     lprintf("itis %s", (char *)(memspace+i));
-   // }
-   //lprintf("memspace%d",*((int*)0x10000000));
-   int * k = (int *)0x129393;
-   *k= 3;
-   lprintf("memspace%p",memspace);
-   lprintf("memspace%d",*k);
+lprintf("%p", frame_base);
+
+
+
+
+
+
+
+
     while (1) {
         continue;
     }
