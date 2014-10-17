@@ -35,7 +35,7 @@ void allocate_page(uint32_t virtual_addr, size_t size);
 static void tick(unsigned int numTicks);
 
 uint64_t seconds;
-
+extern list thread_queue;
 static KF *frame_base = 0;
 /** @brief Kernel entrypoint.
  *  
@@ -51,25 +51,12 @@ int kernel_main(mbinfo_t *mbinfo, int argc, char **argv, char **envp)
      * when you are ready.
      */
     handler_install(tick);
-    lprintf( "Hello from a brand new kernel! %lu",get_esp0());
-    
-    //clear_console();
-    simple_elf_t se_hdr;
-    elf_load_helper(&se_hdr, "init");
-    lprintf("%lx",se_hdr.e_entry);
-    lprintf("%d",machine_phys_frames());
-    // MAGIC_BREAK;
-    //set_ss(213123);
+    lprintf("Hello from a brand new kernel! %lu",get_esp0());
+    enable_interrupts();
+    clear_console();
 
-    // MAGIC_BREAK;
     frame_base = mm_init();
 
-
-    // f = (void *)(se_hdr.e_entry);
-    // lprintf("%p",f);
-    // f();
-    //int i =0;
-    // for (i=0;i<1000;i++) lprintf("%adsf", *((int *)se_hdr.e_entry+(1<<24)+i));
 //     /* --- Simplified ELF header --- */
 // typedef struct simple_elf {
 //   const char *  e_fname;       /* filename of binary */
@@ -107,6 +94,7 @@ int kernel_main(mbinfo_t *mbinfo, int argc, char **argv, char **envp)
 
 
 // MAGIC_BREAK;
+
 lprintf("%p", frame_base);
 allocate_page((uint32_t)se_hdr.e_datstart, se_hdr.e_datlen);
 allocate_page((uint32_t)se_hdr.e_txtstart,se_hdr.e_txtlen);
@@ -121,8 +109,76 @@ getbytes(se_hdr.e_fname, se_hdr.e_rodatoff, se_hdr.e_rodatlen, (char *)se_hdr.e_
 memset((char *)se_hdr.e_bssstart, 0,  se_hdr.e_bsslen);
 
 MAGIC_BREAK;
+set_esp0(get_esp0());
 // set_eflags((get_eflags() | EFL_RESV1) & ~EFL_AC);
+
+
+
+// set up tcb for init 
+    TCB *tcb = (TCB *)smemalign(4, sizeof(TCB));
+    tcb -> tid = next_tid;
+    next_tid++;
+    tcb -> state = THREAD_RUNNABLE;
+
+    tcb -> registers.ds = SEGSEL_USER_DS | 0x3;
+    tcb -> registers.es = SEGSEL_USER_DS | 0x3;
+    tcb -> registers.fs = SEGSEL_USER_DS | 0x3;
+    tcb -> registers.gs = SEGSEL_USER_DS | 0x3;    
+
+    tcb -> registers.edi = 0;
+    tcb -> registers.esi = 0;
+    // tcb -> registers.ebp = 0; // ??
+    tcb -> registers.ebx = 0;
+    tcb -> registers.edx = 0;
+    tcb -> registers.ecx = 0;
+    tcb -> registers.eax = 0;
+
+    tcb -> registers.eip = se_hdr.e_entry;
+    tcb -> registers.cs = SEGSEL_USER_CS | 0x3;
+    tcb -> registers.eflags = (get_eflags() | EFL_RESV1) & ~EFL_AC;
+    tcb -> registers.esp = 0xffffffff;
+    tcb -> registers.ss = SEGSEL_USER_DS | 0x3;
+
+    list_insert_last(&thread_queue, tcb -> all_threads);
+
+
+
+// set up pcb for init
+
+
+    PCB *pcb = (PCB *)smemalign(4, sizeof(PCB));
+    pcb -> status = PROCESS_RUNNING;
+    pcb -> ppid = 0;
+    pcb -> pid = next_pid;
+    next_pid++;
+    list_init(pcb -> threads);
+    pcb -> PTE = 
+
+
+
+
+
+
+
+
+
+
+
 set_ss();
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 lprintf("nop");
@@ -133,8 +189,4 @@ lprintf("nop");
 
     return 0;
 }
-void tick(unsigned int numTicks)
-{
-     if (numTicks % 100 == 0) 
-         ++seconds;
-}
+

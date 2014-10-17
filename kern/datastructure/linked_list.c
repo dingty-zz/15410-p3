@@ -12,6 +12,12 @@
 #include "assert.h"
 #include "malloc.h"
 
+#define offsetof(TYPE, MEMBER) ((size_t) &((TYPE *) 0)->MEMBER)
+#define list_entry(LIST_ELEM, STRUCT, MEMBER)    \
+           ((STRUCT *) ((uint8_t *) LIST_ELEM    \
+                - offsetof (STRUCT, MEMBER)))
+
+
 /** @brief The function to initialize the doubly linked list
  *
  *  @param l a pointer to the list to be initialized
@@ -126,6 +132,7 @@ void list_insert_first(list *l, node *j)
     }
     l -> length++;
 }
+
 
 /** @brief Insert a node at the last place in the linked list
  *

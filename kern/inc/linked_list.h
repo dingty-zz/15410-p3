@@ -15,12 +15,21 @@
 #ifndef _LINKED_LIST_H
 #define _LINKED_LIST_H
 
+// struct list_elem
+// {
+//     struct list_elem *prev;     /* Previous list element. */
+//     struct list_elem *next;     /* Next list element. */
+// };
+
+// struct list
+// {
+//     struct list_elem head;      /* List head, dummy node. */
+//     struct list_elem tail;      /* List tail, dummy node. */
+// };
+
 /* Generic list node */
 typedef struct node_t
 {
-	void 	*data;  // thread_t when the list stores tcb, and null when used
-					// in mutex, cond_var, etc.
-	int 	tid;  	// thread's tid
 	struct node_t	*prev;	// Previous node
 	struct node_t	*next;	// Next node
 } node;

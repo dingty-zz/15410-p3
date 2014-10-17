@@ -124,6 +124,27 @@ MF:
     call    _MF
     popa
     iret
+
+TS:
+
+    pusha
+    call    _TS
+    popa
+    iret
+
+NM:
+
+    pusha
+    call    _NM
+    popa
+    iret
+
+SS:
+
+    pusha
+    call    _SS
+    popa
+    iret
     
 AC:
 

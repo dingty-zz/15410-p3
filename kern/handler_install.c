@@ -36,6 +36,22 @@ int handler_install(void (*tickback)(unsigned int))
 
 	// for instance,
 	_handler_install(0x0, DE);
+	_handler_install(0x1, DB);
+	_handler_install(0x3, BP);
+	_handler_install(0x4, OF);
+	_handler_install(0x5, BR);
+	_handler_install(0x6, UD);
+	_handler_install(0x7, NM);
+	// _handler_install(0x8, DF);
+	_handler_install(0x10, TS);
+	_handler_install(0x11, NP);
+	_handler_install(0x12, SS);
+	_handler_install(0X13, GP);
+	_handler_install(0x14, PF);
+	_handler_install(0x16, MF);
+	_handler_install(0x17, AC);
+	_handler_install(0x18, MC);
+	_handler_install(0x19, XF);
 
 
 

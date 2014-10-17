@@ -1,16 +1,18 @@
 .global set_ss
-set_ss:
-	#mov	0x2b, %ss
-pushl $0x2e
-	pushl $0xffffffff
+# set_ss:
+
+# 	#mov	0x2b, %ss
+# # pushl $0x2e
+# pushl 0x2b
+# pushl $0xffffffff
 	
-pushf
-pushl $0x26
-	pushl  $0x1000064  # esp
+
+# pushf
+# pushl $0x23
+# 	pushl  $0x1000064  # esp
 
 
-
-	iret
+# 	iret
 
 # set_ss:
 #       //pushf
@@ -32,3 +34,17 @@ pushl $0x26
 #       pushl $0x26
 #       pushl $0x1000064
 #      ret 
+set_ss:
+     movl $0x2b, %eax
+     movl %eax, %ds
+     movl %eax, %es 
+     movl %eax, %fs 
+     movl %eax, %gs
+ 
+     movl %esp, %eax
+     mov %ss, 0x26
+     pushl %eax 
+     pushf
+     pushl $0x2e
+     pushl $0x1000064
+     iret
