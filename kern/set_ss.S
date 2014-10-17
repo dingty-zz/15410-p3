@@ -35,16 +35,22 @@
 #       pushl $0x1000064
 #      ret 
 set_ss:
+     
+     # popl %eax # return address
+
+
      movl $0x2b, %eax
      movl %eax, %ds
      movl %eax, %es 
      movl %eax, %fs 
      movl %eax, %gs
+
  
-     movl %esp, %eax
-     mov %ss, 0x26
-     pushl %eax 
-     pushf
-     pushl $0x2e
-     pushl $0x1000064
+     pushl $0x2b
+     pushl $0xfffffffc
+     pushf     
+
+     pushl $0x23
+     pushl $0x1000064         
+          movl $0xffffffff, %ebp 
      iret

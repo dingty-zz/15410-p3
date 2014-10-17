@@ -53,6 +53,5 @@ node *list_delete_last(list *l);
 void list_insert_first(list *l, node *j);
 void list_insert_last(list *l, node *j);	
 node *list_search(list *l, int tid); // generic search function
-node *make_node(void *data, int tid);
 
 #endif /* _LINKED_LIST_H */

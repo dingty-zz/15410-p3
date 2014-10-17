@@ -10,8 +10,7 @@
 
 #include "linked_list.h"
 #include "assert.h"
-#include "malloc.h"
-
+#define NULL 0
 #define offsetof(TYPE, MEMBER) ((size_t) &((TYPE *) 0)->MEMBER)
 #define list_entry(LIST_ELEM, STRUCT, MEMBER)    \
            ((STRUCT *) ((uint8_t *) LIST_ELEM    \
@@ -58,17 +57,6 @@ node *list_delete(list *l, node *j)
     return j;
 }
 
-/** @brief The function to delete a specific tid from a list
- *
- *  @param l a pointer to the list
- *	@param tid the target tid
- *  @return the node that's deleted
- */
-node *list_delete_id(list *l, int tid)
-{
-    return list_delete(l, list_search(l, tid));
-}
-
 /** @brief The function to delete the first node from list
  *
  *  @param l a pointer to the list
@@ -89,23 +77,23 @@ node *list_delete_last(list *l)
     return list_delete(l, l -> tail);
 }
 
-/** @brief The generic function to search for a specific tid in a list
- *
- *  @param l the pointer to the node with that specific tid
- *  @return the node that matches the tid
- */
-node *list_search(list *l, int tid)
-{
-    if (l == NULL) return NULL;
-    node *temp = l -> head;
-    while (temp)
-    {
-        if (temp -> tid == tid)
-            return temp;
-        temp = temp -> next;
-    }
-    return NULL;
-}
+// /** @brief The generic function to search for a specific tid in a list
+//  *
+//  *  @param l the pointer to the node with that specific tid
+//  *  @return the node that matches the tid
+//  */
+// node *list_search(list *l, )
+// {
+//     if (l == NULL) return NULL;
+//     node *temp = l -> head;
+//     while (temp)
+//     {
+//         if (temp -> tid == tid)
+//             return temp;
+//         temp = temp -> next;
+//     }
+//     return NULL;
+// }
 
 /** @brief Insert a node at the first place in the linked list
  *
@@ -158,21 +146,4 @@ void list_insert_last(list *l, node *j)
         l -> tail = j;
     }
     l -> length++;
-}
-
-
-/** @brief Make a new node with data = data, and tid = tid
- *
- *  @param data the data to be stored in the node
- *  @param tid a tid
- *  @return the node created
- */
-node *make_node(void *data, int tid)
-{
-    node *n = (node *)malloc(sizeof(node));  // allocated the node on heap
-    n -> data = data;
-    n -> tid = tid;
-    n -> prev = NULL;
-    n -> next = NULL;
-    return n;
 }

@@ -5,7 +5,7 @@
 #ifndef _CONTROL_B_H
 #define _CONTROL_B_H
 #include "ureg.h"
-
+#include "linked_list.h"
  
 #define THREAD_EXIT -1
 #define THREAD_BLOCKED 0
@@ -17,6 +17,7 @@
 #define PROCESS_RUNNING 1
   #define PROCESS_RUNNABLE 2
 
+
 typedef struct PCB_t {
     int special;  // if this process is idle, then never delete out of queue
     int ppid;
@@ -26,10 +27,11 @@ typedef struct PCB_t {
     // PCB_t* parent;
     // PCB_t** children;
 
-    list *threads;
-
-    PTE;
-    PDE;
+    // list *threads;  // Now we only care about single threaded
+    struct TCB_t *thread;
+    node all_processes;
+    // PTE;
+    // PDE;
 } PCB;
 
 
@@ -41,7 +43,7 @@ typedef struct TCB_t {
     int state;
     
     ureg_t registers;
-    node peer_threads;
+    // node peer_threads;  // Now we only care about single threaded
     node all_threads;
 
     // struct TCB* prev;

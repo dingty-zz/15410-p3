@@ -107,6 +107,7 @@ int j =0;
 		 	PT[pt+j] = (uint32_t)frame_base[i].address|0x3;
 		 	lprintf("this is adjusted address %x  ",(unsigned int)frame_base[i].address);
 		 				pde |= 0x3;
+		 				lprintf("pde: %x", (unsigned int)pde);
 			PD[pd]=pde;
 			j++;
 		 	// break;
