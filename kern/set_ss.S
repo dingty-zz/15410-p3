@@ -38,7 +38,7 @@ set_ss:
      
      # popl %eax # return address
 
-
+     movl 4(%esp), %ebx
      movl $0x2b, %eax
      movl %eax, %ds
      movl %eax, %es 
@@ -51,6 +51,6 @@ set_ss:
      pushf     
 
      pushl $0x23
-     pushl $0x1000064               
-          # movl $0xffffffff , %ebp 
+     pushl %ebx             
+
      iret

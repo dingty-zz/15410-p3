@@ -32,16 +32,15 @@ extern void set_cs(int i);
 extern void set_esp(int i);
 extern KF *mm_init();
 void allocate_page(uint32_t virtual_addr, size_t size);
-// extern void tick(unsigned int numTicks);
+extern void tick(unsigned int numTicks);
 
 
 // extern list thread_queue;
 // extern list process_queue;
-
 static KF *frame_base = 0;
 
-
 extern int process_create(const char *filename);
+extern int process_init();
 /** @brief Kernel entrypoint.
  *
  *  This is the entrypoint for the kernel.
@@ -55,13 +54,13 @@ int kernel_main(mbinfo_t *mbinfo, int argc, char **argv, char **envp)
      * You should delete this comment, and enable them --
      * when you are ready.
      */
-    handler_install(NULL);
+    handler_install(tick);
     lprintf("Hello from a brand new kernel! %lu", get_esp0());
     enable_interrupts();
     clear_console();
 
     frame_base = mm_init();
-
+    process_init();
 
 
     //     /* --- Simplified ELF header --- */
@@ -96,8 +95,8 @@ int kernel_main(mbinfo_t *mbinfo, int argc, char **argv, char **envp)
 
 
 
-    process_create("init");
-    // process_create("idle");
+    // process_create("init");
+    process_create("idle");
 
 
 

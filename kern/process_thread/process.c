@@ -23,7 +23,7 @@ uint32_t next_pid = 0;
 uint32_t next_tid = 0 ;
 
 void allocate_page(uint32_t virtual_addr, size_t size);
-extern void set_ss();
+extern void set_ss(uint32_t entry_point);
 
 
 int process_init()
@@ -73,10 +73,11 @@ int process_create(const char *filename)
     allocate_page((uint32_t)se_hdr.e_txtstart, se_hdr.e_txtlen);
     allocate_page((uint32_t)se_hdr.e_rodatstart, se_hdr.e_rodatlen);
     allocate_page((uint32_t)se_hdr.e_bssstart, se_hdr.e_bsslen);
-    allocate_page((uint32_t)0xffffefff, 4096);
-    // // *(int *)0xfffffffc=3;
+    allocate_page((uint32_t)0xffffffff, 4096);
+    lprintf("sdfds");
+    *(int *)0xffffffff=3;
 
-    // MAGIC_BREAK;
+    MAGIC_BREAK;
     // /* copy data from data field */
     getbytes(se_hdr.e_fname, se_hdr.e_datoff, se_hdr.e_datlen, (char *)se_hdr.e_datstart);
     getbytes(se_hdr.e_fname, se_hdr.e_txtoff, se_hdr.e_txtlen, (char *)se_hdr.e_txtstart);
@@ -133,7 +134,7 @@ int process_create(const char *filename)
     lprintf("this is the esp, %x", (unsigned int)get_esp0());
 
     MAGIC_BREAK;    
-    set_ss();  // let it run, enter ring 3!
+    set_ss(se_hdr.e_entry);  // let it run, enter ring 3!
     return 0;
 }
 
