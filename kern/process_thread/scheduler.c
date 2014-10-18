@@ -2,6 +2,7 @@
 
 // uint64_t seconds = 0;
 // extern list thread_queue;
+// tcb *current_thread;  // indicates the current runnign thread
 
 // void tick(unsigned int numTicks)
 // {

@@ -13,8 +13,8 @@
 #define NULL 0
 #define offsetof(TYPE, MEMBER) ((size_t) &((TYPE *) 0)->MEMBER)
 #define list_entry(LIST_ELEM, STRUCT, MEMBER)    \
-           ((STRUCT *) ((uint8_t *) LIST_ELEM    \
-                - offsetof (STRUCT, MEMBER)))
+    ((STRUCT *) ((uint8_t *) LIST_ELEM    \
+                 - offsetof (STRUCT, MEMBER)))
 
 
 /** @brief The function to initialize the doubly linked list
@@ -33,7 +33,7 @@ void list_init(list *l)
 
 /** @brief The generic function to delete a specific node from a list
  *
- *		   Requires that j is stored in the list
+ *         Requires that j is stored in the list
  *  @param a pointer to the list and a pointer to the node
  *  @return the node that's deleted
  */
@@ -98,7 +98,7 @@ node *list_delete_last(list *l)
 /** @brief Insert a node at the first place in the linked list
  *
  *  @param l a pointer to the list
- *	@param j a pointer to the node
+ *  @param j a pointer to the node
  *  @return void
  */
 void list_insert_first(list *l, node *j)
@@ -125,7 +125,7 @@ void list_insert_first(list *l, node *j)
 /** @brief Insert a node at the last place in the linked list
  *
  *  @param l a pointer to the list
- *	@param j a pointer to the node
+ *  @param j a pointer to the node
  *  @return void
  */
 void list_insert_last(list *l, node *j)

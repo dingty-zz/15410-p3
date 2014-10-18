@@ -47,10 +47,10 @@ set_ss:
 
  
      pushl $0x2b
-     pushl $0xfffffffc
+     pushl $0xffffff10
      pushf     
 
      pushl $0x23
-     pushl $0x1000064         
-          movl $0xffffffff, %ebp 
+     pushl $0x1000064               
+          # movl $0xffffffff , %ebp 
      iret

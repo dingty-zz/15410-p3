@@ -35,23 +35,23 @@ int handler_install(void (*tickback)(unsigned int))
 	/* Initialize the fault handlers */
 
 	// for instance,
-	_handler_install(0x0, DE);
-	_handler_install(0x1, DB);
-	_handler_install(0x3, BP);
-	_handler_install(0x4, OF);
-	_handler_install(0x5, BR);
-	_handler_install(0x6, UD);
-	_handler_install(0x7, NM);
-	// _handler_install(0x8, DF);
-	_handler_install(0x10, TS);
-	_handler_install(0x11, NP);
-	_handler_install(0x12, SS);
-	_handler_install(0X13, GP);
-	_handler_install(0x14, PF);
-	_handler_install(0x16, MF);
-	_handler_install(0x17, AC);
-	_handler_install(0x18, MC);
-	_handler_install(0x19, XF);
+	// _handler_install(0x0, DE);
+	// _handler_install(0x1, DB);
+	// _handler_install(0x3, BP);
+	// _handler_install(0x4, OF);
+	// _handler_install(0x5, BR);
+	// _handler_install(0x6, UD);
+	// _handler_install(0x7, NM);
+	// // _handler_install(0x8, DF);
+	// _handler_install(0x10, TS);
+	// _handler_install(0x11, NP);
+	// _handler_install(0x12, SS);
+	// _handler_install(0X13, GP);
+	// _handler_install(0x14, PF);
+	// _handler_install(0x16, MF);
+	// _handler_install(0x17, AC);
+	// _handler_install(0x18, MC);
+	// _handler_install(0x19, XF);
 
 
 
@@ -78,6 +78,12 @@ int handler_install(void (*tickback)(unsigned int))
 
 
 	/* initialize system call handlers */
+	// int i =0;
+	// for (i = 10; i < 12; ++i)
+	// {
+		
+	
+	// }
 	_handler_install(GETTID_INT, (void *)gettid);
 
 
@@ -97,8 +103,9 @@ static void _handler_install(int idt_entry, void (*handler)()) {
 
 	/* Build the trap gate */ 
 	unsigned int* idtbase = (unsigned int *)idt_base();
+
     unsigned int offset = (unsigned int)handler;
-	unsigned int reserved = 0x8F00;  // DPL = 0, P = 1, D = 1, reserved = 0
+	unsigned int reserved = 0xef00;  // DPL = 0, P = 1, D = 1, reserved = 0
 	unsigned int offset3116 = offset & 0xFFFF0000;
 	unsigned int offset150 = offset & 0x0000FFFF;
 
@@ -107,5 +114,6 @@ static void _handler_install(int idt_entry, void (*handler)()) {
 	 * position */
 	idtbase[idt_entry * 2] = (SEGSEL_KERNEL_CS << 16) | offset150;
 	idtbase[idt_entry * 2 + 1] = offset3116 | reserved;
+
 
 }
