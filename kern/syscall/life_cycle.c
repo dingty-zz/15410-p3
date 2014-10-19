@@ -1,8 +1,39 @@
 #include <syscall.h>
 
+/*To-do: need to set the entry to readable too*/
+pgt_entry* copy_pgt_entry(pgt_entry* entry)
+{
+	//base case
+	if (entry == NULL) return NULL;
+	//recursive case
+	pgt_entry* new_entry = malloc(sizeof(pgt_entry));
+	new_entry->virtual_addr = entry->virtual_addr;
+	new_entry->phys_addr = entry->phys_addr;
+	new_entry->left = copy_pgt_entry(entry->left);
+	new_entry->right = copy_pgt_entry(entry->right);
+}
+
+pgt* copy_pgt(pgt* parent_pgt)
+{
+	pgt* child_pgt = (pgt*)malloc(sizeof(pgt));
+	child_pgt->head = copy_pgt_entry(parent_pgt->head);
+	return child_pgt;
+}
+
 int fork(void)
 {
-	return -1;
+	//parent_pcb
+	//COW
+	PCB* child_pcb = (PCB*)malloc(sizeof(PCB));
+	//1. copy the parent's page tables
+	pgt* parent_pgt = parent_pcb -> page_table;
+	pgt* child_pgt = copy_pgt(parent_pgt);
+	child_pcb->page_table = child_pgt;
+	//2. the assignment of a unique process 
+	//descriptor struct, task_struct, for the child. 
+	int curTid = gettid();
+
+	//3. put both processes in the scheduling waiting queue
 }
 
 int exec(char *execname, char *argvec[])

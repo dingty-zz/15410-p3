@@ -17,6 +17,9 @@
 #define PROCESS_RUNNING 1
 #define PROCESS_RUNNABLE 2
 
+struct PCB_t;
+struct TCB_t;
+
 
 typedef struct PCB_t
 {
@@ -29,9 +32,10 @@ typedef struct PCB_t
     // PCB_t** children;
 
     // list *threads;  // Now we only care about single threaded
-    struct TCB_t *thread;
+    struct TCB_t* thread;
     node all_processes;
-    // PTE;
+
+    pgt* page_table;
     // PDE;
 } PCB;
 
@@ -39,7 +43,7 @@ typedef struct PCB_t
 typedef struct TCB_t
 {
 
-    PCB *pcb; //process the thread belongs to
+    struct PCB_t* pcb; //process the thread belongs to
 
     int tid;
     int state;

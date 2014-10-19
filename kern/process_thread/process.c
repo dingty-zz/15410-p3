@@ -1,9 +1,6 @@
-
 /** @file process.c
  *  @brief This file defines funcitons to control processes
  */
-
-
 
 
 
@@ -125,7 +122,6 @@ int process_create(const char *filename)
     // pcb -> PD = memcpy(asdfasdf,fsdaf);
     // pcb -> PT = memcpy('sfasdfas'f);
     list_insert_last(&process_queue, &pcb -> all_processes);
-
 
     tcb -> pcb = pcb;
 
