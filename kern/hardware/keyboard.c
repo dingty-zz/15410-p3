@@ -56,6 +56,7 @@ int readchar(void)
 void keyboard_handler()
 {
     disable_interrupts();   // Defer other interrupts
+    lprintf("keyboard is called ");
     uint8_t scancode = inb(KEYBOARD_PORT);
     enqueue(s_queue, scancode);
     outb(INT_CTL_PORT, INT_ACK_CURRENT);

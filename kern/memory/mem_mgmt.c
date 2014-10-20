@@ -61,7 +61,7 @@ KF *mm_init()
     lprintf("the cr0 %u", (unsigned int)get_cr0);
     set_cr4(get_cr4() | CR4_PGE);
     set_cr0(get_cr0() | CR0_PG);
-    MAGIC_BREAK;
+    // MAGIC_BREAK;
     return frame_base;
 }
 
@@ -93,6 +93,10 @@ void allocate_page(uint32_t virtual_addr, size_t size)
     lprintf("the offset is %x", (unsigned int)offset);
 
     uint32_t times = offset % 4096 == 0 ? offset / 4096 : offset / 4096 + 1;
+    if (times ==0)
+    {
+        return;
+    }
     int j = 0;
     for (i = 0; i < 65536; ++i)
     {

@@ -20,9 +20,10 @@ static unsigned int numTicks = 0;  // Number of total ticks
 
 int timer_handler() {
 	numTicks++;
+	outb(INT_CTL_PORT, INT_ACK_CURRENT);  // Send ack back
 	if (callback != NULL)
 		(*callback)(numTicks);
-	outb(INT_CTL_PORT, INT_ACK_CURRENT);  // Send ack back
+	
 	return 0;
 }
 

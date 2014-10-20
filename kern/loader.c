@@ -22,6 +22,7 @@
 
 /* --- Local function prototypes --- */ 
 
+
 /**
  * Copies data from a file into a buffer.
  *
@@ -32,6 +33,7 @@
  *
  * @return returns the number of bytes copied on succes; -1 on failure
  */
+
 int getbytes( const char *filename, int offset, int size, char *buf )
 {
 
@@ -43,9 +45,10 @@ int getbytes( const char *filename, int offset, int size, char *buf )
 		}
 	}
 	memcpy(buf, (void *)exec2obj_userapp_TOC[i].execbytes + offset,size);
-    
+    lprintf("The address for execbytes is: %p", exec2obj_userapp_TOC[i].execbytes);
 
   return size;
 }
+
 
 /*@}*/

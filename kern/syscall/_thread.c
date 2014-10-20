@@ -18,7 +18,7 @@ int make_runnable(int pid)
 int _gettid(void)
 {
 	// return the tid from the currenspoding entry in tid
-	return -1;
+	return 5;
 }
 
 int sleep(int ticks)
