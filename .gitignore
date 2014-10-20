@@ -11,3 +11,4 @@ bootfd.img
 g.sh
 kernel.log
 kernel.strip
+*.json
