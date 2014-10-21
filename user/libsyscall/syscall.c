@@ -27,11 +27,6 @@ int fork(void)
 	return -1;
 }
 
-int exec(char *execname, char *argvec[])
-{
-	return -1;
-}
-
 void set_status(int status)
 {
 	return;

@@ -1,12 +1,4 @@
-
-/** @file process.c
- *  @brief This file defines funcitons to control processes
- */
-
-/* Process controls the create/run and exit of a thread */
-
-
-
+#include <syscall.h>
 #include "control_block.h"
 #include "linked_list.h"
 #include "seg.h"
@@ -18,12 +10,8 @@
 #include "string.h"
 #include "eflags.h"
 
-list process_queue;
-uint32_t next_pid = 0;
-
-
-// list thread_queue;
-// uint32_t next_tid = 0 ;
+extern list process_queue;
+extern uint32_t next_pid;
 
 void allocate_page(uint32_t virtual_addr, size_t size);
 extern void set_ss(uint32_t ss, 
@@ -43,27 +31,24 @@ extern TCB *thr_create(simple_elf_t *se_hdr, int run);
 
 extern TCB *current_thread;
 
-int process_init()
+
+int fork(void)
 {
-
-
-    // create a list of run queues based on threads
-    list_init(&process_queue);
-    next_pid = 1;
-    return 0;
+	return -1;
 }
 
-
-
-int process_create(const char *filename, int run)
+int _exec(char *execname, char *argvec[])
 {
-
-    /* Load the elf program using the helper function */
+  lprintf("char %s", execname);
+	// int argc = 1; // hardcode it to be 1
+	// while(argvec[argc] != 0) {
+	// 	argc++;
+	// }
+	/* Load the elf program using the helper function */
     simple_elf_t se_hdr;
     lprintf("\n");
-    elf_load_helper(&se_hdr, filename);
+    elf_load_helper(&se_hdr, execname);
     lprintf("%lx", se_hdr.e_entry);
-    lprintf("%d", machine_phys_frames());
     lprintf("e_txtstart: %lx", se_hdr.e_txtstart);
     lprintf("e_txtoff: %lu", se_hdr.e_txtoff);
     lprintf("e_txtlen: %lu", se_hdr.e_txtlen);
@@ -82,7 +67,10 @@ int process_create(const char *filename, int run)
     lprintf("e_bssstart: %lx", se_hdr.e_bssstart);
     lprintf("e_bsslen: %lu", se_hdr.e_bsslen);
 
+   lprintf("before zeroth break");
+    // *(int *)0xffffffff=3;
 
+    MAGIC_BREAK;
     /* Allocate memory for every area */
     allocate_page((uint32_t)se_hdr.e_datstart, se_hdr.e_datlen);
     // MAGIC_BREAK;
@@ -90,10 +78,10 @@ int process_create(const char *filename, int run)
     allocate_page((uint32_t)se_hdr.e_rodatstart, se_hdr.e_rodatlen);
     allocate_page((uint32_t)se_hdr.e_bssstart, se_hdr.e_bsslen);
     allocate_page((uint32_t)0xffffc000, 4096*4);  // possibly bugs here
-    // lprintf("sdfds");
+   lprintf("before first break");
     // *(int *)0xffffffff=3;
 
-    // MAGIC_BREAK;
+    MAGIC_BREAK;
     // /* copy data from data field */
     getbytes(se_hdr.e_fname, se_hdr.e_datoff, se_hdr.e_datlen, (char *)se_hdr.e_datstart);
     getbytes(se_hdr.e_fname, se_hdr.e_txtoff, se_hdr.e_txtlen, (char *)se_hdr.e_txtstart);
@@ -112,7 +100,7 @@ int process_create(const char *filename, int run)
     next_pid++;
     // list_init(pcb -> threads);
 
-    TCB *thread = thr_create(&se_hdr, run); // please see thread.c
+    TCB *thread = thr_create(&se_hdr, 1); // please see thread.c
     pcb -> thread =  thread;
 
     // pcb -> PD = memcpy(asdfasdf,fsdaf);
@@ -122,12 +110,23 @@ int process_create(const char *filename, int run)
 
     thread -> pcb = pcb;  // cycle reference :)
 
-    if (!run)  // if not run ,we return
-    {
-    MAGIC_BREAK;    
+	// *((unsigned int*)(thread -> registers.esp)) = 0xffffc000;
+	// thread -> registers.esp -= 4;
 
-        return 0 ;
-    }
+	// *(unsigned int*)thread -> registers.esp = 0xffffffff;
+	// thread -> registers.esp -= 4;
+
+	// *(int*)thread -> registers.esp = argc;
+	// thread -> registers.esp -= 4;
+
+	// thread -> registers.esp = (unsigned int)argvec;
+	// thread -> registers.esp -= 4;
+
+	// thread -> registers.esp -= 4;
+
+
+   lprintf("before second break");
+
 MAGIC_BREAK;
     /* We need to do this everytime for a thread to run */
     current_thread = thread;
@@ -150,15 +149,33 @@ MAGIC_BREAK;
     return 0;
 }
 
-
-int process_exit()
+void set_status(int status)
 {
-    return 0;
+	return;
+}
 
+volatile int placate_the_compiler;
+void vanish(void)
+{
+	int blackhole = 867-5309;
+
+	blackhole ^= blackhole;
+	blackhole /= blackhole;
+	*(int *) blackhole = blackhole; /* won't get here */
+	while (1)
+		++placate_the_compiler;
+}
+
+int wait(int *status_ptr)
+{
+	return -1;
 }
 
 
-
-
-
-
+void task_vanish(int status)
+{
+	status ^= status;
+	status /= status;
+	while (1)
+		continue;
+}

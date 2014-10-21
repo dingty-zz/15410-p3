@@ -113,9 +113,9 @@ int main()
     }
 }*/
 
-    process_create("idle2", 0);   // we hang this thread
+    // process_create("idle2", 0);   // we hang this thread
 
-    process_create("idle", 1);   // we run this thread
+    process_create("exec_basic", 1);   // we run this thread
     // process_create("init");
     // process_create("ck1");
 

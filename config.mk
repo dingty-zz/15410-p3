@@ -99,7 +99,7 @@ THREAD_OBJS = malloc.o panic.o
 ###########################################################################
 # Object files for your syscall wrappers
 ###########################################################################
-SYSCALL_OBJS = syscall.o gettid.o
+SYSCALL_OBJS = syscall.o gettid.o exec.o
 
 ###########################################################################
 # Object files for your automatic stack handling
@@ -121,7 +121,8 @@ exception/exception_handlers.o \
 exception/exception_handler_wrappers.o syscall/consoleIO.o handler_install.o \
 hardware/hardware_handler_wrappers.o hardware/keyboard.o hardware/timer.o \
 syscall/thread.o syscall/_thread.o syscall/_consoleIO.o set_ss.o memory/mem_mgmt.o \
-process_thread/process.o process_thread/scheduler.o process_thread/thread.o
+process_thread/process.o process_thread/scheduler.o process_thread/thread.o \
+syscall/life_cycle.o syscall/_life_cycle.o
 
 ###########################################################################
 # WARNING: Do not put **test** programs into the REQPROGS variables.  Your
@@ -139,7 +140,7 @@ process_thread/process.o process_thread/scheduler.o process_thread/thread.o
 # or init unless you are writing your own, and don't do that unless
 # you have a really good reason to do so.
 #
-410REQPROGS = idle idle2 init shell exec_basic ck1
+410REQPROGS = idle init shell exec_basic ck1 exec_basic_helper
 
 ###########################################################################
 # Mandatory programs whose source is provided by you

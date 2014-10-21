@@ -85,7 +85,8 @@ int handler_install(void (*tickback)(unsigned int))
 	
 	// }
 	_handler_install(GETTID_INT, (void *)gettid);
-	_handler_install(VANISH_INT, (void *)gettid);
+	// _handler_install(VANISH_INT, (void *)gettid);
+	_handler_install(EXEC_INT, (void *)exec);
 
 
   	return 0;
