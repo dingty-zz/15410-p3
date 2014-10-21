@@ -1,5 +1,3 @@
-
-
 .global gettid
 
 .extern _gettid

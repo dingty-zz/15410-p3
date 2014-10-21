@@ -16,7 +16,7 @@ typedef struct alloc_frames_node
 
 typedef struct alloc_frames_head
 {
-    struct alloc)frames *head;
+    struct alloc_frames *head;
     int num;
 } alloc_frames;
 
