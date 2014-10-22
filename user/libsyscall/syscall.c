@@ -21,7 +21,7 @@
  */
 
 #include <syscall.h>
-
+#include "simics.h"
 int fork(void)
 {
 	return -1;
@@ -29,12 +29,14 @@ int fork(void)
 
 void set_status(int status)
 {
+	lprintf("set_status");
 	return;
 }
 
 volatile int placate_the_compiler;
 void vanish(void)
 {
+	lprintf("vanish");
 	int blackhole = 867-5309;
 
 	blackhole ^= blackhole;

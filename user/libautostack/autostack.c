@@ -2,8 +2,10 @@
  * delete this autostack.c and provide an autostack.S
  * instead.
  */
-
+#include "simics.h"
 void
 install_autostack(void *stack_high, void *stack_low)
 {
+lprintf("Hello");
+
 }

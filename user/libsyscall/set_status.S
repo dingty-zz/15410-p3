@@ -1,13 +1,13 @@
 #include <syscall_int.h>
 
-.global exec
+.global set_status
 
-exec:
+set_status:
 pushl	%ebp
 movl	%esp, %ebp
 pushl	%esi
-leal	8(%ebp), %esi
-INT 	$EXEC_INT
+movl	8(%ebp), %esi
+INT 	$SET_STATUS_INT
 popl	%esi
 popl	%ebp
 ret

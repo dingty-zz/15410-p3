@@ -7,8 +7,8 @@ exec:
 	# call get_esp0
 	# movl %eax, %esp
 
-	pushl 4(%esi)
-	pushl %esi
+	pushl 	4(%esi)
+	pushl 	(%esi)
 	
 	movl 	$0x18,	%eax
 	movl	%eax,	%ds

@@ -32,18 +32,91 @@ extern TCB *thr_create(simple_elf_t *se_hdr, int run);
 extern TCB *current_thread;
 
 
+
+/*To-do: need to set the entry to readable too*/
+// pgt_entry* copy_pgt_entry(pgt_entry* entry)
+// {
+//  //base case
+//  if (entry == NULL) return NULL;
+//  //recursive case
+//  pgt_entry* new_entry = malloc(sizeof(pgt_entry));
+//  new_entry->virtual_addr = entry->virtual_addr;
+//  new_entry->phys_addr = entry->phys_addr;
+//  new_entry->left = copy_pgt_entry(entry->left);
+//  new_entry->right = copy_pgt_entry(entry->right);
+// }
+
+// pgt* copy_pgt(pgt* parent_pgt)
+// {
+//  pgt* child_pgt = (pgt*)malloc(sizeof(pgt));
+//  child_pgt->head = copy_pgt_entry(parent_pgt->head);
+//  return child_pgt;
+// }
+
+/* two more things to do: 1. copy page table 2. iret*/
+/*
 int fork(void)
 {
-	return -1;
-}
+    // //parent_pcb
+    // //COW
+    // PCB* child_pcb = (PCB*)malloc(sizeof(PCB));
+    // //1. ecopy the parent's page tables
+    // pgt* parent_pgt = parent_pcb -> page_table;
+    // pgt* child_pgt = copy_pgt(parent_pgt);
+    // child_pcb->page_table = child_pgt;
+    // //2. the assignment of a unique process 
+    // //descriptor struct, task_struct, for the child. 
+    // int curTid = gettid();
+
+    // //3. put both processes in the scheduling waiting queue
+
+
+    //---------------------------------------------------------------
+    PCB* child_pcb = (PCB*)malloc(sizeof(PCB));
+    TCB* child_tcb = (TCB*)malloc(sizeof(TCB));
+    PCB* parent_pcb = current_thread -> pcb;
+    //step 1: check if multi threaded; then no permission to fork;
+    //to be done. We should add count of threads in pcb
+    //.........
+
+    //step 2: set up the thread control block;
+    child_tcb -> pcb = child_pcb;
+    child_tcb -> tid = next_tid;
+    next_tid++;
+    child_tcb -> state = THREAD_RUNNING;
+    child_tcb -> registers = parent_tcb -> registers;
+
+    child_tcb -> all_threads = {NULL,NULL};
+
+
+    //step 3: set up the process control block;
+    child_pcb -> special = 0;
+    child_pcb -> ppid = parent_pcb -> ppid;
+    child_pcb -> pid = next_pid;
+    next_pid++;
+    child_pcb -> state = PROCESS_RUNNING;
+    child_pcb -> thread = child_tcb;
+
+    //return values are different;
+    child_tcb -> registers.eax = 0;
+    current_thread -> registers.eax = child_pcb -> pid;
+
+    //insert child to the list of threads and processes
+    list_insert_last(process_queue,child_pcb);
+    list_insert_last(thread_queue,child_tcb);
+    list_insert_last(process_queue,parent_pcb);
+    list_insert_last(thread_queue,parent_tcb);
+} */
+
 
 int _exec(char *execname, char *argvec[])
 {
-  lprintf("char %s", execname);
-	// int argc = 1; // hardcode it to be 1
-	// while(argvec[argc] != 0) {
-	// 	argc++;
-	// }
+  lprintf("char %s, argvec: %p", execname, argvec);
+	int argc = 0;
+	while(argvec[argc] != 0) {
+		argc++;
+	}
+    lprintf("The argc==%d",argc);
 	/* Load the elf program using the helper function */
     simple_elf_t se_hdr;
     lprintf("\n");
@@ -109,21 +182,23 @@ int _exec(char *execname, char *argvec[])
 
 
     thread -> pcb = pcb;  // cycle reference :)
+    
+    MAGIC_BREAK;
+	*((unsigned int*)(thread -> registers.esp)) = 0xffffc000;
+	thread -> registers.esp -= 4;
 
-	// *((unsigned int*)(thread -> registers.esp)) = 0xffffc000;
-	// thread -> registers.esp -= 4;
+	*(unsigned int*)thread -> registers.esp = 0xffffffff;
+	thread -> registers.esp -= 4;
 
-	// *(unsigned int*)thread -> registers.esp = 0xffffffff;
-	// thread -> registers.esp -= 4;
 
-	// *(int*)thread -> registers.esp = argc;
-	// thread -> registers.esp -= 4;
+	*((unsigned int*)(thread -> registers.esp)) = (unsigned int)argvec;
+	thread -> registers.esp -= 4;
 
-	// thread -> registers.esp = (unsigned int)argvec;
-	// thread -> registers.esp -= 4;
+        *(int*)thread -> registers.esp = argc;
+    thread -> registers.esp -= 4;
 
-	// thread -> registers.esp -= 4;
 
+    MAGIC_BREAK;
 
    lprintf("before second break");
 
