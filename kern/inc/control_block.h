@@ -6,6 +6,7 @@
 #define _CONTROL_B_H
 #include "ureg.h"
 #include "linked_list.h"
+#include "vm_type.h"
 
 #define THREAD_EXIT -1
 #define THREAD_BLOCKED 0
@@ -25,14 +26,14 @@ typedef struct PCB_t
     int pid;
     int state; //running, ready, block
 
-    // PCB_t* parent;
+    // +++++++++++_t* parent;
     // PCB_t** children;
+    // list *threads;  
 
-    // list *threads;  // Now we only care about single threaded
+    // Now we only care about single threaded
     struct TCB_t *thread;
     node all_processes;
-    // PTE;
-    // PDE;
+    PD* pd_ptr;
 } PCB;
 
 

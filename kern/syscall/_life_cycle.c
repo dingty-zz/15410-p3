@@ -28,30 +28,8 @@ extern void set_ss(uint32_t ss,
                    uint32_t edi);
 extern TCB *thr_create(simple_elf_t *se_hdr, int run);
 
-
 extern TCB *current_thread;
 
-
-
-/*To-do: need to set the entry to readable too*/
-// pgt_entry* copy_pgt_entry(pgt_entry* entry)
-// {
-//  //base case
-//  if (entry == NULL) return NULL;
-//  //recursive case
-//  pgt_entry* new_entry = malloc(sizeof(pgt_entry));
-//  new_entry->virtual_addr = entry->virtual_addr;
-//  new_entry->phys_addr = entry->phys_addr;
-//  new_entry->left = copy_pgt_entry(entry->left);
-//  new_entry->right = copy_pgt_entry(entry->right);
-// }
-
-// pgt* copy_pgt(pgt* parent_pgt)
-// {
-//  pgt* child_pgt = (pgt*)malloc(sizeof(pgt));
-//  child_pgt->head = copy_pgt_entry(parent_pgt->head);
-//  return child_pgt;
-// }
 
 /* two more things to do: 1. copy page table 2. iret*/
 int _fork(void)

@@ -100,23 +100,20 @@ int process_create(const char *filename, int run)
     getbytes(se_hdr.e_fname, se_hdr.e_rodatoff, se_hdr.e_rodatlen, (char *)se_hdr.e_rodatstart);
     memset((char *)se_hdr.e_bssstart, 0,  se_hdr.e_bsslen);
 
-   
-
-
     // set up pcb for this program
-
     PCB *pcb = (PCB *)malloc(sizeof(PCB));
     pcb -> state = PROCESS_RUNNING;
     pcb -> ppid = 0; // who cares this??
     pcb -> pid = next_pid;
     next_pid++;
-    // list_init(pcb -> threads);
+    pcb -> pd_ptr = smemalign(PD_SIZE, sizeof(PD));
+    memset(pd_ptr,0,PT_SIZE*sizeof(PT*));
 
+    // list_init(pcb -> threads);
     TCB *thread = thr_create(&se_hdr, run); // please see thread.c
     pcb -> thread =  thread;
 
-    // pcb -> PD = memcpy(asdfasdf,fsdaf);
-    // pcb -> PT = memcpy('sfasdfas'f);
+
     list_insert_last(&process_queue, &pcb -> all_processes);
 
 
