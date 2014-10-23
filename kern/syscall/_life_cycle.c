@@ -54,59 +54,59 @@ extern TCB *current_thread;
 // }
 
 /* two more things to do: 1. copy page table 2. iret*/
-/*
-int fork(void)
+int _fork(void)
 {
-    // //parent_pcb
-    // //COW
-    // PCB* child_pcb = (PCB*)malloc(sizeof(PCB));
-    // //1. ecopy the parent's page tables
-    // pgt* parent_pgt = parent_pcb -> page_table;
-    // pgt* child_pgt = copy_pgt(parent_pgt);
-    // child_pcb->page_table = child_pgt;
-    // //2. the assignment of a unique process 
-    // //descriptor struct, task_struct, for the child. 
-    // int curTid = gettid();
+  // //parent_pcb
+  // //COW
+  // PCB* child_pcb = (PCB*)malloc(sizeof(PCB));
+  // //1. ecopy the parent's page tables
+  // pgt* parent_pgt = parent_pcb -> page_table;
+  // pgt* child_pgt = copy_pgt(parent_pgt);
+  // child_pcb->page_table = child_pgt;
+  // //2. the assignment of a unique process 
+  // //descriptor struct, task_struct, for the child. 
+  // int curTid = gettid();
 
-    // //3. put both processes in the scheduling waiting queue
-
-
-    //---------------------------------------------------------------
-    PCB* child_pcb = (PCB*)malloc(sizeof(PCB));
-    TCB* child_tcb = (TCB*)malloc(sizeof(TCB));
-    PCB* parent_pcb = current_thread -> pcb;
-    //step 1: check if multi threaded; then no permission to fork;
-    //to be done. We should add count of threads in pcb
-    //.........
-
-    //step 2: set up the thread control block;
-    child_tcb -> pcb = child_pcb;
-    child_tcb -> tid = next_tid;
-    next_tid++;
-    child_tcb -> state = THREAD_RUNNING;
-    child_tcb -> registers = parent_tcb -> registers;
-
-    child_tcb -> all_threads = {NULL,NULL};
+  // //3. put both processes in the scheduling waiting queue
 
 
-    //step 3: set up the process control block;
-    child_pcb -> special = 0;
-    child_pcb -> ppid = parent_pcb -> ppid;
-    child_pcb -> pid = next_pid;
-    next_pid++;
-    child_pcb -> state = PROCESS_RUNNING;
-    child_pcb -> thread = child_tcb;
+  //---------------------------------------------------------------
+  PCB* child_pcb = (PCB*)malloc(sizeof(PCB));
+  TCB* child_tcb = (TCB*)malloc(sizeof(TCB));
+  PCB* parent_pcb = current_thread -> pcb;
+  //step 1: check if multi threaded; then no permission to fork;
+  //to be done. We should add count of threads in pcb
+  //.........
 
-    //return values are different;
-    child_tcb -> registers.eax = 0;
-    current_thread -> registers.eax = child_pcb -> pid;
+  //step 2: set up the thread control block;
+  child_tcb -> pcb = child_pcb;
+  child_tcb -> tid = next_tid;
+  next_tid++;
+  child_tcb -> state = THREAD_RUNNING;
+  child_tcb -> registers = parent_tcb -> registers;
+  child_tcb -> all_threads = {NULL,NULL};
 
-    //insert child to the list of threads and processes
-    list_insert_last(process_queue,child_pcb);
-    list_insert_last(thread_queue,child_tcb);
-    list_insert_last(process_queue,parent_pcb);
-    list_insert_last(thread_queue,parent_tcb);
-} */
+  //step 3: set up the process control block;
+  child_pcb -> special = 0;
+  child_pcb -> ppid = parent_pcb -> ppid;
+  child_pcb -> pid = next_pid;
+  next_pid++;
+  child_pcb -> state = PROCESS_RUNNING;
+  child_pcb -> thread = child_tcb;
+
+  //return values are different;
+  child_tcb -> registers.eax = 0;
+  current_thread -> registers.eax = child_pcb -> pid;
+
+  //copy page tables
+  
+  //insert child to the list of threads and processes
+  list_insert_last(process_queue,child_pcb);
+  list_insert_last(thread_queue,child_tcb);
+  list_insert_last(thread_queue,parent_tcb);
+
+  return 0;
+}
 
 
 int _exec(char *execname, char *argvec[])
