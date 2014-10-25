@@ -81,7 +81,10 @@ int process_create(const char *filename, int run)
 
     lprintf("e_bssstart: %lx", se_hdr.e_bssstart);
     lprintf("e_bsslen: %lu", se_hdr.e_bsslen);
-
+    PCB *pcb = (PCB *)malloc(sizeof(PCB));
+    //create a clean page directory
+    pcb -> pd_ptr = (PD*)smemalign(4096, 1024 * 4);
+    memset(pcb -> PD , 0, 4096)
 
     /* Allocate memory for every area */
     allocate_page((uint32_t)se_hdr.e_datstart, se_hdr.e_datlen);
@@ -101,7 +104,7 @@ int process_create(const char *filename, int run)
     memset((char *)se_hdr.e_bssstart, 0,  se_hdr.e_bsslen);
 
     // set up pcb for this program
-    PCB *pcb = (PCB *)malloc(sizeof(PCB));
+    
     pcb -> state = PROCESS_RUNNING;
     pcb -> ppid = 0; // who cares this??
     pcb -> pid = next_pid;

@@ -76,8 +76,12 @@ int _fork(void)
   child_tcb -> registers.eax = 0;
   current_thread -> registers.eax = child_pcb -> pid;
 
-  //copy page tables
+  //create a new page directory for the child, which points to the same page tables;
+  PD* parent_table = parent_pcb -> pd_ptr;
+  child_pcb -> pd_ptr = (PD*) smemalign(PD_SIZE*4,Pt_SIZE*4);
+  int i;
   
+ 
   //insert child to the list of threads and processes
   list_insert_last(process_queue,child_pcb);
   list_insert_last(thread_queue,child_tcb);
