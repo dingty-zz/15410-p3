@@ -9,9 +9,7 @@
 #include "string.h"
 #include "eflags.h"
 
-
-list thread_queue;
-uint32_t next_tid = 0 ;
+uint32_t next_tid = 0;
 
 int thr_init() {
 	    list_init(&thread_queue);

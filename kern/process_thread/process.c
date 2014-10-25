@@ -18,12 +18,10 @@
 #include "string.h"
 #include "eflags.h"
 
-list process_queue;
-uint32_t next_pid = 0;
-
 
 // list thread_queue;
 // uint32_t next_tid = 0 ;
+uint32_t next_pid=0;
 
 void allocate_page(uint32_t virtual_addr, size_t size);
 extern void set_ss(uint32_t ss, 
@@ -83,8 +81,8 @@ int process_create(const char *filename, int run)
     lprintf("e_bsslen: %lu", se_hdr.e_bsslen);
     PCB *pcb = (PCB *)malloc(sizeof(PCB));
     //create a clean page directory
-    pcb -> pd_ptr = (PD*)smemalign(4096, 1024 * 4);
-    memset(pcb -> PD , 0, 4096)
+    pcb -> pd_ptr = smemalign(PD_SIZE, sizeof(PD));
+    memset(pcb -> pd_ptr,0,PT_SIZE*sizeof(PT*));
 
     /* Allocate memory for every area */
     allocate_page((uint32_t)se_hdr.e_datstart, se_hdr.e_datlen);
@@ -109,8 +107,7 @@ int process_create(const char *filename, int run)
     pcb -> ppid = 0; // who cares this??
     pcb -> pid = next_pid;
     next_pid++;
-    pcb -> pd_ptr = smemalign(PD_SIZE, sizeof(PD));
-    memset(pd_ptr,0,PT_SIZE*sizeof(PT*));
+    
 
     // list_init(pcb -> threads);
     TCB *thread = thr_create(&se_hdr, run); // please see thread.c

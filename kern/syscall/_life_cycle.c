@@ -34,24 +34,10 @@ extern TCB *current_thread;
 /* two more things to do: 1. copy page table 2. iret*/
 int _fork(void)
 {
-  // //parent_pcb
-  // //COW
-  // PCB* child_pcb = (PCB*)malloc(sizeof(PCB));
-  // //1. ecopy the parent's page tables
-  // pgt* parent_pgt = parent_pcb -> page_table;
-  // pgt* child_pgt = copy_pgt(parent_pgt);
-  // child_pcb->page_table = child_pgt;
-  // //2. the assignment of a unique process 
-  // //descriptor struct, task_struct, for the child. 
-  // int curTid = gettid();
-
-  // //3. put both processes in the scheduling waiting queue
-
-
-  //---------------------------------------------------------------
   PCB* child_pcb = (PCB*)malloc(sizeof(PCB));
   TCB* child_tcb = (TCB*)malloc(sizeof(TCB));
   PCB* parent_pcb = current_thread -> pcb;
+  TCB* parent_tcb = current_thread;
   //step 1: check if multi threaded; then no permission to fork;
   //to be done. We should add count of threads in pcb
   //.........
@@ -62,7 +48,7 @@ int _fork(void)
   next_tid++;
   child_tcb -> state = THREAD_RUNNING;
   child_tcb -> registers = parent_tcb -> registers;
-  child_tcb -> all_threads = {NULL,NULL};
+  // child_tcb -> all_threads;
 
   //step 3: set up the process control block;
   child_pcb -> special = 0;
@@ -74,18 +60,18 @@ int _fork(void)
 
   //return values are different;
   child_tcb -> registers.eax = 0;
-  current_thread -> registers.eax = child_pcb -> pid;
+  parent_tcb -> registers.eax = child_pcb -> pid;
 
   //create a new page directory for the child, which points to the same page tables;
-  PD* parent_table = parent_pcb -> pd_ptr;
-  child_pcb -> pd_ptr = (PD*) smemalign(PD_SIZE*4,Pt_SIZE*4);
-  int i;
+  // PD* parent_table = parent_pcb -> pd_ptr;
+  child_pcb -> pd_ptr = (PD*) smemalign(PD_SIZE*4,PT_SIZE*4);
+  // int i;
   
  
   //insert child to the list of threads and processes
-  list_insert_last(process_queue,child_pcb);
-  list_insert_last(thread_queue,child_tcb);
-  list_insert_last(thread_queue,parent_tcb);
+  list_insert_last(&process_queue,&child_pcb->all_processes);
+  list_insert_last(&thread_queue,&child_tcb->all_threads);
+  list_insert_last(&thread_queue,&parent_tcb->all_threads);
 
   return 0;
 }
