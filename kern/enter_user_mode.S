@@ -1,6 +1,6 @@
-.global set_ss
+.global enter_user_mode
 
-set_ss:
+enter_user_mode:
      
 
      popl      %eax       # return address

@@ -1,3 +1,11 @@
+/** @file scheduler.c
+ *
+ *  @brief This file the scheduler and context switch routine.
+ *
+ *  @author Xianqi Zeng (xianqiz)
+ *  @author Tianyuan Ding (tding)
+ *  @bug No known bugs
+ */
 #include "linked_list.h"
 #include "control_block.h"
 #include "simics.h"
@@ -18,7 +26,7 @@
                  - offsetoff (STRUCT, MEMBER)))
 
 
-extern void set_ss(uint32_t ss,
+extern void enter_user_mode(uint32_t ss,
                    uint32_t esp,
                    uint32_t eflags,
                    uint32_t cs,
@@ -55,7 +63,7 @@ void tick(unsigned int numTicks)
 
 void schedule()
 {
-
+  disable_interrupts();
     // save current running thread, such as %ss and stuff
     lprintf("this is the current running thread: %d", current_thread->tid);
 
@@ -107,7 +115,7 @@ void schedule()
 
     // MAGIC_BREAK;
     current_thread = next_thread;
-    set_ss(next_thread -> registers.edi,     // let it run, enter ring 3!
+    enter_user_mode(next_thread -> registers.edi,     // let it run, enter ring 3!
            next_thread -> registers.esi,
            next_thread -> registers.ebp,
            next_thread -> registers.ebx,

@@ -33,3 +33,7 @@ void setup_timer(void (*tickback)(unsigned int))
     callback = tickback;
 }
 
+unsigned int _get_ticks()
+{
+    return numTicks;
+}

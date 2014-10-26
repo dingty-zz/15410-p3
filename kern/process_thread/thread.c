@@ -1,3 +1,11 @@
+/** @file thread.c
+ *
+ *  @brief This file includes some kernel thread routines.
+ *
+ *  @author Xianqi Zeng (xianqiz)
+ *  @author Tianyuan Ding (tding)
+ *  @bug No known bugs
+ */
 #include "control_block.h"
 #include "linked_list.h"
 #include "seg.h"

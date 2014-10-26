@@ -1,12 +1,11 @@
-
 /** @file process.c
- *  @brief This file defines funcitons to control processes
+ *
+ *  @brief This file defines process manipulation routines
+ *
+ *  @author Xianqi Zeng (xianqiz)
+ *  @author Tianyuan Ding (tding)
+ *  @bug No known bugs
  */
-
-/* Process controls the create/run and exit of a thread */
-
-
-
 #include "control_block.h"
 #include "linked_list.h"
 #include "seg.h"
@@ -24,7 +23,7 @@
 uint32_t next_pid=0;
 
 void allocate_page(uint32_t virtual_addr, size_t size);
-extern void set_ss(uint32_t ss, 
+extern void enter_user_mode(uint32_t ss, 
                    uint32_t esp,
                    uint32_t eflags,
                    uint32_t cs,
@@ -133,7 +132,7 @@ int process_create(const char *filename, int run)
     set_esp0((uint32_t)(thread -> stack_base + thread -> stack_size));  // set up kernel stack pointer possibly bugs here
     lprintf("this is the esp, %x", (unsigned int)get_esp0());
 
-    set_ss(thread -> registers.edi,     // let it run, enter ring 3!
+    enter_user_mode(thread -> registers.edi,     // let it run, enter ring 3!
            thread -> registers.esi,
            thread -> registers.ebp,
            thread -> registers.ebx,

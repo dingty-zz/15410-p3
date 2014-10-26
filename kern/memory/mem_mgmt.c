@@ -4,6 +4,7 @@
 #include "mem_internals.h"
 #include "string.h"
 static KF *frame_base;
+//static void *freelist
 /* Initialize the whole memory system */
 KF *mm_init()
 {

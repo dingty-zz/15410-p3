@@ -25,11 +25,6 @@
 /* x86 specific includes */
 #include <x86/asm.h>                /* enable_interrupts() */
 extern int handler_install(void (*tickback)(unsigned int));
-extern void set_ss();
-extern void set_ds(int i);
-extern void set_es(int i);
-extern void set_cs(int i);
-extern void set_esp(int i);
 extern KF *mm_init();
 void allocate_page(uint32_t virtual_addr, size_t size);
 extern void tick(unsigned int numTicks);

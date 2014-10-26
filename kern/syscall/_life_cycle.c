@@ -15,18 +15,18 @@ extern uint32_t next_pid;
 
 void allocate_page(uint32_t virtual_addr, size_t size);
 
-extern void set_ss(uint32_t ss, 
-                   uint32_t esp,
-                   uint32_t eflags,
-                   uint32_t cs,
-                   uint32_t eip,
-                   uint32_t eax,
-                   uint32_t ecx,
-                   uint32_t edx,
-                   uint32_t ebx,
-                   uint32_t ebp,
-                   uint32_t esi,
-                   uint32_t edi);
+extern void enter_user_mode(uint32_t ss,
+                            uint32_t esp,
+                            uint32_t eflags,
+                            uint32_t cs,
+                            uint32_t eip,
+                            uint32_t eax,
+                            uint32_t ecx,
+                            uint32_t edx,
+                            uint32_t ebx,
+                            uint32_t ebp,
+                            uint32_t esi,
+                            uint32_t edi);
 extern TCB *thr_create(simple_elf_t *se_hdr, int run);
 
 extern TCB *current_thread;
@@ -35,46 +35,46 @@ extern TCB *current_thread;
 /* two more things to do: 1. copy page table 2. iret*/
 int _fork(void)
 {
-  PCB* child_pcb = (PCB*)malloc(sizeof(PCB));
-  TCB* child_tcb = (TCB*)malloc(sizeof(TCB));
-  PCB* parent_pcb = current_thread -> pcb;
-  TCB* parent_tcb = current_thread;
-  //step 1: check if multi threaded; then no permission to fork;
-  //to be done. We should add count of threads in pcb
-  //.........
+    PCB *child_pcb = (PCB *)malloc(sizeof(PCB));
+    TCB *child_tcb = (TCB *)malloc(sizeof(TCB));
+    PCB *parent_pcb = current_thread -> pcb;
+    TCB *parent_tcb = current_thread;
+    //step 1: check if multi threaded; then no permission to fork;
+    //to be done. We should add count of threads in pcb
+    //.........
 
-  //step 2: set up the thread control block;
-  child_tcb -> pcb = child_pcb;
-  child_tcb -> tid = next_tid;
-  next_tid++;
-  child_tcb -> state = THREAD_RUNNING;
-  child_tcb -> registers = parent_tcb -> registers;
-  // child_tcb -> all_threads;
+    //step 2: set up the thread control block;
+    child_tcb -> pcb = child_pcb;
+    child_tcb -> tid = next_tid;
+    next_tid++;
+    child_tcb -> state = THREAD_RUNNING;
+    child_tcb -> registers = parent_tcb -> registers;
+    // child_tcb -> all_threads;
 
-  //step 3: set up the process control block;
-  child_pcb -> special = 0;
-  child_pcb -> ppid = parent_pcb -> ppid;
-  child_pcb -> pid = next_pid;
-  next_pid++;
-  child_pcb -> state = PROCESS_RUNNING;
-  child_pcb -> thread = child_tcb;
+    //step 3: set up the process control block;
+    child_pcb -> special = 0;
+    child_pcb -> ppid = parent_pcb -> ppid;
+    child_pcb -> pid = next_pid;
+    next_pid++;
+    child_pcb -> state = PROCESS_RUNNING;
+    child_pcb -> thread = child_tcb;
 
-  //return values are different;
-  child_tcb -> registers.eax = 0;
-  parent_tcb -> registers.eax = child_pcb -> pid;
+    //return values are different;
+    child_tcb -> registers.eax = 0;
+    parent_tcb -> registers.eax = child_pcb -> pid;
 
-  //create a new page directory for the child, which points to the same page tables;
-  // PD* parent_table = parent_pcb -> pd_ptr;
-  child_pcb -> pd_ptr = (PD*) smemalign(PD_SIZE*4,PT_SIZE*4);
-  // int i;
-  
- 
-  //insert child to the list of threads and processes
-  list_insert_last(&process_queue,&child_pcb->all_processes);
-  list_insert_last(&thread_queue,&child_tcb->all_threads);
-  list_insert_last(&thread_queue,&parent_tcb->all_threads);
+    //create a new page directory for the child, which points to the same page tables;
+    // PD* parent_table = parent_pcb -> pd_ptr;
+    child_pcb -> pd_ptr = (PD *) smemalign(PD_SIZE * 4, PT_SIZE * 4);
+    // int i;
 
-  return 0;
+
+    //insert child to the list of threads and processes
+    list_insert_last(&process_queue, &child_pcb->all_processes);
+    list_insert_last(&thread_queue, &child_tcb->all_threads);
+    list_insert_last(&thread_queue, &parent_tcb->all_threads);
+
+    return 0;
 }
 
 
@@ -220,18 +220,18 @@ int _exec(char *execname, char *argvec[])
     set_esp0((uint32_t)(thread -> stack_base + thread -> stack_size));  // set up kernel stack pointer possibly bugs here
     lprintf("this is the esp, %x", (unsigned int)get_esp0());
 
-    set_ss(thread -> registers.edi,     // let it run, enter ring 3!
-           thread -> registers.esi,
-           thread -> registers.ebp,
-           thread -> registers.ebx,
-           thread -> registers.edx,
-           thread -> registers.ecx,
-           thread -> registers.eax,
-           thread -> registers.eip,
-           thread -> registers.cs,
-           thread -> registers.eflags,
-           thread -> registers.esp,
-           thread -> registers.ss);
+    enter_user_mode(thread -> registers.edi,     // let it run, enter ring 3!
+                    thread -> registers.esi,
+                    thread -> registers.ebp,
+                    thread -> registers.ebx,
+                    thread -> registers.edx,
+                    thread -> registers.ecx,
+                    thread -> registers.eax,
+                    thread -> registers.eip,
+                    thread -> registers.cs,
+                    thread -> registers.eflags,
+                    thread -> registers.esp,
+                    thread -> registers.ss);
     return 0;
 }
 
