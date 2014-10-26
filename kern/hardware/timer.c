@@ -1,4 +1,4 @@
-/** @file timer.c 
+/** @file timer.c
  *
  *  @brief This file includes a timer handler and a setup funtion
  *
@@ -18,15 +18,18 @@ static void (*callback)(unsigned int);
 
 static unsigned int numTicks = 0;  // Number of total ticks
 
-int timer_handler() {
-	numTicks++;
-	if (callback != NULL)
-		(*callback)(numTicks);
-	outb(INT_CTL_PORT, INT_ACK_CURRENT);  // Send ack back
-	return 0;
+int timer_handler()
+{
+    numTicks++;
+    outb(INT_CTL_PORT, INT_ACK_CURRENT);  // Send ack back
+    if (callback != NULL)
+        (*callback)(numTicks);
+
+    return 0;
 }
 
-void setup_timer(void (*tickback)(unsigned int)) {
-	callback = tickback;
+void setup_timer(void (*tickback)(unsigned int))
+{
+    callback = tickback;
 }
 

@@ -3,9 +3,9 @@
  * @name loader.c
  *
  * Functions for the loading
- * of user programs from binary 
+ * of user programs from binary
  * files should be written in
- * this file. The function 
+ * this file. The function
  * elf_load_helper() is provided
  * for your use.
  */
@@ -20,7 +20,8 @@
 #include <elf_410.h>
 #include "simics.h"
 
-/* --- Local function prototypes --- */ 
+/* --- Local function prototypes --- */
+
 
 /**
  * Copies data from a file into a buffer.
@@ -32,20 +33,22 @@
  *
  * @return returns the number of bytes copied on succes; -1 on failure
  */
+
 int getbytes( const char *filename, int offset, int size, char *buf )
 {
 
-	int i = 0;
-	for (i = 0; i<exec2obj_userapp_count;i++) {
-		if (!strcmp(exec2obj_userapp_TOC[i].execname , filename))
-		{
-			break;
-		}
-	}
-	memcpy(buf, (void *)exec2obj_userapp_TOC[i].execbytes + offset,size);
-    
+    int i = 0;
+    for (i = 0; i < exec2obj_userapp_count; i++)
+    {
+        if (!strcmp(exec2obj_userapp_TOC[i].execname , filename))
+        {
+            break;
+        }
+    }
+    memcpy(buf, (void *)exec2obj_userapp_TOC[i].execbytes + offset, size);
 
-  return size;
+    return size;
 }
+
 
 /*@}*/

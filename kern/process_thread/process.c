@@ -1,6 +1,9 @@
+
 /** @file process.c
  *  @brief This file defines funcitons to control processes
  */
+
+/* Process controls the create/run and exit of a thread */
 
 
 
@@ -14,30 +17,45 @@
 #include "common_kern.h"
 #include "string.h"
 #include "eflags.h"
-list thread_queue;
+
 list process_queue;
 uint32_t next_pid = 0;
-uint32_t next_tid = 0 ;
+
+
+// list thread_queue;
+// uint32_t next_tid = 0 ;
 
 void allocate_page(uint32_t virtual_addr, size_t size);
-extern void set_ss(uint32_t entry_point);
+extern void set_ss(uint32_t ss,
+                   uint32_t esp,
+                   uint32_t eflags,
+                   uint32_t cs,
+                   uint32_t eip,
+                   uint32_t eax,
+                   uint32_t ecx,
+                   uint32_t edx,
+                   uint32_t ebx,
+                   uint32_t ebp,
+                   uint32_t esi,
+                   uint32_t edi);
+extern TCB *thr_create(simple_elf_t *se_hdr, int run);
 
+
+extern TCB *current_thread;
 
 int process_init()
 {
 
 
     // create a list of run queues based on threads
-    list_init(&thread_queue);
     list_init(&process_queue);
-    next_tid = 1;
     next_pid = 1;
     return 0;
 }
 
 
 
-int process_create(const char *filename)
+int process_create(const char *filename, int run)
 {
 
     /* Load the elf program using the helper function */
@@ -67,46 +85,21 @@ int process_create(const char *filename)
 
     /* Allocate memory for every area */
     allocate_page((uint32_t)se_hdr.e_datstart, se_hdr.e_datlen);
+    // MAGIC_BREAK;
     allocate_page((uint32_t)se_hdr.e_txtstart, se_hdr.e_txtlen);
     allocate_page((uint32_t)se_hdr.e_rodatstart, se_hdr.e_rodatlen);
     allocate_page((uint32_t)se_hdr.e_bssstart, se_hdr.e_bsslen);
-    allocate_page((uint32_t)0xffffffff, 4096);
-    lprintf("sdfds");
-    *(int *)0xffffffff=3;
+    allocate_page((uint32_t)0xffffc000, 4096 * 4); // possibly bugs here
+    // lprintf("sdfds");
+    // *(int *)0xffffffff=3;
 
-    MAGIC_BREAK;
+    // MAGIC_BREAK;
     // /* copy data from data field */
     getbytes(se_hdr.e_fname, se_hdr.e_datoff, se_hdr.e_datlen, (char *)se_hdr.e_datstart);
     getbytes(se_hdr.e_fname, se_hdr.e_txtoff, se_hdr.e_txtlen, (char *)se_hdr.e_txtstart);
     getbytes(se_hdr.e_fname, se_hdr.e_rodatoff, se_hdr.e_rodatlen, (char *)se_hdr.e_rodatstart);
     memset((char *)se_hdr.e_bssstart, 0,  se_hdr.e_bsslen);
 
-    // set up tcb for this program
-    TCB *tcb = (TCB *)malloc(sizeof(TCB));
-    tcb -> tid = next_tid;
-    next_tid++;
-    tcb -> state = THREAD_RUNNING;
-
-    tcb -> registers.ds = SEGSEL_USER_DS;
-    tcb -> registers.es = SEGSEL_USER_DS;
-    tcb -> registers.fs = SEGSEL_USER_DS;
-    tcb -> registers.gs = SEGSEL_USER_DS;
-
-    tcb -> registers.edi = 0;
-    tcb -> registers.esi = 0;
-    tcb -> registers.ebp = 0xffffffff;  // set up frame pointer
-    tcb -> registers.ebx = 0;
-    tcb -> registers.edx = 0;
-    tcb -> registers.ecx = 0;
-    tcb -> registers.eax = 0;
-
-    tcb -> registers.eip = se_hdr.e_entry;
-    tcb -> registers.cs = SEGSEL_USER_CS;
-    tcb -> registers.eflags = (get_eflags() | EFL_RESV1) & ~EFL_AC;
-    tcb -> registers.esp = 0xffffffff;  // set up stack pointer
-    tcb -> registers.ss = SEGSEL_USER_DS;
-
-    list_insert_last(&thread_queue, &tcb -> all_threads);
 
 
 
@@ -118,19 +111,42 @@ int process_create(const char *filename)
     pcb -> pid = next_pid;
     next_pid++;
     // list_init(pcb -> threads);
-    pcb -> thread = tcb;
+
+    TCB *thread = thr_create(&se_hdr, run); // please see thread.c
+    pcb -> thread =  thread;
 
     // pcb -> PD = memcpy(asdfasdf,fsdaf);
     // pcb -> PT = memcpy('sfasdfas'f);
     list_insert_last(&process_queue, &pcb -> all_processes);
 
-    tcb -> pcb = pcb;
 
-    set_esp0(0x5c5fec);
+    thread -> pcb = pcb;  // cycle reference :)
+
+    if (!run)  // if not run ,we return
+    {
+        MAGIC_BREAK;
+
+        return 0 ;
+    }
+    MAGIC_BREAK;
+    /* We need to do this everytime for a thread to run */
+    current_thread = thread;
+    set_esp0((uint32_t)(thread -> stack_base + thread -> stack_size));  // set up kernel stack pointer possibly bugs here
     lprintf("this is the esp, %x", (unsigned int)get_esp0());
 
-    MAGIC_BREAK;    
-    set_ss(se_hdr.e_entry);  // let it run, enter ring 3!
+
+    set_ss(thread -> registers.edi,     // let it run, enter ring 3!
+           thread -> registers.esi,
+           thread -> registers.ebp,
+           thread -> registers.ebx,
+           thread -> registers.edx,
+           thread -> registers.ecx,
+           thread -> registers.eax,
+           thread -> registers.eip,
+           thread -> registers.cs,
+           thread -> registers.eflags,
+           thread -> registers.esp,
+           thread -> registers.ss);
     return 0;
 }
 

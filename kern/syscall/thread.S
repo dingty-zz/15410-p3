@@ -1,3 +1,5 @@
+
+
 .global gettid
 
 .extern _gettid
@@ -8,7 +10,12 @@ gettid:
 
 	pushl 	$0
 
-	pusha
+	pushl 	%ebx
+	pushl 	%ecx 
+	pushl 	%edx
+	pushl	%esi
+	pushl	%edi
+	pushl	%ebp
 	pushl 	%ds
 	pushl	%es
 	pushl	%fs
@@ -35,7 +42,14 @@ gettid:
 	popl	%fs	
 	popl	%es	
 	popl	%ds
-	popa
+	
+	popl	%ebp
+	popl	%edi
+	popl	%esi
+	popl 	%edx
+	popl 	%ecx 
+	popl 	%ebx
+
 	addl 	$0x4,	%esp
 
 	iret	

@@ -2,7 +2,7 @@
 #include <malloc.h>
 #include "simics.h"
 #include "mem_internals.h"
-
+#include "string.h"
 static KF *frame_base;
 /* Initialize the whole memory system */
 KF *mm_init()
@@ -32,6 +32,7 @@ KF *mm_init()
         frame_base[i].flag = 0;
 
         frame_base[i].address = (void *)(0x0 + i * 4096);
+        // memset(frame_base[i].address, 0 , 4096);
     }
 
     lprintf("the address for frame is %p", frame_base);
@@ -93,6 +94,10 @@ void allocate_page(uint32_t virtual_addr, size_t size)
     lprintf("the offset is %x", (unsigned int)offset);
 
     uint32_t times = offset % 4096 == 0 ? offset / 4096 : offset / 4096 + 1;
+    if (times == 0)
+    {
+        return;
+    }
     int j = 0;
     for (i = 0; i < 65536; ++i)
     {
@@ -110,6 +115,7 @@ void allocate_page(uint32_t virtual_addr, size_t size)
             lprintf("page table entry: %x", (unsigned int)PT);
 
             PT[pt + j] = (uint32_t)frame_base[i].address | 0x7;
+            // memset(frame_base[i].address, 0 , 4096);
             lprintf("this is adjusted address %x  ", (unsigned int)PT[pt + j]);
             pde |= 0x7;
             lprintf("pde: %x", (unsigned int)pde);
@@ -118,8 +124,8 @@ void allocate_page(uint32_t virtual_addr, size_t size)
             // break;
             if (times == 0)
             {
-            	lprintf("finally this is pde: %x", (unsigned int)PD[pd]);
-            	// lprintf("finally this is pte: %x", (unsigned int)PD[pd]+pt);
+                lprintf("finally this is pde: %x", (unsigned int)PD[pd]);
+                // lprintf("finally this is pte: %x", (unsigned int)PD[pd]+pt);
                 break;
             }
 

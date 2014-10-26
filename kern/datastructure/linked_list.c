@@ -11,10 +11,6 @@
 #include "linked_list.h"
 #include "assert.h"
 #define NULL 0
-#define offsetof(TYPE, MEMBER) ((size_t) &((TYPE *) 0)->MEMBER)
-#define list_entry(LIST_ELEM, STRUCT, MEMBER)    \
-    ((STRUCT *) ((uint8_t *) LIST_ELEM    \
-                 - offsetof (STRUCT, MEMBER)))
 
 
 /** @brief The function to initialize the doubly linked list
@@ -130,6 +126,7 @@ void list_insert_first(list *l, node *j)
  */
 void list_insert_last(list *l, node *j)
 {
+    // lprintf("list_insert_last");
     if (l == NULL || j == NULL) return;
     /*Empty list*/
     if (l -> tail == NULL)

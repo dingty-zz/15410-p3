@@ -17,9 +17,6 @@
 #define PROCESS_RUNNING 1
 #define PROCESS_RUNNABLE 2
 
-struct PCB_t;
-struct TCB_t;
-
 
 typedef struct PCB_t
 {
@@ -32,10 +29,9 @@ typedef struct PCB_t
     // PCB_t** children;
 
     // list *threads;  // Now we only care about single threaded
-    struct TCB_t* thread;
+    struct TCB_t *thread;
     node all_processes;
-
-    pgt* page_table;
+    // PTE;
     // PDE;
 } PCB;
 
@@ -43,15 +39,17 @@ typedef struct PCB_t
 typedef struct TCB_t
 {
 
-    struct PCB_t* pcb; //process the thread belongs to
+    PCB *pcb; //process the thread belongs to
 
     int tid;
     int state;
 
-    ureg_t registers;
+    ureg_t registers;  // USER stack pointer is in here!
     // node peer_threads;  // Now we only care about single threaded
     node all_threads;
 
+    void *stack_base;           // KERNEL stack base
+    unsigned int stack_size;  // 4096 (1 page) by default
     // struct TCB* prev;
     // struct TCB* next;
     // struct TCB* wait_next;

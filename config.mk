@@ -86,7 +86,7 @@ STUDENTFILES =
 ###########################################################################
 # Object files for your thread library
 ###########################################################################
- THREAD_OBJS = malloc.o atomic_xchange.o panic.o getesp.o linked_list.o t_fork.o  mutex.o spinlock.o cond_var.o semaphore.o thread_mgmt.o rwlock.o
+THREAD_OBJS = malloc.o panic.o
 
 # Thread Group Library Support.
 #
@@ -99,7 +99,7 @@ STUDENTFILES =
 ###########################################################################
 # Object files for your syscall wrappers
 ###########################################################################
-SYSCALL_OBJS = set_status.o vanish.o print.o fork.o new_pages.o readline.o gettid.o yield.o sleep.o exec.o wait.o task_vanish.o misbehave.o readfile.o set_term_color.o set_cursor_pos.o deschedule.o make_runnable.o misbehave.o get_ticks.o getchar.o remove_pages.o swexn.o halt.o get_cursor_pos.o
+SYSCALL_OBJS = syscall.o gettid.o exec.o
 
 ###########################################################################
 # Object files for your automatic stack handling
@@ -120,10 +120,9 @@ KERNEL_OBJS = console.o kernel.o loader.o malloc_wrappers.o datastructure/linked
 exception/exception_handlers.o \
 exception/exception_handler_wrappers.o syscall/consoleIO.o handler_install.o \
 hardware/hardware_handler_wrappers.o hardware/keyboard.o hardware/timer.o \
-syscall/thread.o syscall/_thread.o syscall/_consoleIO.o set_ss.o set_cs.o \
-set_ds.o set_es.o set_esp.o memory/mem_mgmt.o \
-process_thread/process.o process_thread/scheduler.o
-
+syscall/thread.o syscall/_thread.o syscall/_consoleIO.o set_ss.o memory/mem_mgmt.o \
+process_thread/process.o process_thread/scheduler.o process_thread/thread.o \
+syscall/life_cycle.o syscall/_life_cycle.o
 
 ###########################################################################
 # WARNING: Do not put **test** programs into the REQPROGS variables.  Your
@@ -141,7 +140,7 @@ process_thread/process.o process_thread/scheduler.o
 # or init unless you are writing your own, and don't do that unless
 # you have a really good reason to do so.
 #
-410REQPROGS = idle init shell
+410REQPROGS = idle init shell exec_basic ck1 exec_basic_helper peon merchant
 
 ###########################################################################
 # Mandatory programs whose source is provided by you
