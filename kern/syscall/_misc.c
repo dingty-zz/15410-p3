@@ -5,6 +5,8 @@ void _halt(void)
 {
 	clear_console();        
     printf("Shutting down...");
+    SIM_halt();
+
     // TODO power off
     while(1);
 }

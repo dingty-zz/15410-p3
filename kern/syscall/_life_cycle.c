@@ -1,3 +1,11 @@
+/** @file exception_handlers.c
+ *
+ *  @brief This file includes timer handler and keyboard handler wrappers.
+ *
+ *  @author Xianqi Zeng (xianqiz)
+ *  @author Tianyuan Ding (tding)
+ *  @bug No known bugs
+ */
 #include <syscall.h>
 #include "control_block.h"
 #include "linked_list.h"
@@ -31,7 +39,13 @@ extern TCB *thr_create(simple_elf_t *se_hdr, int run);
 
 extern TCB *current_thread;
 
-
+/** @brief Determine if the given queue is empty
+ *
+ *  If top == bottom, we know there are nothing in the queue.
+ *
+ *  @param q The pointer to the queue
+ *  @return int 1 means not empty and 0 otherwise
+ **/
 /* two more things to do: 1. copy page table 2. iret*/
 int _fork(void)
 {

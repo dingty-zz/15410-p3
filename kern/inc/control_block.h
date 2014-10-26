@@ -1,5 +1,12 @@
 /** @file control_block.h
- *  @brief This file defines the type for TCB and PCB.
+ *
+ *  @brief This file includes paging handling routines
+*          1. General design, PD, PT descrptions
+           2. How free list works
+ *
+ *  @author Xianqi Zeng (xianqiz)
+ *  @author Tianyuan Ding (tding)
+ *  @bug No known bugs
  */
 
 #ifndef _CONTROL_B_H

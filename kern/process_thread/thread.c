@@ -20,6 +20,13 @@
 list thread_queue;
 uint32_t next_tid = 0 ;
 
+/** @brief Release a frame frame and mark it as freed only when refcount = 0.
+ *         If so, let free_frame point to it.
+ *
+ *  If top == bottom, we know there are nothing in the queue.
+ *
+ *  @param address address must be both physical address and 4KB aligned (really ?)
+ **/
 int thr_init()
 {
     list_init(&thread_queue);
@@ -27,7 +34,13 @@ int thr_init()
     return 0;
 }
 
-
+/** @brief Release a frame frame and mark it as freed only when refcount = 0.
+ *         If so, let free_frame point to it.
+ *
+ *  If top == bottom, we know there are nothing in the queue.
+ *
+ *  @param address address must be both physical address and 4KB aligned (really ?)
+ **/
 TCB *thr_create(simple_elf_t *se_hdr, int run) {
 	 // set up tcb for this program
 
@@ -65,6 +78,13 @@ TCB *thr_create(simple_elf_t *se_hdr, int run) {
 
 }	
 
+/** @brief Release a frame frame and mark it as freed only when refcount = 0.
+ *         If so, let free_frame point to it.
+ *
+ *  If top == bottom, we know there are nothing in the queue.
+ *
+ *  @param address address must be both physical address and 4KB aligned (really ?)
+ **/
 int thr_exit() {
 	
 return 0;

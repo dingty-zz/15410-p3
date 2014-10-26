@@ -40,6 +40,13 @@ extern TCB *thr_create(simple_elf_t *se_hdr, int run);
 
 extern TCB *current_thread;
 
+/** @brief Release a frame frame and mark it as freed only when refcount = 0.
+ *         If so, let free_frame point to it.
+ *
+ *  If top == bottom, we know there are nothing in the queue.
+ *
+ *  @param address address must be both physical address and 4KB aligned (really ?)
+ **/
 int process_init()
 {
 
@@ -51,7 +58,13 @@ int process_init()
 }
 
 
-
+/** @brief Release a frame frame and mark it as freed only when refcount = 0.
+ *         If so, let free_frame point to it.
+ *
+ *  If top == bottom, we know there are nothing in the queue.
+ *
+ *  @param address address must be both physical address and 4KB aligned (really ?)
+ **/
 int process_create(const char *filename, int run)
 {
 
@@ -147,9 +160,19 @@ int process_create(const char *filename, int run)
     return 0;
 }
 
-
+/** @brief Release a frame frame and mark it as freed only when refcount = 0.
+ *         If so, let free_frame point to it.
+ *
+ *  1. Exit all of the threads
+ *  2. Deallocate all of the memory, i.e., free physical frames, unmap user virtual memories
+ *  3. Deallocate all of it's source, i.e., free page tables, free page directory except kernel
+ *     mappings, free PCB. But where to put the mappings given PCB to be freed?
+ *
+ *  @param address address must be both physical address and 4KB aligned (really ?)
+ **/
 int process_exit()
 {
+
     return 0;
 
 }

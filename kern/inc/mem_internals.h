@@ -35,10 +35,16 @@ typedef struct PD
 // a node that keeps track of allocated physical frames
 typedef struct kernel_frame
 {
-	void *address;
-	int flag;
+	unsigned int refcount;	 // copy on write usage, will be explained later
+	struct kernel_frame *next;
 } KF;
 
+// typedef struct virtual_addr_t
+// {
+// 	uint32_t PDO;
+// 	uint32_t PTO;
+// 	uint32_t
 
+// }virtual_addr;
 
 #endif /* _MEM_INTERNALS_H */

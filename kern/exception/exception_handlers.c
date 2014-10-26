@@ -1,4 +1,12 @@
-
+/** @file exception_handlers.c
+ *
+ *  @brief This file includes timer handler and keyboard handler wrappers.
+ *
+ *  @author Xianqi Zeng (xianqiz)
+ *  @author Tianyuan Ding (tding)
+ *  @bug No known bugs
+ */
+ 
 #include "simics.h"
 /* Divide error exception handler */
 void _DE() {

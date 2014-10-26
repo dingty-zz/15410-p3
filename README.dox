@@ -2,9 +2,18 @@
 
 @mainpage 15-410 Project 3
 
-@author Name1 (id1)
-@author Name2 (id2)
+@author Xianqi Zeng (xianqiz)
+@author Tianyuan Ding (tding)
+@bug 
 
-Same drill as last time.
+1. Memory Management
+
+2. Control Blocks
+
+3. Process / Thread Handling
+
+4. Scheduler
+
+5. 
 
 */
