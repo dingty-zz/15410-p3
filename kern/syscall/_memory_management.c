@@ -3,6 +3,8 @@
 
 int new_pages(void * addr, int len)
 {
+	/* If either the address is invalid or len is not aligned,
+	 * return a negative number */ 
 	if (addr == NULL)
 	{
 		return -1;

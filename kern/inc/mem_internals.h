@@ -1,7 +1,7 @@
 #ifndef _MEM_INTERNALS_H
 #define _MEM_INTERNALS_H
 #include <stdint.h>
-#include "linked_list.h"
+
 #define PT_SIZE 1024
 #define PD_SIZE 1024
 

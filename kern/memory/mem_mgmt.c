@@ -149,9 +149,31 @@ void allocate_page(uint32_t virtual_addr, size_t size)
 // }
 
 /* The reverse for allocate, free the memory out of the memory system */
-void freeff(uint32_t *addr)
+void free_page(uint32_t virtual_addr, size_t size)
 {
+    // int i ;
+    // lprintf("the address is %x", (unsigned int)virtual_addr);
+
+    // uint32_t pd = virtual_addr >> 22;
+    // lprintf("the pd is %x", (unsigned int)pd);
+    // uint32_t pt = (virtual_addr & 0x3ff000) >> 12;
+    // lprintf("the pt is %x", (unsigned int)pt);
+
+    // uint32_t offset = (virtual_addr & 0xfff) + (uint32_t)size;
+    // lprintf("the offset is %x", (unsigned int)offset);
+
+    // uint32_t times = offset % 4096 == 0 ? offset / 4096 : offset / 4096 + 1;
+
+    // if (times ==0)
+    // {
+    //     return;
+    // }
+}
+
+void acquire_free_frame() {
 
 }
 
-
+void release_free_frame() {
+    
+}
