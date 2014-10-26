@@ -1,25 +1,14 @@
-*.o
-*.a
-*.dep
-*.swp
 410user/
 410kern/
-# 410user/exec2obj
-# 410user/progs/idle
-# 410user/progs/init
-# 410user/progs/shell
+temp/
+*.a
+*.o
+*.*~
+.*
+!.gitignore
 bootfd.img
-bootcd.iso
-kernel
+*.dep
+g.sh
 kernel.log
 kernel.strip
-temp/
-.md5s
-user/progs/*
-!user/progs/*.c
-*.ignore
-doc/
-doxygen.warn
-.*
-g.sh
-sftp-config.json
+*.json

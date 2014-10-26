@@ -18,15 +18,13 @@
 #include "string.h"
 #include "eflags.h"
 
-list process_queue;
-uint32_t next_pid = 0;
-
-
 // list thread_queue;
 // uint32_t next_tid = 0 ;
 
+uint32_t next_pid=0;
+
 void allocate_page(uint32_t virtual_addr, size_t size);
-extern void set_ss(uint32_t ss,
+extern void set_ss(uint32_t ss, 
                    uint32_t esp,
                    uint32_t eflags,
                    uint32_t cs,
@@ -81,7 +79,10 @@ int process_create(const char *filename, int run)
 
     lprintf("e_bssstart: %lx", se_hdr.e_bssstart);
     lprintf("e_bsslen: %lu", se_hdr.e_bsslen);
-
+    PCB *pcb = (PCB *)malloc(sizeof(PCB));
+    //create a clean page directory
+    pcb -> pd_ptr = smemalign(PD_SIZE, sizeof(PD));
+    memset(pcb -> pd_ptr,0,PT_SIZE*sizeof(PT*));
 
     /* Allocate memory for every area */
     allocate_page((uint32_t)se_hdr.e_datstart, se_hdr.e_datlen);
@@ -90,6 +91,7 @@ int process_create(const char *filename, int run)
     allocate_page((uint32_t)se_hdr.e_rodatstart, se_hdr.e_rodatlen);
     allocate_page((uint32_t)se_hdr.e_bssstart, se_hdr.e_bsslen);
     allocate_page((uint32_t)0xffffc000, 4096 * 4); // possibly bugs here
+
     // lprintf("sdfds");
     // *(int *)0xffffffff=3;
 
@@ -100,27 +102,24 @@ int process_create(const char *filename, int run)
     getbytes(se_hdr.e_fname, se_hdr.e_rodatoff, se_hdr.e_rodatlen, (char *)se_hdr.e_rodatstart);
     memset((char *)se_hdr.e_bssstart, 0,  se_hdr.e_bsslen);
 
-
-
-
     // set up pcb for this program
-
-    PCB *pcb = (PCB *)malloc(sizeof(PCB));
+    
     pcb -> state = PROCESS_RUNNING;
     pcb -> ppid = 0; // who cares this??
     pcb -> pid = next_pid;
     next_pid++;
-    // list_init(pcb -> threads);
+    
 
+    // list_init(pcb -> threads);
     TCB *thread = thr_create(&se_hdr, run); // please see thread.c
     pcb -> thread =  thread;
 
-    // pcb -> PD = memcpy(asdfasdf,fsdaf);
-    // pcb -> PT = memcpy('sfasdfas'f);
+
     list_insert_last(&process_queue, &pcb -> all_processes);
 
 
     thread -> pcb = pcb;  // cycle reference :)
+
 
     if (!run)  // if not run ,we return
     {
@@ -133,7 +132,6 @@ int process_create(const char *filename, int run)
     current_thread = thread;
     set_esp0((uint32_t)(thread -> stack_base + thread -> stack_size));  // set up kernel stack pointer possibly bugs here
     lprintf("this is the esp, %x", (unsigned int)get_esp0());
-
 
     set_ss(thread -> registers.edi,     // let it run, enter ring 3!
            thread -> registers.esi,

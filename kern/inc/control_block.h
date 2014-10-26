@@ -4,8 +4,13 @@
 
 #ifndef _CONTROL_B_H
 #define _CONTROL_B_H
+
 #include "ureg.h"
 #include "linked_list.h"
+#include "vm_type.h"
+#include <elf/elf_410.h>
+
+
 
 #define THREAD_EXIT -1
 #define THREAD_BLOCKED 0
@@ -18,25 +23,27 @@
 #define PROCESS_RUNNABLE 2
 
 
-typedef struct PCB_t
+
+struct PCB_t
 {
     int special;  // if this process is idle, then never delete out of queue
     int ppid;
     int pid;
     int state; //running, ready, block
 
-    // PCB_t* parent;
+    // +++++++++++_t* parent;
     // PCB_t** children;
+    // list *threads;  
 
-    // list *threads;  // Now we only care about single threaded
+    // Now we only care about single threaded
     struct TCB_t *thread;
     node all_processes;
-    // PTE;
-    // PDE;
-} PCB;
+    PD* pd_ptr;
+};
+typedef struct PCB_t PCB;
 
 
-typedef struct TCB_t
+struct TCB_t
 {
 
     PCB *pcb; //process the thread belongs to
@@ -54,9 +61,15 @@ typedef struct TCB_t
     // struct TCB* next;
     // struct TCB* wait_next;
     // struct TCB* wait_prev;
-} TCB;
+};
+
+typedef struct TCB_t TCB;
 
 
+uint32_t next_tid;
+uint32_t next_pid;
+list thread_queue;
+list process_queue;
 
 
 #endif /* _CONTROL_B_H */

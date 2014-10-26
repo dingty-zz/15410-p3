@@ -140,6 +140,7 @@ syscall/life_cycle.o syscall/_life_cycle.o
 # or init unless you are writing your own, and don't do that unless
 # you have a really good reason to do so.
 #
+
 410REQPROGS = idle init shell exec_basic ck1 exec_basic_helper peon merchant
 
 ###########################################################################

@@ -17,6 +17,7 @@
     ((STRUCT *) ((uint8_t *) LIST_ELEM    \
                  - offsetoff (STRUCT, MEMBER)))
 
+
 extern void set_ss(uint32_t ss,
                    uint32_t esp,
                    uint32_t eflags,
@@ -38,7 +39,6 @@ void schedule();
 
 void tick(unsigned int numTicks)
 {
-
     if (numTicks % 100 == 0)
     {
         ++seconds;

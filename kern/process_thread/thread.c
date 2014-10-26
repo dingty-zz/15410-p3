@@ -9,7 +9,6 @@
 #include "string.h"
 #include "eflags.h"
 
-
 list thread_queue;
 uint32_t next_tid = 0 ;
 
@@ -20,9 +19,10 @@ int thr_init()
     return 0;
 }
 
-TCB *thr_create(simple_elf_t *se_hdr, int run)
-{
-    // set up tcb for this program
+
+TCB *thr_create(simple_elf_t *se_hdr, int run) {
+	 // set up tcb for this program
+
     TCB *tcb = (TCB *)malloc(sizeof(TCB));
     tcb -> tid = next_tid;
     next_tid++;
@@ -54,12 +54,10 @@ TCB *thr_create(simple_elf_t *se_hdr, int run)
         list_insert_last(&thread_queue, &tcb -> all_threads);
     return tcb;
 
+
+}	
+
+int thr_exit() {
+	
+return 0;
 }
-
-// int thr_join() {
-
-// }
-
-// int thr_exit() {
-
-// }

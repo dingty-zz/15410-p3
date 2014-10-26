@@ -4,41 +4,34 @@
 
 #ifndef _VM_H
 #define _VM_H
-#define PGT_SIZE 512
+#define PT_SIZE 1024
+#define PD_SIZE 1024
 
 //allocated_frames
-typedef struct alloc_frames_node
-{
-    unsigned long addr;
-    struct alloc_frames *next;
-    struct alloc_frames *prev;
-} frame_node;
+// typedef struct alloc_frames_node
+// {
+//     unsigned long addr;
+//     struct alloc_frames *next;
+//     struct alloc_frames *prev;
+// } frame_node;
 
-typedef struct alloc_frames_head
-{
-    struct alloc)frames *head;
-    int num;
-} alloc_frames;
+// typedef struct alloc_frames_head
+// {
+//     struct alloc)frames *head;
+//     int num;
+// } alloc_frames;
 
-typedef struct page_table_entry
+//Page table is essentially an array of physical addresses;
+typedef struct PT
 {
-    int virtual_addr;
-    int phys_addr;
-    struct page_table_entry* left;
-    struct page_table_entry* node;
-} pgt_entry;
+	void* pt[PT_SIZE];
+} PT;
 
-//binary serch tree to implement the mapping
-typedef struct page_table
+//Page directory is an array of page tables;
+typedef struct PD
 {
-    pgt_entry* head;
-} pgt;
+	PT* pd[PD_SIZE];
+} PD;
 
-typedef struct page_directory
-{
-    pgt *[4] pgt_array;
-} pgd;
-
-pgd glb_PD;
 
 #endif /* _VM_H */

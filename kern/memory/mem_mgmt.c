@@ -9,54 +9,46 @@ KF *mm_init()
 {
 
     // allocate 4k memory for kernel page directory
-    uint32_t *PD = (uint32_t *)smemalign(4096, 1024 * 4); // should mark as global
-    set_cr3((uint32_t)PD);
-    lprintf("the pd uint32_t is %u", (unsigned int)PD);
-    lprintf("the pd  is %p", PD);
+    PD* kern_PD = (PD *)smemalign(4096, 1024 * 4); // should mark as global
+    PT** kern_pd = kern_PD -> pd;
+    set_cr3((uint32_t)kern_pd);
+    lprintf("the pd uint32_t is %u", (unsigned int)kern_pd);
+    lprintf("the pd  is %p", kern_pd);
     lprintf("cr3 is :%u", ((unsigned int)get_cr3()));
-    // allocate PT
-    int i = 0;
-    for (i = 0; i < 1024; ++i)
+    //initialize the first four entries of the kernel pd    
+    int i;
+    for (i = 0; i < 4; ++i)
     {
-        void *PTE = smemalign(4096, 1024 * 4);
-
-        PD[i] = (uint32_t)PTE;
+        kern_pd[i] = (PT*)smemalign(4096, 1024 * 4);
         // lprintf("the page table is in %p", PTE);
         // lprintf("check we get the correct thign: %x", (unsigned int)*(PD + i));
     }
-
+    //initizlie the free frame array
     frame_base = (KF *)smemalign(4096, 8 * 65536); // bunch of pointers that points to pages
-
     for (i = 0; i < 65536; ++i)
     {
         frame_base[i].flag = 0;
-
         frame_base[i].address = (void *)(0x0 + i * 4096);
         // memset(frame_base[i].address, 0 , 4096);
     }
 
     lprintf("the address for frame is %p", frame_base);
 
-    // maping kernel address spaces
-
-    // map first 4 entries in page directory
+    // map first 4 entries in page directory, for kernel address space
     int j;
     for ( i = 0; i < 4; ++i)
     {
-
-        uint32_t PT = PD[i];
-        PD[i] |= 0x107;
-        lprintf("the pt is %x", (unsigned int)PT);
+        void** current_pt = kern_pd[i]->pt;
+        kern_pd[i] = (PT *) ((uint32_t)(kern_pd[i]) | 0x107);
+        lprintf("the pt is %x", (unsigned int)current_pt);
         for (j = 0; j < 1024; ++j)
         {
             uint32_t k = (uint32_t)(frame_base[1024 * i + j].address);
             frame_base[1024 * i + j].flag = 1;
             // lprintf("the page address is %x", (unsigned int)k);
-            *((uint32_t *)(PT) + j) =  k | 0x103;
+            *((uint32_t *)(current_pt) + j) =  k | 0x103;
         }
     }
-
-
 
     // enable paging
     lprintf("the cr0 %u", (unsigned int)get_cr0);
@@ -94,7 +86,8 @@ void allocate_page(uint32_t virtual_addr, size_t size)
     lprintf("the offset is %x", (unsigned int)offset);
 
     uint32_t times = offset % 4096 == 0 ? offset / 4096 : offset / 4096 + 1;
-    if (times == 0)
+
+    if (times ==0)
     {
         return;
     }

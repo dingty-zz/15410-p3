@@ -97,6 +97,7 @@ int kernel_main(mbinfo_t *mbinfo, int argc, char **argv, char **envp)
     // set_eflags((get_eflags() | EFL_RESV1) & ~EFL_AC);
 
 
+
     enable_interrupts();
 
 
@@ -120,6 +121,9 @@ int kernel_main(mbinfo_t *mbinfo, int argc, char **argv, char **envp)
     // process_create("ck1");
 
 
+    // process_create("exec_basic", 1);   // we run this thread
+    // process_create("init");
+    // process_create("ck1");
 
 
 
@@ -127,6 +131,8 @@ int kernel_main(mbinfo_t *mbinfo, int argc, char **argv, char **envp)
 
 
 
+
+   
 
     lprintf("End of the kernel main in line 108.");
 
