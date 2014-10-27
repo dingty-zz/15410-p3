@@ -17,6 +17,9 @@
 #include "string.h"
 static KF *frame_base;      // always fixed
 static KF *free_frame;      // points to the first free frame where refcount = 0
+void init_free_frame();
+uint32_t acquire_free_frame();
+void release_free_frame(uint32_t address);
 
 
 /** @brief Initialize the whole memory system, immediately
@@ -39,14 +42,17 @@ KF *mm_init()
     lprintf("the pd  is %p", kern_pd);
     lprintf("cr3 is :%u", ((unsigned int)get_cr3()));
 
-    //initialize the first four entries of the kernel pd, note that the first 4 pts (kernel pts)
-    // are fixed at the beginning, it is then copied to the pts for the first running program.
+    //initialize the first four entries of the kernel pd, note that 
+    // the first 4 pts (kernel pts)
+    // are fixed at the beginning, it is then copied to the pts 
+    //for the first running program.
     int i;
     for (i = 0; i < 4; ++i)
     {
         kern_pd[i] = (PT *)smemalign(4096, 1024 * 4);
         // lprintf("the page table is in %p", PTE);
-        // lprintf("check we get the correct thign: %x", (unsigned int)*(PD + i));
+        // lprintf("check we get the correct thign: %x", 
+        //  (unsigned int)*(PD + i));
     }
 
 
@@ -91,7 +97,8 @@ uint32_t virtual2physical(uint32_t virtual_addr)
 
 /** @brief Map this virtual address to a physical pages, for kernel use
  *
- *  Note for very COMPLEX cases, when the size is excessively LARGE, we have to handle the
+ *  Note for very COMPLEX cases, when the size is excessively 
+ LARGE, we have to handle the
  *  case when allocation accross multiple page tables!!!!!!!!!!!!!!!!!!!!!!!
  *   Also, if the address is already mapped, we just return
  *
@@ -120,7 +127,8 @@ void allocate_page(uint32_t virtual_addr, size_t size)
 
         uint32_t free_frame_addr = acquire_free_frame();
 
-        uint32_t *PD = (uint32_t *)get_cr3();  // Now cr3 may points to a process's PD
+// Now cr3 may points to a process's PD
+        uint32_t *PD = (uint32_t *)get_cr3();  
         uint32_t pde = PD[pd];
         lprintf("page table entry: %x", (unsigned int)pde);
 
@@ -135,15 +143,19 @@ void allocate_page(uint32_t virtual_addr, size_t size)
         PD[pd] = pde;
 
         /* ZFOD the virtual address but not the physical address */
-        memset(virtual_addr + 4096 * i, 0, 4096);
+        lprintf("The freed address is %x",(unsigned int)(pd << 22 | (pt + i)<< 12));
+        memset((void *)(pd << 22 | (pt + i)<< 12), 0, 4096);
         // break;
     }
+
 }
 
-/** @brief The reverse for allocate, free the memory out of the memory system, for kernel use
+/** @brief The reverse for allocate, free the memory out of the 
+memory system, for kernel use
  *
  *         Not only decrement the refcount, but also clear the page table entry
- *  Note for very COMPLEX cases, when the size is excessively LARGE, we have to handle the
+ *  Note for very COMPLEX cases, when the size is excessively 
+ LARGE, we have to handle the
  *  case when allocation accross multiple page tables!!!!!!!!!!!!!!!!!!!!!!!
  *    If the address is not mapped, we return -1
  *  @param q The pointer to the queue
@@ -168,7 +180,8 @@ void free_page(uint32_t virtual_addr, size_t size)
 
     for (i = 0; i < times; ++i)
     {
-        uint32_t *PD = (uint32_t *)get_cr3();  // Now cr3 may points to a process's PD
+        // Now cr3 may points to a process's PD
+        uint32_t *PD = (uint32_t *)get_cr3();  
         uint32_t pde = PD[pd];
         lprintf("page table entry: %x", (unsigned int)pde);
 
@@ -194,8 +207,10 @@ void free_page(uint32_t virtual_addr, size_t size)
  **/
 void init_free_frame()
 {
+    int i ;
     //initizlie the free frame array
-    frame_base = (KF *)smemalign(4096, 8 * 65536); // bunch of pointers that points to pages
+     // bunch of pointers that points to pages
+    frame_base = (KF *)smemalign(4096, 8 * 65536);
     for (i = 0; i < 65536; ++i)
     {
         frame_base[i].refcount = 0;
@@ -204,7 +219,8 @@ void init_free_frame()
     free_frame = frame_base;
 }
 
-/** @brief Returns a frame frame from the current free list and set the next free list
+/** @brief Returns a frame frame from the current free list and 
+set the next free list
  *         to be the struct where refcount = 0;
  *
  *  If top == bottom, we know there are nothing in the queue.
@@ -225,7 +241,8 @@ uint32_t acquire_free_frame()
         free_frame = free_frame -> next;
     }
     return physical_frame_addr;
-    // Note that it's possible that there is no free physical page, so in this case we
+    // Note that it's possible that there is no free physical 
+    // page, so in this case we
     // need to handle this situation
 }
 
@@ -234,17 +251,28 @@ uint32_t acquire_free_frame()
  *
  *  If top == bottom, we know there are nothing in the queue.
  *
- *  @param address address must be both physical address and 4KB aligned (really ?)
+ *  @param address address must be both physical
+  address and 4KB aligned (really ?)
  **/
 void release_free_frame(uint32_t address)
 {
     uint32_t index = address / 4096;
     frame_base[index].refcount--;
     // If there is no reference count, let free_frame point to it
-    if (frame_base[index].refcount = 0)
+    if (frame_base[index].refcount == 0)
     {
-        free_frame = frame_base[index];
+        *free_frame = frame_base[index];
     }
+}
+
+void copy_page_directory(PD *pd) {
+    
+
+}
+
+void copy_page_table(PT *pt) {
+    
+
 }
 
 void destroy_page_directory(PD *pd) {
@@ -252,7 +280,7 @@ void destroy_page_directory(PD *pd) {
 
 }
 
-void destroy_page_table(PD *pt) {
+void destroy_page_table(PT *pt) {
 
     
 }
@@ -265,7 +293,8 @@ void destroy_page_table(PD *pt) {
  *
  *  If top == bottom, we know there are nothing in the queue.
  *
- *  @param address address must be both physical address and 4KB aligned (really ?)
+ *  @param address address must be both 
+ physical address and 4KB aligned (really ?)
  **/
 int _new_pages(void * addr, int len)
 {
@@ -273,14 +302,15 @@ int _new_pages(void * addr, int len)
      * return a negative number */ 
     if (addr == NULL ||                     // addr is null
         (uint32_t)addr < 0x01000000 ||      // addr is in kernel memory
-       ((uint32_t)addr) & 0xfff != 0 ||   // addr is not aligned
+       (((uint32_t)addr) & 0xfff) != 0 ||   // addr is not aligned
         len < 0)                         // len is negative
         return -1;
     
     return 0;
 }
 
-/** @brief Release a frame frame and mark it as freed only when refcount = 0.
+/** @brief Release a frame frame and mark it as 
+freed only when refcount = 0.
  *         If so, let free_frame point to it.
  *
  *  If top == bottom, we know there are nothing in the queue.

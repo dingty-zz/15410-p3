@@ -18,6 +18,7 @@
 #include "common_kern.h"
 #include "string.h"
 #include "eflags.h"
+ #include <x86/asm.h> 
 // #include "linked_list.c"
 
 #define offsetoff(TYPE, MEMBER) ((size_t) &((TYPE *) 0)->MEMBER)

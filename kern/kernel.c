@@ -62,23 +62,6 @@ int kernel_main(mbinfo_t *mbinfo, int argc, char **argv, char **envp)
     thr_init();
 
 
-    //     /* --- Simplified ELF header --- */
-    // typedef struct simple_elf {
-    //   const char *  e_fname;       /* filename of binary */
-    //   unsigned long e_entry;       /* entry point virtual address */
-    //   unsigned long e_txtoff;      /* offset of text segment in file */
-    //   unsigned long e_txtlen;      /* length of text segment in bytes */
-    //   unsigned long e_txtstart;    /* start of text segment virtual address */
-    //   unsigned long e_datoff;      /* offset of data segment in file */
-    //   unsigned long e_datlen;      /* length of data segment in bytes */
-    //   unsigned long e_datstart;    /* start of data segment in virtual memory */
-    //   unsigned long e_rodatoff;    /* offset of rodata segment in file */
-    //   unsigned long e_rodatlen;    /* length of rodata segment in bytes */
-    //   unsigned long e_rodatstart;  /* start of rodata segment in virtual memory*/
-    //   unsigned long e_bsslen;      /* length of bss  segment in bytes */
-    //   unsigned long e_bssstart;    /* start of bss  segment in virtual memory */
-    // } simple_elf_t;
-
 
 
 

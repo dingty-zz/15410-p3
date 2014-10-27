@@ -277,13 +277,3 @@ int wait(int *status_ptr)
 
 }
 
-
-void task_vanish(int status)
-{
-
-    status ^= status;
-    status /= status;
-    while (1)
-        continue;
-
-}

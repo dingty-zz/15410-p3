@@ -102,9 +102,9 @@ int process_create(const char *filename, int run)
     allocate_page((uint32_t)se_hdr.e_txtstart, se_hdr.e_txtlen);
     allocate_page((uint32_t)se_hdr.e_rodatstart, se_hdr.e_rodatlen);
     allocate_page((uint32_t)se_hdr.e_bssstart, se_hdr.e_bsslen);
-    allocate_page((uint32_t)0xffffc000, 4096 * 4); // possibly bugs here
+    allocate_page((uint32_t)0xfffff000, 4096); // possibly bugs here
 
-    // lprintf("sdfds");
+    lprintf("sdfds");
     // *(int *)0xffffffff=3;
 
     // MAGIC_BREAK;
@@ -170,6 +170,7 @@ int process_create(const char *filename, int run)
  *
  *  @param address address must be both physical address and 4KB aligned (really ?)
  **/
+ // Possibly be vanish??
 int process_exit()
 {
 
