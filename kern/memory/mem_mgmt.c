@@ -20,8 +20,8 @@ static KF *free_frame;      // points to the first free frame where refcount = 0
 void init_free_frame();
 uint32_t acquire_free_frame();
 void release_free_frame(uint32_t address);
-
-
+int virtual_map_physical(PD *PD, uint32_t pd_index, uint32_t pt_index);
+int virtual_unmap_physical(PD *PD, uint32_t pd_index, uint32_t pt_index);
 /** @brief Initialize the whole memory system, immediately
  *         called when the kernel enters to enable paging
  *
@@ -42,16 +42,16 @@ KF *mm_init()
     lprintf("the pd  is %p", kern_pd);
     lprintf("cr3 is :%u", ((unsigned int)get_cr3()));
 
-    //initialize the first four entries of the kernel pd, note that 
+    //initialize the first four entries of the kernel pd, note that
     // the first 4 pts (kernel pts)
-    // are fixed at the beginning, it is then copied to the pts 
+    // are fixed at the beginning, it is then copied to the pts
     //for the first running program.
     int i;
     for (i = 0; i < 4; ++i)
     {
         kern_pd[i] = (PT *)smemalign(4096, 1024 * 4);
         // lprintf("the page table is in %p", PTE);
-        // lprintf("check we get the correct thign: %x", 
+        // lprintf("check we get the correct thign: %x",
         //  (unsigned int)*(PD + i));
     }
 
@@ -81,23 +81,84 @@ KF *mm_init()
     return frame_base;
 }
 
-void kerelmap()
+/* Map an unmapped virtual memory to physical memory */
+int virtual_map_physical(PD *PD, uint32_t pd_index, uint32_t pt_index)
 {
+    lprintf("In virtual2physical:");
 
-}
+    // Now cr3 may points to a process's PD
+    uint32_t pde = PD[pd_index];
 
+    if (pde != 0)
+    {
+        uint32_t *PT = (uint32_t *)(pde & 0xfffffff8);
+        lprintf("page table address: %x", (unsigned int)PT);
 
-/* Map a virtual memory to physical memory */
-uint32_t virtual2physical(uint32_t virtual_addr)
-{
+        uint32_t pte = PT[pt_index];
+        if (pte == 0)
+        {
+            uint32_t free_frame_addr = acquire_free_frame();
+            PT[pt_index] = free_frame_addr | 0x7;
+        }
+        else return -1;     // Already mapped
 
+    }
+    else
+    {
+        uint32_t free_frame_addr = acquire_free_frame();
+        uint32_t *PT = (PT *)smemalign(4096, 1024 * 4);
+        lprintf("page table addr: %x", (unsigned int)PT);
+
+        PT[pt_index] = free_frame_addr | 0x7;
+        lprintf("this is physical address %x  ", (unsigned int)PT[pt_index]);
+
+        PD[pd_index] = ((uint32_t)PT) | 0x7;
+    }
+
+    lprintf("The freed address is %x", (unsigned int)(pd_index << 22 | pt_index << 12));
+    /* ZFOD the virtual address but not the physical address */
+    memset((void *)(pd_index << 22 | (pt_index) << 12), 0, 4096);
+    lprintf("Return virtual2physical");
     return 0;
 }
 
+/* Unmap an mapped virtual memory to physical memory */
+int virtual_unmap_physical(PD *PD, uint32_t pd_index, uint32_t pt_index)
+{
+    lprintf("In virtual_erase_physical:");
+
+    // Now cr3 may points to a process's PD
+    uint32_t pde = PD[pd_index];
+
+    if (pde == 0)
+    {
+        return -1;        // Ok, this virtual memory is already unmapped
+    }
+    else
+    {
+        uint32_t *PT = (uint32_t *)(pde & 0xfffffff8);
+        lprintf("page table address: %x", (unsigned int)PT);
+
+        uint32_t pte = PT[pt_index];
+        lprintf("page table entry: %x", (unsigned int)pde);
+
+        if (pte == 0)
+        {
+            return -1;    // Ok, this virtual memory is already unmapped
+        }
+        else
+        {
+            uint32_t physical_addr = (uint32_t *)(pte & 0xfffffff8);
+            release_free_frame(physical_addr);
+            PT[pt_index] = 0;       // Unmap this page
+        }
+    }
+    return 0;
+}
 
 /** @brief Map this virtual address to a physical pages, for kernel use
  *
- *  Note for very COMPLEX cases, when the size is excessively 
+ *  Note for very COMPLEX cases, when the size is excessively
  LARGE, we have to handle the
  *  case when allocation accross multiple page tables!!!!!!!!!!!!!!!!!!!!!!!
  *   Also, if the address is already mapped, we just return
@@ -105,98 +166,113 @@ uint32_t virtual2physical(uint32_t virtual_addr)
  *  @param q The pointer to the queue
  *  @return 0 on success, -1 error
  **/
-void allocate_page(uint32_t virtual_addr, size_t size)
+void allocate_pages(PD *pd, uint32_t virtual_addr, size_t size)
 {
 
-    int i ;
+    int i = 0;
     lprintf("the address is %x", (unsigned int)virtual_addr);
 
-    uint32_t pd = virtual_addr >> 22;
-    lprintf("the pd is %x", (unsigned int)pd);
-    uint32_t pt = (virtual_addr & 0x3ff000) >> 12;
-    lprintf("the pt is %x", (unsigned int)pt);
+    uint32_t pd_index = virtual_addr >> 22;
+    lprintf("the pd is %x", (unsigned int)pd_index);
+    uint32_t pt_index = (virtual_addr & 0x3ff000) >> 12;
+    lprintf("the pt is %x", (unsigned int)pt_index);
 
-    uint32_t offset = (virtual_addr & 0xfff) + (uint32_t)size;
-    lprintf("the offset is %x", (unsigned int)offset);
+    uint32_t total_size = (virtual_addr & 0xfff) + (uint32_t)size;
+    lprintf("the total_size is %x", (unsigned int)total_size);
 
-    uint32_t times = offset % 4096 == 0 ? offset / 4096 : offset / 4096 + 1;
+    uint32_t times = total_size % 4096 == 0 ? total_size / 4096 : total_size / 4096 + 1;
     lprintf("times to allocation a page: %u", (unsigned int)times);
 
     for (i = 0; i < times; ++i)
     {
-
-        uint32_t free_frame_addr = acquire_free_frame();
-
-// Now cr3 may points to a process's PD
-        uint32_t *PD = (uint32_t *)get_cr3();  
-        uint32_t pde = PD[pd];
-        lprintf("page table entry: %x", (unsigned int)pde);
-
-        uint32_t *PT = (uint32_t *)(pde & 0xfffffff8);
-        lprintf("page table entry: %x", (unsigned int)PT);
-
-        PT[pt + i] = free_frame_addr | 0x7;
-        // memset(frame_base[i].address, 0 , 4096);
-        lprintf("this is adjusted address %x  ", (unsigned int)PT[pt + i]);
-        pde |= 0x7;
-        lprintf("pde: %x", (unsigned int)pde);
-        PD[pd] = pde;
-
-        /* ZFOD the virtual address but not the physical address */
-        lprintf("The freed address is %x",(unsigned int)(pd << 22 | (pt + i)<< 12));
-        memset((void *)(pd << 22 | (pt + i)<< 12), 0, 4096);
-        // break;
+        virtual_map_physical(pd, pd_index, pt_index + i);
     }
+    lprintf("Finished allocation pages.");
 
 }
 
-/** @brief The reverse for allocate, free the memory out of the 
+/** @brief The reverse for allocate, free the memory out of the
 memory system, for kernel use
  *
  *         Not only decrement the refcount, but also clear the page table entry
- *  Note for very COMPLEX cases, when the size is excessively 
+ *  Note for very COMPLEX cases, when the size is excessively
  LARGE, we have to handle the
  *  case when allocation accross multiple page tables!!!!!!!!!!!!!!!!!!!!!!!
  *    If the address is not mapped, we return -1
  *  @param q The pointer to the queue
  *  @return 0 on success, -1 error
  **/
-void free_page(uint32_t virtual_addr, size_t size)
+void free_pages(uint32_t virtual_addr, size_t size)
 {
 
-    int i ;
+    int i = 0;
     lprintf("the address is %x", (unsigned int)virtual_addr);
 
-    uint32_t pd = virtual_addr >> 22;
-    lprintf("the pd is %x", (unsigned int)pd);
-    uint32_t pt = (virtual_addr & 0x3ff000) >> 12;
-    lprintf("the pt is %x", (unsigned int)pt);
+    uint32_t pd_index = virtual_addr >> 22;
+    lprintf("the pd is %x", (unsigned int)pd_index);
+    uint32_t pt_index = (virtual_addr & 0x3ff000) >> 12;
+    lprintf("the pt is %x", (unsigned int)pt_index);
 
-    uint32_t offset = (virtual_addr & 0xfff) + (uint32_t)size;
-    lprintf("the offset is %x", (unsigned int)offset);
+    uint32_t total_size = (virtual_addr & 0xfff) + (uint32_t)size;
+    lprintf("the total_size is %x", (unsigned int)total_size);
 
-
-    uint32_t times = offset % 4096 == 0 ? offset / 4096 : offset / 4096 + 1;
-
+    uint32_t times = total_size % 4096 == 0 ? total_size / 4096 : total_size / 4096 + 1;
+    lprintf("times to allocation a page: %u", (unsigned int)times);
     for (i = 0; i < times; ++i)
     {
-        // Now cr3 may points to a process's PD
-        uint32_t *PD = (uint32_t *)get_cr3();  
-        uint32_t pde = PD[pd];
-        lprintf("page table entry: %x", (unsigned int)pde);
-
-        uint32_t *PT = (uint32_t *)(pde & 0xfffffff8);
-        lprintf("page table entry: %x", (unsigned int)PT);
-
-        uint32_t physical_addr = PT[pt + i] - 0x7;
-        release_free_frame(physical_addr);
-        PT[pt + i] = 0;             // Delete this entry
-
-        lprintf("pde: %x", (unsigned int)pde);
-        PD[pd] = pde;
+        virtual_unmap_physical(pd, pd_index, pt_index + i);
     }
     return ;
 }
+
+void init_pd(PD *pd)
+{
+    void *old_cr3 = (void *)get_cr3();
+    pd = (PD *)smemalign(4096, 1024 * 4); // Allocate pd for process
+    memset(pd, 0, 1024 * 4);  // clean
+    memcpy((void *)pd, old_cr3, 4 * 4); // Copy kernel pt mapping
+    set_cr3((uint32_t) pd);  // should we free old page directory?
+}
+
+void copy_page_directory(PD *pd)
+{
+
+
+}
+
+void copy_page_table(PT *pt)
+{
+
+
+}
+
+void destroy_page_directory(PD *pd)
+{
+
+
+}
+
+void destroy_page_table(PT *pt)
+{
+
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 /** @brief Initialize the free list, which keeps track the current free frames.
  *
@@ -209,7 +285,7 @@ void init_free_frame()
 {
     int i ;
     //initizlie the free frame array
-     // bunch of pointers that points to pages
+    // bunch of pointers that points to pages
     frame_base = (KF *)smemalign(4096, 8 * 65536);
     for (i = 0; i < 65536; ++i)
     {
@@ -219,7 +295,7 @@ void init_free_frame()
     free_frame = frame_base;
 }
 
-/** @brief Returns a frame frame from the current free list and 
+/** @brief Returns a frame frame from the current free list and
 set the next free list
  *         to be the struct where refcount = 0;
  *
@@ -241,7 +317,7 @@ uint32_t acquire_free_frame()
         free_frame = free_frame -> next;
     }
     return physical_frame_addr;
-    // Note that it's possible that there is no free physical 
+    // Note that it's possible that there is no free physical
     // page, so in this case we
     // need to handle this situation
 }
@@ -265,25 +341,7 @@ void release_free_frame(uint32_t address)
     }
 }
 
-void copy_page_directory(PD *pd) {
-    
 
-}
-
-void copy_page_table(PT *pt) {
-    
-
-}
-
-void destroy_page_directory(PD *pd) {
-    
-
-}
-
-void destroy_page_table(PT *pt) {
-
-    
-}
 // parsing the virtual address
 // struct virtual_addr parse(uint32_t virtual_addr);
 
@@ -293,23 +351,23 @@ void destroy_page_table(PT *pt) {
  *
  *  If top == bottom, we know there are nothing in the queue.
  *
- *  @param address address must be both 
+ *  @param address address must be both
  physical address and 4KB aligned (really ?)
  **/
-int _new_pages(void * addr, int len)
+int _new_pages(void *addr, int len)
 {
     /* If either the address is invalid or len is not aligned,
-     * return a negative number */ 
+     * return a negative number */
     if (addr == NULL ||                     // addr is null
-        (uint32_t)addr < 0x01000000 ||      // addr is in kernel memory
-       (((uint32_t)addr) & 0xfff) != 0 ||   // addr is not aligned
-        len < 0)                         // len is negative
+            (uint32_t)addr < 0x01000000 ||      // addr is in kernel memory
+            (((uint32_t)addr) & 0xfff) != 0 ||   // addr is not aligned
+            len < 0)                         // len is negative
         return -1;
-    
+
     return 0;
 }
 
-/** @brief Release a frame frame and mark it as 
+/** @brief Release a frame frame and mark it as
 freed only when refcount = 0.
  *         If so, let free_frame point to it.
  *
@@ -317,13 +375,13 @@ freed only when refcount = 0.
  *
  *  @param address address must be both physical address and 4KB aligned (really ?)
  **/
-int _remove_pages(void * addr)
+int _remove_pages(void *addr)
 {
     if (addr == NULL ||                     // addr is null
-        (uint32_t)addr < 0x01000000 ||      // addr is in kernel memory
-       ((uint32_t)addr & 0xfff) != 0)    // addr is not aligned
+            (uint32_t)addr < 0x01000000 ||      // addr is in kernel memory
+            ((uint32_t)addr & 0xfff) != 0)    // addr is not aligned
         return -1;
-    
+
     return 0;
 
 }

@@ -67,54 +67,10 @@ int process_init()
  **/
 int process_create(const char *filename, int run)
 {
-
-    /* Load the elf program using the helper function */
-    simple_elf_t se_hdr;
-    lprintf("\n");
-    elf_load_helper(&se_hdr, filename);
-    lprintf("%lx", se_hdr.e_entry);
-    lprintf("%d", machine_phys_frames());
-    lprintf("e_txtstart: %lx", se_hdr.e_txtstart);
-    lprintf("e_txtoff: %lu", se_hdr.e_txtoff);
-    lprintf("e_txtlen: %lu", se_hdr.e_txtlen);
-
-
-    lprintf("e_datstart: %lx", se_hdr.e_datstart);
-    lprintf("e_datoff: %lu", se_hdr.e_datoff);
-    lprintf("e_datlen: %lu", se_hdr.e_datlen);
-
-
-    lprintf("e_rodatstart: %lx", se_hdr.e_rodatstart);
-    lprintf("e_rodatoff: %lu", se_hdr.e_rodatoff);
-    lprintf("e_rodatlen: %lu", se_hdr.e_rodatlen);
-
-
-    lprintf("e_bssstart: %lx", se_hdr.e_bssstart);
-    lprintf("e_bsslen: %lu", se_hdr.e_bsslen);
-    PCB *pcb = (PCB *)malloc(sizeof(PCB));
-    //create a clean page directory
-    pcb -> pd_ptr = smemalign(PD_SIZE, sizeof(PD));
-    memset(pcb -> pd_ptr,0,PT_SIZE*sizeof(PT*));
-
-    /* Allocate memory for every area */
-    allocate_page((uint32_t)se_hdr.e_datstart, se_hdr.e_datlen);
-    // MAGIC_BREAK;
-    allocate_page((uint32_t)se_hdr.e_txtstart, se_hdr.e_txtlen);
-    allocate_page((uint32_t)se_hdr.e_rodatstart, se_hdr.e_rodatlen);
-    allocate_page((uint32_t)se_hdr.e_bssstart, se_hdr.e_bsslen);
-    allocate_page((uint32_t)0xfffff000, 4096); // possibly bugs here
-
-    lprintf("sdfds");
-    // *(int *)0xffffffff=3;
-
-    // MAGIC_BREAK;
-    // /* copy data from data field */
-    getbytes(se_hdr.e_fname, se_hdr.e_datoff, se_hdr.e_datlen, (char *)se_hdr.e_datstart);
-    getbytes(se_hdr.e_fname, se_hdr.e_txtoff, se_hdr.e_txtlen, (char *)se_hdr.e_txtstart);
-    getbytes(se_hdr.e_fname, se_hdr.e_rodatoff, se_hdr.e_rodatlen, (char *)se_hdr.e_rodatstart);
-    memset((char *)se_hdr.e_bssstart, 0,  se_hdr.e_bsslen);
-
-    // set up pcb for this program
+  PCB *pcb = (PCB *)malloc(sizeof(PCB));
+  //create a clean page directory
+    init_pd(pcb -> pd_ptr);
+  // set up pcb for this program
     
     pcb -> state = PROCESS_RUNNING;
     pcb -> ppid = 0; // who cares this??
@@ -145,6 +101,50 @@ int process_create(const char *filename, int run)
     set_esp0((uint32_t)(thread -> stack_base + thread -> stack_size));  // set up kernel stack pointer possibly bugs here
     lprintf("this is the esp, %x", (unsigned int)get_esp0());
 
+    /* Load the elf program using the helper function */
+    simple_elf_t se_hdr;
+    lprintf("\n");
+    elf_load_helper(&se_hdr, filename);
+    lprintf("%lx", se_hdr.e_entry);
+    lprintf("%d", machine_phys_frames());
+    lprintf("e_txtstart: %lx", se_hdr.e_txtstart);
+    lprintf("e_txtoff: %lu", se_hdr.e_txtoff);
+    lprintf("e_txtlen: %lu", se_hdr.e_txtlen);
+
+
+    lprintf("e_datstart: %lx", se_hdr.e_datstart);
+    lprintf("e_datoff: %lu", se_hdr.e_datoff);
+    lprintf("e_datlen: %lu", se_hdr.e_datlen);
+
+
+    lprintf("e_rodatstart: %lx", se_hdr.e_rodatstart);
+    lprintf("e_rodatoff: %lu", se_hdr.e_rodatoff);
+    lprintf("e_rodatlen: %lu", se_hdr.e_rodatlen);
+
+
+    lprintf("e_bssstart: %lx", se_hdr.e_bssstart);
+    lprintf("e_bsslen: %lu", se_hdr.e_bsslen);
+
+
+    /* Allocate memory for every area */
+    allocate_pages(pcb -> pd_ptr, (uint32_t)se_hdr.e_datstart, se_hdr.e_datlen);
+    // MAGIC_BREAK;
+    allocate_pages(pcb -> pd_ptr, (uint32_t)se_hdr.e_txtstart, se_hdr.e_txtlen);
+    allocate_pages(pcb -> pd_ptr, (uint32_t)se_hdr.e_rodatstart, se_hdr.e_rodatlen);
+    allocate_pages(pcb -> pd_ptr, (uint32_t)se_hdr.e_bssstart, se_hdr.e_bsslen);
+    allocate_pages(pcb -> pd_ptr, (uint32_t)0xfffff000, 4096); // possibly bugs here
+
+    lprintf("allocate_pages done!");
+    // *(int *)0xffffffff=3;
+
+    // MAGIC_BREAK;
+    // /* copy data from data field */
+    getbytes(se_hdr.e_fname, se_hdr.e_datoff, se_hdr.e_datlen, (char *)se_hdr.e_datstart);
+    getbytes(se_hdr.e_fname, se_hdr.e_txtoff, se_hdr.e_txtlen, (char *)se_hdr.e_txtstart);
+    getbytes(se_hdr.e_fname, se_hdr.e_rodatoff, se_hdr.e_rodatlen, (char *)se_hdr.e_rodatstart);
+    memset((char *)se_hdr.e_bssstart, 0,  se_hdr.e_bsslen);
+
+   
     enter_user_mode(thread -> registers.edi,     // let it run, enter ring 3!
            thread -> registers.esi,
            thread -> registers.ebp,

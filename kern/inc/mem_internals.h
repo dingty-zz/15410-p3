@@ -22,13 +22,13 @@
 //Page table is essentially an array of physical addresses;
 typedef struct PT
 {
-	void* pt[PT_SIZE];
+	void* pte[PT_SIZE];
 } PT;
 
 //Page directory is an array of page tables;
 typedef struct PD
 {
-	PT* pd[PD_SIZE];
+	PT* pt[PD_SIZE];
 } PD;
 
 
