@@ -20,7 +20,7 @@
 
 extern list process_queue;
 extern uint32_t next_pid;
-
+extern int process_create(const char *filename, int run);
 void allocate_pages(uint32_t *pd, uint32_t virtual_addr, size_t size);
 
 extern void enter_user_mode(uint32_t ss,
@@ -91,9 +91,12 @@ int _fork(void)
     return 0;
 }
 
+// int _exec(char *execname, char *argvec[]) {
+//      process_create(execname, 1);
+//      return 0;
+// }
 
-
-int _exec(char *execname, char *argvec[])
+int _execc(char *execname, char *argvec[])
 {
 
 
