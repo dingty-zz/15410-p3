@@ -21,7 +21,7 @@
 extern list process_queue;
 extern uint32_t next_pid;
 
-void allocate_page(uint32_t virtual_addr, size_t size);
+void allocate_pages(uint32_t *pd, uint32_t virtual_addr, size_t size);
 
 extern void enter_user_mode(uint32_t ss,
                             uint32_t esp,
@@ -36,7 +36,7 @@ extern void enter_user_mode(uint32_t ss,
                             uint32_t esi,
                             uint32_t edi);
 extern TCB *thr_create(simple_elf_t *se_hdr, int run);
-
+extern uint32_t *init_pd();
 extern TCB *current_thread;
 
 /** @brief Determine if the given queue is empty
@@ -79,7 +79,7 @@ int _fork(void)
 
     //create a new page directory for the child, which points to the same page tables;
     // PD* parent_table = parent_pcb -> pd_ptr;
-    child_pcb -> pd_ptr = (PD *) smemalign(PD_SIZE * 4, PT_SIZE * 4);
+    child_pcb -> PD = (uint32_t *) smemalign(PD_SIZE * 4, PT_SIZE * 4);
     // int i;
 
 
@@ -95,6 +95,7 @@ int _fork(void)
 
 int _exec(char *execname, char *argvec[])
 {
+
 
     lprintf("char %s, argvec: %p", execname, argvec);
     int argc = 0;
@@ -118,12 +119,48 @@ int _exec(char *execname, char *argvec[])
 
 
     lprintf("The argc==%d", argc);
-    /* Load the elf program using the helper function */
-    simple_elf_t se_hdr;
-    // lprintf("\n");
+      simple_elf_t se_hdr;
 
     elf_load_helper(&se_hdr, execname);
     lprintf("%lx", se_hdr.e_entry);
+  PCB *pcb = (PCB *)malloc(sizeof(PCB));
+  //create a clean page directory
+    pcb -> PD = init_pd();
+  // set up pcb for this program
+    
+    pcb -> state = PROCESS_RUNNING;
+    pcb -> ppid = 0; // who cares this??
+    pcb -> pid = next_pid;
+    next_pid++;
+    
+
+    // list_init(pcb -> threads);
+    TCB *thread = thr_create(&se_hdr, 1); // please see thread.c
+    pcb -> thread =  thread;
+
+
+    list_insert_last(&process_queue, &pcb -> all_processes);
+
+
+    thread -> pcb = pcb;  // cycle reference :)
+
+
+    if (0)  // if not run ,we return
+    {
+        MAGIC_BREAK;
+
+        return 0 ;
+    }
+    MAGIC_BREAK;
+    /* We need to do this everytime for a thread to run */
+    current_thread = thread;
+    // set up kernel stack pointer possibly bugs here
+    set_esp0((uint32_t)(thread -> stack_base + thread -> stack_size));  
+    lprintf("this is the esp, %x", (unsigned int)get_esp0());
+    /* Load the elf program using the helper function */
+
+    // lprintf("\n");
+
     lprintf("e_txtstart: %lx", se_hdr.e_txtstart);
     lprintf("e_txtoff: %lu", se_hdr.e_txtoff);
     lprintf("e_txtlen: %lu", se_hdr.e_txtlen);
@@ -149,44 +186,32 @@ int _exec(char *execname, char *argvec[])
     //MAGIC_BREAK;
 
     /* Allocate memory for every area */
-    allocate_page((uint32_t)se_hdr.e_datstart, se_hdr.e_datlen);
+    allocate_pages(pcb -> PD, 
+      (uint32_t)se_hdr.e_datstart, se_hdr.e_datlen);
     // MAGIC_BREAK;
-    allocate_page((uint32_t)se_hdr.e_txtstart, se_hdr.e_txtlen);
-    allocate_page((uint32_t)se_hdr.e_rodatstart, se_hdr.e_rodatlen);
-    allocate_page((uint32_t)se_hdr.e_bssstart, se_hdr.e_bsslen);
-    allocate_page((uint32_t)0xffffc000, 4096 * 4); // possibly bugs here
-    lprintf("before first break");
+    allocate_pages(pcb -> PD, 
+      (uint32_t)se_hdr.e_txtstart, se_hdr.e_txtlen);
+    allocate_pages(pcb -> PD, 
+      (uint32_t)se_hdr.e_rodatstart, se_hdr.e_rodatlen);
+    allocate_pages(pcb -> PD, 
+      (uint32_t)se_hdr.e_bssstart, se_hdr.e_bsslen);
+    allocate_pages(pcb -> PD, 
+      (uint32_t)0xfffff000, 4096); // possibly bugs here
+
+    lprintf("allocate_pages done!");
     // *(int *)0xffffffff=3;
 
-    //MAGIC_BREAK;
-
+    // MAGIC_BREAK;
     // /* copy data from data field */
-    getbytes(se_hdr.e_fname, se_hdr.e_datoff, se_hdr.e_datlen, (char *)se_hdr.e_datstart);
-    getbytes(se_hdr.e_fname, se_hdr.e_txtoff, se_hdr.e_txtlen, (char *)se_hdr.e_txtstart);
-    getbytes(se_hdr.e_fname, se_hdr.e_rodatoff, se_hdr.e_rodatlen, (char *)se_hdr.e_rodatstart);
+    getbytes(se_hdr.e_fname, se_hdr.e_datoff, se_hdr.e_datlen, 
+      (char *)se_hdr.e_datstart);
+    getbytes(se_hdr.e_fname, se_hdr.e_txtoff, se_hdr.e_txtlen, 
+      (char *)se_hdr.e_txtstart);
+    getbytes(se_hdr.e_fname, se_hdr.e_rodatoff, se_hdr.e_rodatlen, 
+      (char *)se_hdr.e_rodatstart);
     memset((char *)se_hdr.e_bssstart, 0,  se_hdr.e_bsslen);
 
 
-    // set up pcb for this program
-
-    PCB *pcb = (PCB *)malloc(sizeof(PCB));
-    pcb -> state = PROCESS_RUNNING;
-    pcb -> ppid = 0; // who cares this??
-    pcb -> pid = next_pid;
-    next_pid++;
-    // list_init(pcb -> threads);
-
-    TCB *thread = thr_create(&se_hdr, 1); // please see thread.c
-    pcb -> thread =  thread;
-
-    // pcb -> PD = memcpy(asdfasdf,fsdaf);
-    // pcb -> PT = memcpy('sfasdfas'f);
-    list_insert_last(&process_queue, &pcb -> all_processes);
-
-
-    thread -> pcb = pcb;  // cycle reference :)
-
-    MAGIC_BREAK;
     char *dest = (char *)0xffffffff;
     char *vector[argc + 1];
 

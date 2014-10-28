@@ -66,6 +66,7 @@ TCB *thr_create(simple_elf_t *se_hdr, int run) {
     tcb -> registers.eax = 0;
 
     tcb -> registers.eip = se_hdr -> e_entry;
+    lprintf("The dip is %x", (unsigned int)se_hdr->e_entry);
     tcb -> registers.cs = SEGSEL_USER_CS;
     tcb -> registers.eflags = (get_eflags() | EFL_RESV1) & ~EFL_AC;
     tcb -> registers.esp = 0xffffff10;  // set up user stack pointer

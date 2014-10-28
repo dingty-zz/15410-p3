@@ -96,7 +96,7 @@ int kernel_main(mbinfo_t *mbinfo, int argc, char **argv, char **envp)
 
     // process_create("peon", 1);   // we run this thread
     process_create("peon", 1);
-    // process_create("ck1");
+
 
 
     // process_create("exec_basic", 1);   // we run this thread

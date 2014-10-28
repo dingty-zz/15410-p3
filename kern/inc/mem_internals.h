@@ -19,17 +19,17 @@
 // 	void *address;
 // } page;
 
-//Page table is essentially an array of physical addresses;
-typedef struct PT
-{
-	void* pte[PT_SIZE];
-} PT;
+// //Page table is essentially an array of physical addresses;
+// typedef struct PT
+// {
+// 	void* pt[PT_SIZE];
+// } PT;
 
-//Page directory is an array of page tables;
-typedef struct PD
-{
-	PT* pt[PD_SIZE];
-} PD;
+// //Page directory is an array of page tables;
+// typedef struct PD
+// {
+// 	PT* pd[PD_SIZE];
+// } PD;
 
 
 // a node that keeps track of allocated physical frames

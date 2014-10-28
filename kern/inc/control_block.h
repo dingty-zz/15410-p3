@@ -45,7 +45,7 @@ struct PCB_t
     // Now we only care about single threaded
     struct TCB_t *thread;
     node all_processes;
-    PD* pd_ptr;
+    uint32_t* PD;
 };
 typedef struct PCB_t PCB;
 
