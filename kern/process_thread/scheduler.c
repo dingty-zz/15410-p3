@@ -48,13 +48,12 @@ void schedule();
 
 void tick(unsigned int numTicks)
 {
-    if (numTicks % 100 == 0)
+    if (numTicks % 1 == 0)
     {
         ++seconds;
         if (seconds % 5 == 0)
         {
             lprintf("5 seconds, let's do something");
-            // MAGIC_BREAK;
             schedule();     // schedule
         }
 
@@ -65,6 +64,7 @@ void tick(unsigned int numTicks)
 void schedule()
 {
   disable_interrupts();
+
     // save current running thread, such as %ss and stuff
     lprintf("this is the current running thread: %d", current_thread->tid);
 
@@ -92,7 +92,8 @@ void schedule()
         MAGIC_BREAK;
     }
     TCB *next_thread = list_entry(n, TCB, all_threads);
-
+    set_cr3((uint32_t)next_thread -> pcb -> PD);
+    lprintf("getcr3 %x",(unsigned int)get_cr3());
 
     // run this thread by setting registers, and restore it's kernel stack
 
@@ -114,7 +115,7 @@ void schedule()
     set_esp0((uint32_t)(next_thread -> stack_base + next_thread -> stack_size));
     list_insert_last(&thread_queue, &current_thread->all_threads);
 
-    // MAGIC_BREAK;
+    MAGIC_BREAK;
     current_thread = next_thread;
     enter_user_mode(next_thread -> registers.edi,     // let it run, enter ring 3!
            next_thread -> registers.esi,

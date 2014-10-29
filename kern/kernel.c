@@ -98,8 +98,9 @@ int kernel_main(mbinfo_t *mbinfo, int argc, char **argv, char **envp)
     // process_create("peon", 1);
 
 
-
     process_create("fork_test1", 1);   // we run this thread
+
+
     // process_create("init");
     // process_create("ck1");
 

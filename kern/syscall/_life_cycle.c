@@ -105,8 +105,9 @@ int _fork(void)
 
 int _exec(char *execname, char *argvec[])
 {
-
-process_create(execname, 1);
+    char *name = (char *)malloc(strlen(execname));
+    memcpy(name, execname, strlen(execname));
+    lprintf("The execname is %s", name);
     lprintf("char %s, argvec: %p", execname, argvec);
     int argc = 0;
     while (argvec[argc] != 0)
@@ -137,8 +138,8 @@ process_create(execname, 1);
   //create a clean page directory
     pcb -> PD = init_pd();
   // set up pcb for this program
-    elf_load_helper(&se_hdr, execname);
-
+    elf_load_helper(&se_hdr, name);
+lprintf("dsfsdf");
         allocate_pages(pcb -> PD, 
       (uint32_t)se_hdr.e_txtstart, se_hdr.e_txtlen);
             getbytes(se_hdr.e_fname, se_hdr.e_txtoff, se_hdr.e_txtlen, 
