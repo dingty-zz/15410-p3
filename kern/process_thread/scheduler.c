@@ -48,7 +48,7 @@ void schedule();
 
 void tick(unsigned int numTicks)
 {
-    if (numTicks % 1 == 0)
+    if (numTicks % 50 == 0)
     {
         ++seconds;
         if (seconds % 5 == 0)
@@ -115,7 +115,7 @@ void schedule()
     set_esp0((uint32_t)(next_thread -> stack_base + next_thread -> stack_size));
     list_insert_last(&thread_queue, &current_thread->all_threads);
 
-    MAGIC_BREAK;
+    // MAGIC_BREAK; 
     current_thread = next_thread;
     enter_user_mode(next_thread -> registers.edi,     // let it run, enter ring 3!
            next_thread -> registers.esi,

@@ -92,13 +92,13 @@ int kernel_main(mbinfo_t *mbinfo, int argc, char **argv, char **envp)
        }
     }*/
 
-    // process_create("idle2", 0);   // we hang this thread
+    process_create("idle", 0);   // we hang this thread
 
-    // process_create("peon", 1);   // we run this thread
+    process_create("peon", 1);   // we run this thread
     // process_create("peon", 1);
 
 
-    process_create("fork_test1", 1);   // we run this thread
+    // process_create("fork_bomb", 1);   // we run this thread
 
 
     // process_create("init");

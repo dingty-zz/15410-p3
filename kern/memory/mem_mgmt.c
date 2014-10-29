@@ -265,7 +265,11 @@ void destroy_page_directory(uint32_t *pd)
 
 void destroy_page_table(uint32_t *pt)
 {
-
+    int i;
+    for (i = 0; i < 1024; ++i)
+    {
+        
+    }
 
 }
 

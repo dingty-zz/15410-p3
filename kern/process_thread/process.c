@@ -70,7 +70,7 @@ int process_init()
 int process_create(const char *filename, int run)
 {
 
-    lprintf("%d", machine_phys_frames());
+    lprintf("%s", filename);
     PCB *pcb = (PCB *)malloc(sizeof(PCB));
     //create a clean page directory
     pcb -> PD = init_pd();
@@ -97,13 +97,7 @@ int process_create(const char *filename, int run)
     thread -> pcb = pcb;  // cycle reference :)
 
 
-    if (!run)  // if not run ,we return
-    {
-        MAGIC_BREAK;
 
-        return 0 ;
-    }
-    MAGIC_BREAK;
     /* We need to do this everytime for a thread to run */
     current_thread = thread;
     // set up kernel stack pointer possibly bugs here
@@ -160,6 +154,13 @@ int process_create(const char *filename, int run)
              (char *)se_hdr.e_rodatstart);
     memset((char *)se_hdr.e_bssstart, 0,  se_hdr.e_bsslen);
 
+    MAGIC_BREAK;
+        if (!run)  // if not run ,we return
+    {
+        MAGIC_BREAK;
+
+        return 0 ;
+    }
     MAGIC_BREAK;
     lprintf("let it run, enter ring 3!, thread -> registers.eip%x", (unsigned int)thread->registers.eip);
     enter_user_mode(thread -> registers.edi,

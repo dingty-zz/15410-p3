@@ -80,7 +80,7 @@ int _fork(void)
 
 
     //create a new page directory for the child, which points to the same page tables;
-    PD* parent_table = parent_pcb -> pd_ptr;
+    uint32_t* parent_table = parent_pcb -> PD;
     child_pcb -> PD = (uint32_t *) smemalign(PD_SIZE * 4, PT_SIZE * 4);
     int i;
     //point to same page tables;
@@ -97,11 +97,6 @@ int _fork(void)
 
     return 0;
 }
-
-// int _exec(char *execname, char *argvec[]) {
-//      process_create(execname, 1);
-//      return 0;
-// }
 
 int _exec(char *execname, char *argvec[])
 {
