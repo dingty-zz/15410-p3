@@ -229,12 +229,18 @@ void free_pages(uint32_t *pd, uint32_t virtual_addr, size_t size)
 
 uint32_t *init_pd()
 {
-    void *old_cr3 = (void *)get_cr3();
+    // void *old_cr3 = (void *)get_cr3();
     uint32_t *pd = (uint32_t *)smemalign(4096, 1024 * 4); // Allocate pd for process
     memset(pd, 0, 1024 * 4);  // clean
-    memcpy((void *)pd, old_cr3, 4 * 4); // Copy kernel pt mapping
-    set_cr3((uint32_t) pd);  // should we free old page directory?
-    lprintf("after calling initpd, the pd is %x", (unsigned int)pd);
+    int i = 0;
+    for (i = 0; i < 4; ++i)
+    {
+        pd[i] = ((((uint32_t *)get_cr3())[i]) & 0xfffff000) | 0x107;
+        lprintf("The directory is %x",(unsigned int)pd[i]);
+    }
+    //memcpy((void *)pd, old_cr3, 4 * 4); // Copy kernel pt mapping
+    set_cr3((uint32_t) pd);    
+    lprintf("after calling initpd, the pd is %x", (unsigned int)get_cr3());
     return pd;
 }
 

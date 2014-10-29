@@ -69,16 +69,17 @@ int process_init()
  **/
 int process_create(const char *filename, int run)
 {
-    simple_elf_t se_hdr;
-        elf_load_helper(&se_hdr, filename);
-    lprintf("%lx", se_hdr.e_entry);
+
     lprintf("%d", machine_phys_frames());
     PCB *pcb = (PCB *)malloc(sizeof(PCB));
     //create a clean page directory
     pcb -> PD = init_pd();
     lprintf("The pd is isisisisisi %x", (unsigned int)pcb->PD);
     // set up pcb for this program
-
+    simple_elf_t se_hdr;
+        elf_load_helper(&se_hdr, filename);
+    lprintf("%lx", se_hdr.e_entry);
+        
     pcb -> state = PROCESS_RUNNING;
     pcb -> ppid = 0; // who cares this??
     pcb -> pid = next_pid;

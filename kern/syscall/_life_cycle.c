@@ -96,10 +96,10 @@ int _fork(void)
 //      return 0;
 // }
 
-int _execc(char *execname, char *argvec[])
+int _exec(char *execname, char *argvec[])
 {
 
-
+process_create(execname, 1);
     lprintf("char %s, argvec: %p", execname, argvec);
     int argc = 0;
     while (argvec[argc] != 0)
@@ -124,13 +124,20 @@ int _execc(char *execname, char *argvec[])
     lprintf("The argc==%d", argc);
       simple_elf_t se_hdr;
 
-    elf_load_helper(&se_hdr, execname);
-    lprintf("%lx", se_hdr.e_entry);
+    // elf_load_helper(&se_hdr, execname);
+    // lprintf("%lx", se_hdr.e_entry);
   PCB *pcb = (PCB *)malloc(sizeof(PCB));
   //create a clean page directory
     pcb -> PD = init_pd();
   // set up pcb for this program
-    
+    elf_load_helper(&se_hdr, execname);
+
+        allocate_pages(pcb -> PD, 
+      (uint32_t)se_hdr.e_txtstart, se_hdr.e_txtlen);
+            getbytes(se_hdr.e_fname, se_hdr.e_txtoff, se_hdr.e_txtlen, 
+      (char *)se_hdr.e_txtstart);
+            lprintf("Doneonoenoennoneoeneonoe");
+            MAGIC_BREAK;
     pcb -> state = PROCESS_RUNNING;
     pcb -> ppid = 0; // who cares this??
     pcb -> pid = next_pid;
@@ -192,8 +199,7 @@ int _execc(char *execname, char *argvec[])
     allocate_pages(pcb -> PD, 
       (uint32_t)se_hdr.e_datstart, se_hdr.e_datlen);
     // MAGIC_BREAK;
-    allocate_pages(pcb -> PD, 
-      (uint32_t)se_hdr.e_txtstart, se_hdr.e_txtlen);
+
     allocate_pages(pcb -> PD, 
       (uint32_t)se_hdr.e_rodatstart, se_hdr.e_rodatlen);
     allocate_pages(pcb -> PD, 
@@ -208,8 +214,7 @@ int _execc(char *execname, char *argvec[])
     // /* copy data from data field */
     getbytes(se_hdr.e_fname, se_hdr.e_datoff, se_hdr.e_datlen, 
       (char *)se_hdr.e_datstart);
-    getbytes(se_hdr.e_fname, se_hdr.e_txtoff, se_hdr.e_txtlen, 
-      (char *)se_hdr.e_txtstart);
+
     getbytes(se_hdr.e_fname, se_hdr.e_rodatoff, se_hdr.e_rodatlen, 
       (char *)se_hdr.e_rodatstart);
     memset((char *)se_hdr.e_bssstart, 0,  se_hdr.e_bsslen);
