@@ -22,10 +22,10 @@
 
 #include <syscall.h>
 #include "simics.h"
-int fork(void)
-{
-	return -1;
-}
+// int fork(void)
+// {
+// 	return -1;
+// }
 
 void set_status(int status)
 {

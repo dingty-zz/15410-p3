@@ -1,6 +1,6 @@
-/** @file exception_handlers.c
+/** @file _life_cycle.c
  *
- *  @brief This file includes timer handler and keyboard handler wrappers.
+ *  @brief This file includes the implementation of the life cycle funcitons.
  *
  *  @author Xianqi Zeng (xianqiz)
  *  @author Tianyuan Ding (tding)
@@ -49,6 +49,7 @@ extern TCB *current_thread;
 /* two more things to do: 1. copy page table 2. iret*/
 int _fork(void)
 {
+
     PCB *child_pcb = (PCB *)malloc(sizeof(PCB));
     TCB *child_tcb = (TCB *)malloc(sizeof(TCB));
     PCB *parent_pcb = current_thread -> pcb;
@@ -67,7 +68,7 @@ int _fork(void)
 
     //step 3: set up the process control block;
     child_pcb -> special = 0;
-    child_pcb -> ppid = parent_pcb -> ppid;
+    child_pcb -> ppid = parent_pcb -> pid;
     child_pcb -> pid = next_pid;
     next_pid++;
     child_pcb -> state = PROCESS_RUNNING;
@@ -77,10 +78,16 @@ int _fork(void)
     child_tcb -> registers.eax = 0;
     parent_tcb -> registers.eax = child_pcb -> pid;
 
+
     //create a new page directory for the child, which points to the same page tables;
-    // PD* parent_table = parent_pcb -> pd_ptr;
+    PD* parent_table = parent_pcb -> pd_ptr;
     child_pcb -> PD = (uint32_t *) smemalign(PD_SIZE * 4, PT_SIZE * 4);
-    // int i;
+    int i;
+    //point to same page tables;
+    for (i = 0; i < PD_SIZE; i++)
+    {
+      (child_pcb -> PD)[i] = parent_table[i];
+    }
 
 
     //insert child to the list of threads and processes

@@ -57,7 +57,7 @@ UPDATE_METHOD = afs
 # A list of the test programs you want compiled in from the 410user/progs
 # directory.
 #
-410TESTS =
+410TESTS = fork_test1
 
 ###########################################################################
 # Test programs you have written which you wish to run
@@ -99,7 +99,7 @@ THREAD_OBJS = malloc.o panic.o
 ###########################################################################
 # Object files for your syscall wrappers
 ###########################################################################
-SYSCALL_OBJS = syscall.o gettid.o exec.o
+SYSCALL_OBJS = syscall.o gettid.o exec.o fork.o
 
 ###########################################################################
 # Object files for your automatic stack handling
@@ -141,7 +141,7 @@ syscall/life_cycle.o syscall/_life_cycle.o
 # you have a really good reason to do so.
 #
 
-410REQPROGS = idle init shell exec_basic ck1 exec_basic_helper peon merchant
+410REQPROGS = idle init shell 
 
 ###########################################################################
 # Mandatory programs whose source is provided by you
