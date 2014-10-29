@@ -259,18 +259,26 @@ void copy_page_table(uint32_t *pt)
 
 void destroy_page_directory(uint32_t *pd)
 {
-
+    int i;
+    for (i = 4; i < 1024; ++i)
+    {
+        destroy_page_table(pd[i] & 0xfffffff8);
+        pd[i] = 0;
+    }
 
 }
 
-void destroy_page_table(uint32_t *pt)
+void destroy_page_table(uint32_t pt)
 {
     int i;
     for (i = 0; i < 1024; ++i)
     {
-        
+        uint32_t pte = pt[i];
+        uint32_t physical_addr = pte & 0xfffffff8;
+            release_free_frame(physical_addr);
+            pt[pt_index] = 0;       // Unmap this page
     }
-
+    sfree((uint32_t *)pt, 1024 * 4);
 }
 
 
@@ -362,45 +370,3 @@ void release_free_frame(uint32_t address)
 
 // parsing the virtual address
 // struct virtual_addr parse(uint32_t virtual_addr);
-
-
-/** @brief Release a frame frame and mark it as freed only when refcount = 0.
- *         If so, let free_frame point to it.
- *
- *  If top == bottom, we know there are nothing in the queue.
- *
- *  @param address address must be both
- physical address and 4KB aligned (really ?)
- **/
-int _new_pages(void *addr, int len)
-{
-    /* If either the address is invalid or len is not aligned,
-     * return a negative number */
-    if (addr == NULL ||                     // addr is null
-            (uint32_t)addr < 0x01000000 ||      // addr is in kernel memory
-            (((uint32_t)addr) & 0xfff) != 0 ||   // addr is not aligned
-            len < 0)                         // len is negative
-        return -1;
-
-    return 0;
-}
-
-/** @brief Release a frame frame and mark it as
-freed only when refcount = 0.
- *         If so, let free_frame point to it.
- *
- *  If top == bottom, we know there are nothing in the queue.
- *
- *  @param address address must be both physical 
- ddress and 4KB aligned (really ?)
- **/
-int _remove_pages(void *addr)
-{
-    if (addr == NULL ||                     // addr is null
-            (uint32_t)addr < 0x01000000 ||      // addr is in kernel memory
-            ((uint32_t)addr & 0xfff) != 0)    // addr is not aligned
-        return -1;
-
-    return 0;
-
-}

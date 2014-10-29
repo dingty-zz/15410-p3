@@ -5,20 +5,6 @@
 #define PT_SIZE 1024
 #define PD_SIZE 1024
 
-// typedef struct mem_type
-// {
-// 	uint32_t	start;
-// 	uint32_t	end;
-// 	int status;
-// 	uint32_t size;
-// } mem_t;
-
-// typedef struct page_t
-// {
-// 	int valid;
-// 	void *address;
-// } page;
-
 // //Page table is essentially an array of physical addresses;
 // typedef struct PT
 // {

@@ -17,8 +17,6 @@
 #include "string.h"
 #include "eflags.h"
 
-list thread_queue;
-uint32_t next_tid = 0 ;
 
 /** @brief Release a frame frame and mark it as freed only when refcount = 0.
  *         If so, let free_frame point to it.
@@ -87,6 +85,6 @@ TCB *thr_create(simple_elf_t *se_hdr, int run) {
  *  @param address address must be both physical address and 4KB aligned (really ?)
  **/
 int thr_exit() {
-	
+	// probably be vanish??
 return 0;
 }

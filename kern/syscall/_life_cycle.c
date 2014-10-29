@@ -287,22 +287,34 @@ lprintf("dsfsdf");
 
 void set_status(int status)
 {
-
+    current_thread -> pcb -> return_state = status;
     return;
 
 }
 
-volatile int placate_the_compiler;
+
 void vanish(void)
 {
+    list_delete(&thread_queue, &current_thread -> all_threads);
 
-    int blackhole = 867 - 5309;
+    PCB *pcb = current_process = current_thread -> pcb;
 
-    blackhole ^= blackhole;
-    blackhole /= blackhole;
-    *(int *) blackhole = blackhole; /* won't get here */
-    while (1)
-        ++placate_the_compiler;
+    if (list_length(pcb -> peer_threads) == 1) // if this is the last thread
+    {
+        destroy_page_directory(pcb -> PD);
+        sfree(current_thread -> stack_base, current_thread -> stack_size);
+        // Make the exit status available to parent task, or init
+        free(tcb);
+        free(pcb);
+    } else {
+        // display to the console
+        // set_status(-2)
+        // free resources
+        sfree(current_thread -> stack_base, current_thread -> stack_size);
+        free(tcb);
+    }
+        // pick a next thread to run, same thing in context switch
+    
 
 }
 

@@ -31,13 +31,13 @@
 
 
 
-struct PCB_t
+typedef struct PCB_t
 {
     int special;  // if this process is idle, then never delete out of queue
     int ppid;
     int pid;
     int state; //running, ready, block
-
+    int return_state;
     // +++++++++++_t* parent;
     // PCB_t** children;
     // list *threads;  
@@ -46,11 +46,10 @@ struct PCB_t
     struct TCB_t *thread;
     node all_processes;
     uint32_t* PD;
-};
-typedef struct PCB_t PCB;
+}PCB;
 
 
-struct TCB_t
+typedef struct TCB_t
 {
 
     PCB *pcb; //process the thread belongs to
@@ -68,14 +67,23 @@ struct TCB_t
     // struct TCB* next;
     // struct TCB* wait_next;
     // struct TCB* wait_prev;
-};
-
-typedef struct TCB_t TCB;
+}TCB;
 
 
+// Information about processes/threads in the kernel
+spinlock_t tid_lock;
 uint32_t next_tid;
+
+spinlock_t pid_lock;
 uint32_t next_pid;
+
+spinlock_t thread_queue_lock;
 list thread_queue;
+
+spinlock_t blocked_thread_queue_lock;
+list blocked_thread_queue;
+
+spinlock_t process_queue_lock;
 list process_queue;
 
 
