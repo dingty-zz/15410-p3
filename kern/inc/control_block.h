@@ -16,7 +16,7 @@
 #include "linked_list.h"
 #include "vm_type.h"
 #include <elf/elf_410.h>
-
+#include "spinlock_type.h"
 
 
 #define THREAD_EXIT -1
@@ -88,5 +88,6 @@ list blocked_thread_queue;
 spinlock_t process_queue_lock;
 list process_queue;
 
+TCB *current_thread;
 
 #endif /* _CONTROL_B_H */

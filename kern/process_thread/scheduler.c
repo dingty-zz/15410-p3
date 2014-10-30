@@ -42,13 +42,13 @@ extern void enter_user_mode(uint32_t ss,
 
 unsigned int seconds;
 extern list thread_queue;
-TCB *current_thread;  // indicates the current runnign thread
+extern TCB *current_thread;  // indicates the current runnign thread
 void schedule();
 
 
 void tick(unsigned int numTicks)
 {
-    if (numTicks % 50 == 0)
+    if (numTicks % 5 == 0)
     {
         ++seconds;
         if (seconds % 5 == 0)
@@ -68,7 +68,7 @@ void schedule()
     // save current running thread, such as %ss and stuff
     lprintf("this is the current running thread: %d", current_thread->tid);
 
-    unsigned int *kernel_stack = (unsigned int *)(current_thread -> stack_base + current_thread->stack_size - 60);
+    unsigned int *kernel_stack = (unsigned int *)(current_thread -> stack_base + current_thread->stack_size - 68);
     lprintf("the kernel_stack is : %p", kernel_stack);
     current_thread -> registers.ss = kernel_stack[16];
     current_thread -> registers.esp = kernel_stack[15];
@@ -101,12 +101,12 @@ void schedule()
 
     // run this thread by setting registers, and restore it's kernel stack
 
-    unsigned int *next_kernel_stack = (unsigned int *)(next_thread -> stack_base + next_thread->stack_size - 60);
-    lprintf("the next_kernel_stack is : %p", next_kernel_stack);
-    next_kernel_stack[0] = next_thread -> registers.edi;
-    next_kernel_stack[1] = next_thread -> registers.edi;
-    next_kernel_stack[2] = next_thread -> registers.edi;
-    next_kernel_stack[3] = next_thread -> registers.edi;
+    unsigned int *next_kernel_stack = (unsigned int *)(next_thread -> stack_base + next_thread->stack_size - 68);
+    lprintf("the next_kernel_stack is : %p", next_kernel_stack + 68);
+    next_kernel_stack[0] = next_thread -> registers.gs;
+    next_kernel_stack[1] = next_thread -> registers.fs;
+    next_kernel_stack[2] = next_thread -> registers.es;
+    next_kernel_stack[3] = next_thread -> registers.ds;
     next_kernel_stack[4] = next_thread -> registers.edi;
     next_kernel_stack[5] = next_thread -> registers.esi;
     next_kernel_stack[6] = next_thread -> registers.ebp;
@@ -123,7 +123,7 @@ void schedule()
     set_esp0((uint32_t)(next_thread -> stack_base + next_thread -> stack_size));
     list_insert_last(&thread_queue, &current_thread->all_threads);
 
-    // MAGIC_BREAK; 
+    MAGIC_BREAK; 
     current_thread = next_thread;
     enable_interrupts();
 }

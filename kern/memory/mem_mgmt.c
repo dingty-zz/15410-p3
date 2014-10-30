@@ -22,6 +22,7 @@ uint32_t acquire_free_frame();
 void release_free_frame(uint32_t address);
 int virtual_map_physical(uint32_t *PD, uint32_t pd_index, uint32_t pt_index);
 int virtual_unmap_physical(uint32_t *PD, uint32_t pd_index, uint32_t pt_index);
+void destroy_page_table(uint32_t pt);
 /** @brief Initialize the whole memory system, immediately
  *         called when the kernel enters to enable paging
  *
@@ -273,10 +274,10 @@ void destroy_page_table(uint32_t pt)
     int i;
     for (i = 0; i < 1024; ++i)
     {
-        uint32_t pte = pt[i];
+        uint32_t pte = ((uint32_t*)pt)[i];
         uint32_t physical_addr = pte & 0xfffffff8;
             release_free_frame(physical_addr);
-            pt[pt_index] = 0;       // Unmap this page
+            ((uint32_t*)pt)[pte] = 0;       // Unmap this page
     }
     sfree((uint32_t *)pt, 1024 * 4);
 }

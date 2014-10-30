@@ -48,7 +48,7 @@ TCB *thr_create(simple_elf_t *se_hdr, int run) {
     tcb -> state = THREAD_RUNNING;
 
     tcb -> stack_size = 4096;
-    tcb -> stack_base = smemalign(4, tcb->stack_size);
+    tcb -> stack_base = smemalign(4096, tcb->stack_size);
 
     tcb -> registers.ds = SEGSEL_USER_DS;
     tcb -> registers.es = SEGSEL_USER_DS;

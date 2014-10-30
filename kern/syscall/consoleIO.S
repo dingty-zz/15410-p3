@@ -14,11 +14,4 @@
 .extern		_get_cursor_pos
 .extern		_set_cursor_pos
 
-getchar:
-	pusha
-	pushl	%esi
-	call _getchar
-	popl	%esi
-	popa
-	iret
 
