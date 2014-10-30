@@ -68,20 +68,24 @@ void schedule()
     // save current running thread, such as %ss and stuff
     lprintf("this is the current running thread: %d", current_thread->tid);
 
-    unsigned int *kernel_stack = (unsigned int *)(current_thread -> stack_base + current_thread->stack_size - 52);
+    unsigned int *kernel_stack = (unsigned int *)(current_thread -> stack_base + current_thread->stack_size - 60);
     lprintf("the kernel_stack is : %p", kernel_stack);
-    current_thread -> registers.ss = kernel_stack[12];
-    current_thread -> registers.esp = kernel_stack[11];
-    current_thread -> registers.eflags = kernel_stack[10];
-    current_thread -> registers.cs = kernel_stack[9];
-    current_thread -> registers.eip = kernel_stack[8];
-    current_thread -> registers.eax = kernel_stack[7];
-    current_thread -> registers.ecx = kernel_stack[6];
-    current_thread -> registers.edx = kernel_stack[5];
-    current_thread -> registers.ebx = kernel_stack[4];
-    current_thread -> registers.ebp = kernel_stack[2];
-    current_thread -> registers.esi = kernel_stack[1];
-    current_thread -> registers.edi = kernel_stack[0];
+    current_thread -> registers.ss = kernel_stack[16];
+    current_thread -> registers.esp = kernel_stack[15];
+    current_thread -> registers.eflags = kernel_stack[14];
+    current_thread -> registers.cs = kernel_stack[13];
+    current_thread -> registers.eip = kernel_stack[12];
+    current_thread -> registers.eax = kernel_stack[11];
+    current_thread -> registers.ecx = kernel_stack[10];
+    current_thread -> registers.edx = kernel_stack[9];
+    current_thread -> registers.ebx = kernel_stack[8];
+    current_thread -> registers.ebp = kernel_stack[6];
+    current_thread -> registers.esi = kernel_stack[5];
+    current_thread -> registers.edi = kernel_stack[4];
+    current_thread -> registers.ds = kernel_stack[3];
+    current_thread -> registers.es = kernel_stack[2];
+    current_thread -> registers.fs = kernel_stack[1];
+    current_thread -> registers.gs = kernel_stack[0];
 
     // MAGIC_BREAK;
     // pop a thread from the thread_queue
@@ -97,37 +101,31 @@ void schedule()
 
     // run this thread by setting registers, and restore it's kernel stack
 
-    unsigned int *next_kernel_stack = (unsigned int *)(next_thread -> stack_base + next_thread->stack_size - 52);
+    unsigned int *next_kernel_stack = (unsigned int *)(next_thread -> stack_base + next_thread->stack_size - 60);
     lprintf("the next_kernel_stack is : %p", next_kernel_stack);
     next_kernel_stack[0] = next_thread -> registers.edi;
-    next_kernel_stack[1] = next_thread -> registers.esi;
-    next_kernel_stack[2] = next_thread -> registers.ebp;
-    next_kernel_stack[4] = next_thread -> registers.ebx;
-    next_kernel_stack[5] = next_thread -> registers.edx;
-    next_kernel_stack[6] = next_thread -> registers.ecx;
-    next_kernel_stack[7] = next_thread -> registers.eax;
-    next_kernel_stack[8] = next_thread -> registers.eip;
-    next_kernel_stack[9] = next_thread -> registers.cs;
-    next_kernel_stack[10] = next_thread -> registers.eflags;
-    next_kernel_stack[11] = next_thread -> registers.esp;
-    next_kernel_stack[12] = next_thread -> registers.ss;
+    next_kernel_stack[1] = next_thread -> registers.edi;
+    next_kernel_stack[2] = next_thread -> registers.edi;
+    next_kernel_stack[3] = next_thread -> registers.edi;
+    next_kernel_stack[4] = next_thread -> registers.edi;
+    next_kernel_stack[5] = next_thread -> registers.esi;
+    next_kernel_stack[6] = next_thread -> registers.ebp;
+    next_kernel_stack[8] = next_thread -> registers.ebx;
+    next_kernel_stack[9] = next_thread -> registers.edx;
+    next_kernel_stack[10] = next_thread -> registers.ecx;
+    next_kernel_stack[11] = next_thread -> registers.eax;
+    next_kernel_stack[12] = next_thread -> registers.eip;
+    next_kernel_stack[13] = next_thread -> registers.cs;
+    next_kernel_stack[14] = next_thread -> registers.eflags;
+    next_kernel_stack[15] = next_thread -> registers.esp;
+    next_kernel_stack[16] = next_thread -> registers.ss;
 
     set_esp0((uint32_t)(next_thread -> stack_base + next_thread -> stack_size));
     list_insert_last(&thread_queue, &current_thread->all_threads);
 
     // MAGIC_BREAK; 
     current_thread = next_thread;
-    enter_user_mode(next_thread -> registers.edi,     // let it run, enter ring 3!
-           next_thread -> registers.esi,
-           next_thread -> registers.ebp,
-           next_thread -> registers.ebx,
-           next_thread -> registers.edx,
-           next_thread -> registers.ecx,
-           next_thread -> registers.eax,
-           next_thread -> registers.eip,
-           next_thread -> registers.cs,
-           next_thread -> registers.eflags,
-           next_thread -> registers.esp,
-           next_thread -> registers.ss);
-
+    enable_interrupts();
 }
+
+// note that this implementation is NOT OK because you have to set esp to it's appropriate place

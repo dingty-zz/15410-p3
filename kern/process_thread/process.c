@@ -102,28 +102,28 @@ int process_create(const char *filename, int run)
     current_thread = thread;
     // set up kernel stack pointer possibly bugs here
     set_esp0((uint32_t)(thread -> stack_base + thread -> stack_size));
-    lprintf("this is the esp, %x", (unsigned int)get_esp0());
+    // lprintf("this is the esp, %x", (unsigned int)get_esp0());
 
-    /* Load the elf program using the helper function */
+    // /* Load the elf program using the helper function */
 
-    lprintf("\n");
-    lprintf("e_txtstart: %lx", se_hdr.e_txtstart);
-    lprintf("e_txtoff: %lu", se_hdr.e_txtoff);
-    lprintf("e_txtlen: %lu", se_hdr.e_txtlen);
-
-
-    lprintf("e_datstart: %lx", se_hdr.e_datstart);
-    lprintf("e_datoff: %lu", se_hdr.e_datoff);
-    lprintf("e_datlen: %lu", se_hdr.e_datlen);
+    // lprintf("\n");
+    // lprintf("e_txtstart: %lx", se_hdr.e_txtstart);
+    // lprintf("e_txtoff: %lu", se_hdr.e_txtoff);
+    // lprintf("e_txtlen: %lu", se_hdr.e_txtlen);
 
 
-    lprintf("e_rodatstart: %lx", se_hdr.e_rodatstart);
-    lprintf("e_rodatoff: %lu", se_hdr.e_rodatoff);
-    lprintf("e_rodatlen: %lu", se_hdr.e_rodatlen);
+    // lprintf("e_datstart: %lx", se_hdr.e_datstart);
+    // lprintf("e_datoff: %lu", se_hdr.e_datoff);
+    // lprintf("e_datlen: %lu", se_hdr.e_datlen);
 
 
-    lprintf("e_bssstart: %lx", se_hdr.e_bssstart);
-    lprintf("e_bsslen: %lu", se_hdr.e_bsslen);
+    // lprintf("e_rodatstart: %lx", se_hdr.e_rodatstart);
+    // lprintf("e_rodatoff: %lu", se_hdr.e_rodatoff);
+    // lprintf("e_rodatlen: %lu", se_hdr.e_rodatlen);
+
+
+    // lprintf("e_bssstart: %lx", se_hdr.e_bssstart);
+    // lprintf("e_bsslen: %lu", se_hdr.e_bsslen);
 
 
     /* Allocate memory for every area */

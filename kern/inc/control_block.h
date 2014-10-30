@@ -23,6 +23,8 @@
 #define THREAD_BLOCKED 0
 #define THREAD_RUNNING 1
 #define THREAD_RUNNABLE 2
+#define THREAD_DESCHEDULED 3     // only set when deschedule() is called
+#define THREAD_SLEEPING 4
 
 #define PROCESS_EXIT -1
 #define PROCESS_BLOCKED 0

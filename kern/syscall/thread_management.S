@@ -5,8 +5,6 @@
 .extern _gettid
 
 gettid:
-	# call get_esp0
-	# movl %eax, %esp
 
 	pushl 	$0
 

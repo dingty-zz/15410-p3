@@ -15,7 +15,15 @@
 timer_wrapper:
 
 	pusha
+	pushl 	%ds
+	pushl 	%es
+	pushl 	%fs
+	pushl 	%gs
     call    timer_handler
+    popl	%gs	
+    popl	%fs	
+    popl	%es	
+    popl	%ds	
     popa
     iret
 

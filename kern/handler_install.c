@@ -76,12 +76,9 @@ int handler_install(void (*tickback)(unsigned int))
     _handler_install(TIMER_IDT_ENTRY, timer_wrapper);
     _handler_install(KEY_IDT_ENTRY, keyboard_wrapper);
     /* initialize system call handlers */
-    // int i =0;
-    // for (i = 10; i < 12; ++i)
-    // {
 
 
-    // }
+
     _handler_install(GETTID_INT, (void *)gettid);
     // _handler_install(VANISH_INT, (void *)gettid);
     _handler_install(EXEC_INT, (void *)exec);
