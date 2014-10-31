@@ -25,6 +25,7 @@
 #define THREAD_RUNNABLE 2
 #define THREAD_DESCHEDULED 3     // only set when deschedule() is called
 #define THREAD_SLEEPING 4
+#define THREAD_INIT 5
 
 #define PROCESS_EXIT -1
 #define PROCESS_BLOCKED 0
@@ -53,18 +54,21 @@ typedef struct PCB_t
 
 typedef struct TCB_t
 {
+    uint32_t esp;
 
     PCB *pcb; //process the thread belongs to
 
     int tid;
     int state;
 
+    void *stack_base;           // KERNEL stack base
+    unsigned int stack_size;  // 4096 (1 page) by default
     ureg_t registers;  // USER stack pointer is in here!
+
     // node peer_threads;  // Now we only care about single threaded
     node all_threads;
 
-    void *stack_base;           // KERNEL stack base
-    unsigned int stack_size;  // 4096 (1 page) by default
+
     // struct TCB* prev;
     // struct TCB* next;
     // struct TCB* wait_next;

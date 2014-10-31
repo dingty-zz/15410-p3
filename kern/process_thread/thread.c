@@ -39,8 +39,9 @@ int thr_init()
  *
  *  @param address address must be both physical address and 4KB aligned (really ?)
  **/
-TCB *thr_create(simple_elf_t *se_hdr, int run) {
-	 // set up tcb for this program
+TCB *thr_create(simple_elf_t *se_hdr, int run)
+{
+    // set up tcb for this program
 
     TCB *tcb = (TCB *)malloc(sizeof(TCB));
     tcb -> tid = next_tid;
@@ -63,6 +64,8 @@ TCB *thr_create(simple_elf_t *se_hdr, int run) {
     tcb -> registers.ecx = 0;
     tcb -> registers.eax = 0;
 
+    tcb -> esp = (uint32_t)tcb -> stack_size + (uint32_t)tcb -> stack_base;
+
     tcb -> registers.eip = se_hdr -> e_entry;
     lprintf("The dip is %x", (unsigned int)se_hdr->e_entry);
     tcb -> registers.cs = SEGSEL_USER_CS;
@@ -70,12 +73,16 @@ TCB *thr_create(simple_elf_t *se_hdr, int run) {
     tcb -> registers.esp = 0xffffff10;  // set up user stack pointer
     tcb -> registers.ss = SEGSEL_USER_DS;
     lprintf("The kernel stack is : %p", tcb -> stack_base + 4096);
-    if (!run)  // if not run, we put it in the run queue
+    if (!run)
+    {
+        // if not run, we put it in the run queue
         list_insert_last(&thread_queue, &tcb -> all_threads);
+        tcb -> state = THREAD_INIT;
+    }
     return tcb;
 
 
-}	
+}
 
 /** @brief Release a frame frame and mark it as freed only when refcount = 0.
  *         If so, let free_frame point to it.
@@ -84,7 +91,8 @@ TCB *thr_create(simple_elf_t *se_hdr, int run) {
  *
  *  @param address address must be both physical address and 4KB aligned (really ?)
  **/
-int thr_exit() {
-	// probably be vanish??
-return 0;
+int thr_exit()
+{
+    // probably be vanish??
+    return 0;
 }

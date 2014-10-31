@@ -242,7 +242,7 @@ uint32_t *init_pd()
     //memcpy((void *)pd, old_cr3, 4 * 4); // Copy kernel pt mapping
     set_cr3((uint32_t) pd);    
     lprintf("after calling initpd, the pd is %x", (unsigned int)get_cr3());
-    MAGIC_BREAK;
+    //MAGIC_BREAK;
     return pd;
 }
 

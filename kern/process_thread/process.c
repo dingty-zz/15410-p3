@@ -154,14 +154,14 @@ int process_create(const char *filename, int run)
              (char *)se_hdr.e_rodatstart);
     memset((char *)se_hdr.e_bssstart, 0,  se_hdr.e_bsslen);
 
-    MAGIC_BREAK;
-        if (!run)  // if not run ,we return
+    // MAGIC_BREAK;
+    if (!run)  // if not run ,we return
     {
         MAGIC_BREAK;
 
         return 0 ;
     }
-    MAGIC_BREAK;
+    // MAGIC_BREAK;
     lprintf("let it run, enter ring 3!, thread -> registers.eip%x", (unsigned int)thread->registers.eip);
     enter_user_mode(thread -> registers.edi,
                     thread -> registers.esi,
