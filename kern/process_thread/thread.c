@@ -64,7 +64,7 @@ TCB *thr_create(simple_elf_t *se_hdr, int run)
     tcb -> registers.ecx = 0;
     tcb -> registers.eax = 0;
 
-    tcb -> esp = (uint32_t)tcb -> stack_size + (uint32_t)tcb -> stack_base;
+    tcb -> esp = (uint32_t)tcb -> stack_size + (uint32_t)tcb -> stack_base -4;
 
     tcb -> registers.eip = se_hdr -> e_entry;
     lprintf("The dip is %x", (unsigned int)se_hdr->e_entry);

@@ -55,7 +55,7 @@ void tick(unsigned int numTicks)
         ++seconds;
         if (seconds % 5 == 0)
         {
-            lprintf("5 seconds, let's do something");
+            lprintf("5 seconds, let's do something\n");
             schedule();     // schedule
         }
 
@@ -81,6 +81,7 @@ void schedule()
     list_insert_last(&thread_queue, &current_thread->all_threads);
 
     // MAGIC_BREAK;
+    // lprintf("Switch from current: %p, to next: %p\n", current_thread, next_thread);
     context_switch(current_thread, next_thread);
     current_thread = next_thread;
     enable_interrupts();
@@ -90,11 +91,19 @@ void schedule()
 
 void context_switch(TCB *current, TCB *next)
 {
-    lprintf("93 context_switch");
-    MAGIC_BREAK;
+    lprintf("Switch from current: %p, to next: %p\n", current, next);
+
+    // MAGIC_BREAK;
     do_switch(current, next);
+    // TCB *temp = next;
+    // next = current;
+    // current = temp;
+   lprintf("(^_^)Switch from current: %p, to next: %p\n", current, next);
 
     set_cr3((uint32_t)next -> pcb -> PD);
+    // MAGIC_BREAK;
+    
+    
     set_esp0((uint32_t)(next -> stack_base + next -> stack_size));
 
     return;

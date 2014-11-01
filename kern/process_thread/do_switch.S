@@ -3,6 +3,7 @@
 .global do_switch
 
 do_switch:
+
 	pushl	%ebp
 	movl 	%esp,	%ebp
 	pusha
