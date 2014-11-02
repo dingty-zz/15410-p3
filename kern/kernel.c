@@ -67,8 +67,8 @@ int kernel_main(mbinfo_t *mbinfo, int argc, char **argv, char **envp)
 
     process_create("ck1", 0);   // we hang this thread
 
-    process_create("merchant", 1);   // we run this thread
-    // process_create("peon", 1);
+    process_create("merchant", 0);   // we run this thread
+    process_create("peon", 1);
 
 
     // process_create("fork_bomb", 1);   // we run this thread

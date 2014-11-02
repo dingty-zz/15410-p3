@@ -44,8 +44,8 @@ unsigned int seconds;
 extern list thread_queue;
 extern TCB *current_thread;  // indicates the current runnign thread
 void schedule();
-void context_switch(TCB *current, TCB *next);
-extern void do_switch(TCB *current, TCB *next);
+TCB * context_switch(TCB *current, TCB *next);
+extern void do_switch(TCB *current, TCB *next, int state);
 void prepare_init_thread(TCB *next);
 
 void tick(unsigned int numTicks)
@@ -69,52 +69,56 @@ void schedule()
 
     // pop a thread from the thread_queue
     node *n  = list_delete_first(&thread_queue);
+    lprintf("This node is %p", n);
     if (n == 0)
     {
         lprintf("ohohoh");
         MAGIC_BREAK;
     }
     TCB *next_thread = list_entry(n, TCB, all_threads);
-
+    lprintf("The next thread addr is %p", next_thread);
     lprintf("getcr3 %x", (unsigned int)get_cr3());
 
     list_insert_last(&thread_queue, &current_thread->all_threads);
 
     // MAGIC_BREAK;
     // lprintf("Switch from current: %p, to next: %p\n", current_thread, next_thread);
-    context_switch(current_thread, next_thread);
-    current_thread = next_thread;
+   current_thread = context_switch(current_thread, next_thread);
+     
+    lprintf(" current running: %p\n", current_thread);
+
     enable_interrupts();
 }
 
 // note that this implementation is NOT OK because you have to set esp to it's appropriate place
 
-void context_switch(TCB *current, TCB *next)
+TCB * context_switch(TCB *current, TCB *next)
 {
     lprintf("Switch from current: %p, to next: %p\n", current, next);
 
     // MAGIC_BREAK;
-    do_switch(current, next);
+        set_cr3((uint32_t)next -> pcb -> PD);
+    // MAGIC_BREAK;
+    
+    
+    set_esp0((uint32_t)(next -> stack_base + next -> stack_size));
+    do_switch(current, next, next -> state);
     // TCB *temp = next;
     // next = current;
     // current = temp;
    lprintf("(^_^)Switch from current: %p, to next: %p\n", current, next);
 
-    set_cr3((uint32_t)next -> pcb -> PD);
-    // MAGIC_BREAK;
-    
-    
-    set_esp0((uint32_t)(next -> stack_base + next -> stack_size));
 
-    return;
+
+    return current;
 }
 
 void prepare_init_thread(TCB *next)
 {
     lprintf("%p", next);
     lprintf("105, run this thread");
-    set_cr3((uint32_t)next -> pcb -> PD);
-    set_esp0((uint32_t)(next -> stack_base + next -> stack_size));
+    // set_cr3((uint32_t)next -> pcb -> PD);
+    // set_esp0((uint32_t)(next -> stack_base + next -> stack_size));
     next -> state = THREAD_RUNNING;
     current_thread = next;
     enable_interrupts();
