@@ -45,8 +45,8 @@ extern TCB *current_thread;
 int _gettid()
 {
     // return the tid from the currenspoding entry in tid
-    // return current_thread -> tid;
-    return 5;
+    return current_thread -> tid;
+    // return 5;
 
 }
 
