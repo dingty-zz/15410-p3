@@ -285,35 +285,36 @@ lprintf("dsfsdf");
     return 0;
 }
 
-// void set_status(int status)
-// {
-//     current_thread -> pcb -> return_state = status;
-//     return;
-
-// }
+void set_status(int status)
+{
+    mutex_lock(&current_thread -> tcb_mutex);
+    current_thread -> pcb -> return_state = status;
+    mutex_unlock(&current_thread -> tcb_mutex);
+    return;
+}
 
 
 void vanish(void)
 {
-    // list_delete(&thread_queue, &current_thread -> all_threads);
+    list_delete(&thread_queue, &current_thread -> all_threads);
 
-    // PCB *pcb = current_process = current_thread -> pcb;
+    PCB *pcb = current_process = current_thread -> pcb;
 
-    // if (list_length(pcb -> peer_threads) == 1) // if this is the last thread
-    // {
-    //     destroy_page_directory(pcb -> PD);
-    //     sfree(current_thread -> stack_base, current_thread -> stack_size);
-    //     // Make the exit status available to parent task, or init
-    //     free(tcb);
-    //     free(pcb);
-    // } else {
-    //     // display to the console
-    //     // set_status(-2)
-    //     // free resources
-    //     sfree(current_thread -> stack_base, current_thread -> stack_size);
-    //     free(tcb);
-    // }
-        // pick a next thread to run, same thing in context switch
+    if (list_length(pcb -> peer_threads) == 1) // if this is the last thread
+    {
+        destroy_page_directory(pcb -> PD);
+        sfree(current_thread -> stack_base, current_thread -> stack_size);
+        // Make the exit status available to parent task, or init
+        free(tcb);
+        free(pcb);
+    } else {
+        // display to the console
+        // set_status(-2)
+        // free resources
+        sfree(current_thread -> stack_base, current_thread -> stack_size);
+        free(tcb);
+    }
+        pick a next thread to run, same thing in context switch
     while(1) {
 
     }

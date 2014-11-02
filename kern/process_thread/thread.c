@@ -16,6 +16,7 @@
 #include "common_kern.h"
 #include "string.h"
 #include "eflags.h"
+#include "mutex_type.h"
 
 
 /** @brief Release a frame frame and mark it as freed only when refcount = 0.
@@ -46,6 +47,8 @@ TCB *thr_create(simple_elf_t *se_hdr, int run)
     TCB *tcb = (TCB *)malloc(sizeof(TCB));
     tcb -> tid = next_tid;
     next_tid++;
+    mutex_init(&tcb -> tcb_mutex);
+
     tcb -> state = THREAD_RUNNING;
 
     tcb -> stack_size = 4096;

@@ -16,7 +16,7 @@
 #include "linked_list.h"
 #include "vm_type.h"
 #include <elf/elf_410.h>
-#include "spinlock_type.h"
+#include "mutex_type.h"
 
 
 #define THREAD_EXIT -1
@@ -49,6 +49,7 @@ typedef struct PCB_t
     struct TCB_t *thread;
     node all_processes;
     uint32_t* PD;
+    mutex_t pcb_mutex;
 }PCB;
 
 
@@ -67,7 +68,7 @@ typedef struct TCB_t
 
     // node peer_threads;  // Now we only care about single threaded
     node all_threads;
-
+    mutex_t tcb_mutex;
 
     // struct TCB* prev;
     // struct TCB* next;
@@ -77,19 +78,19 @@ typedef struct TCB_t
 
 
 // Information about processes/threads in the kernel
-spinlock_t tid_lock;
+mutex_t tid_lock;
 uint32_t next_tid;
 
-spinlock_t pid_lock;
+mutex_t pid_lock;
 uint32_t next_pid;
 
-spinlock_t thread_queue_lock;
+mutex_t thread_queue_lock;
 list thread_queue;
 
-spinlock_t blocked_thread_queue_lock;
+mutex_t blocked_thread_queue_lock;
 list blocked_thread_queue;
 
-spinlock_t process_queue_lock;
+mutex_t process_queue_lock;
 list process_queue;
 
 TCB *current_thread;

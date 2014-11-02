@@ -16,6 +16,7 @@
 #include "common_kern.h"
 #include "string.h"
 #include "eflags.h"
+#include "mutex_type.h"
 
 // list thread_queue;
 // uint32_t next_tid = 0 ;
@@ -83,6 +84,7 @@ int process_create(const char *filename, int run)
     pcb -> state = PROCESS_RUNNING;
     pcb -> ppid = 0; // who cares this??
     pcb -> pid = next_pid;
+    mutex_init(&pcb -> pcb_mutex);
     next_pid++;
 
 

@@ -26,8 +26,7 @@ extern int handler_install(void (*tickback)(unsigned int));
 extern KF *mm_init();
 void allocate_page(uint32_t virtual_addr, size_t size);
 extern void tick(unsigned int numTicks);
-
-
+extern int malloc_init();
 // extern list thread_queue;
 // extern list process_queue;
 static KF *frame_base = 0;
@@ -49,7 +48,7 @@ int kernel_main(mbinfo_t *mbinfo, int argc, char **argv, char **envp)
      * when you are ready.
      */
 
-
+    malloc_init();
     handler_install(tick);
     lprintf("Hello from a brand new kernel! %lu", get_esp0());
 
