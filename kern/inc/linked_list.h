@@ -45,6 +45,9 @@ typedef struct list_t
 
 
 // Some generic list functions
+node *list_begin(list *l);
+node *list_end(list *l);
+
 void list_init(list *l);
 node *list_delete(list *l, node *n);  // generic delete function
 node *list_delete_id(list *l, int tid);  // delete this node with corresponding tid

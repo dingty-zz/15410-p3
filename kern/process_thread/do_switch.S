@@ -13,8 +13,8 @@ do_switch:
 	movl	16(%ebp),	%edx
 	movl	%esp, 		(%ebx)		# current -> esp = %esp
 
-	movl	(%ecx),		%esp		# switch stack to the next TCB's esp
-	cmp		$5,			%edx		# if current -> state = THREAD_INIT
+	movl	(%ecx),		%esp		# switch stack to the next TCB esp
+	cmp		$4,			%edx		# if current -> state = THREAD_INIT
 	je	 	when_init
 	popa
 	popl	%ebp

@@ -19,37 +19,37 @@
 #include "mutex_type.h"
 
 
-#define THREAD_EXIT -1
-#define THREAD_BLOCKED 0
-#define THREAD_RUNNING 1
-#define THREAD_RUNNABLE 2
-#define THREAD_DESCHEDULED 3     // only set when deschedule() is called
-#define THREAD_SLEEPING 4
-#define THREAD_INIT 5
+#define THREAD_EXIT -2
+#define THREAD_BLOCKED -1
+#define THREAD_RUNNING 0
+#define THREAD_RUNNABLE 1
+#define THREAD_DESCHEDULED 2     // only set when deschedule() is called
+#define THREAD_SLEEPING 3
+#define THREAD_INIT 4
 
-#define PROCESS_EXIT -1
-#define PROCESS_BLOCKED 0
-#define PROCESS_RUNNING 1
-#define PROCESS_RUNNABLE 2
+#define PROCESS_EXIT -2
+#define PROCESS_BLOCKED -1
+#define PROCESS_RUNNING 0
+#define PROCESS_RUNNABLE 1
+#define PROCESS_IDLE 2
 
 
 
 typedef struct PCB_t
 {
     int special;  // if this process is idle, then never delete out of queue
-    int ppid;
     int pid;
     int state; //running, ready, block
     int return_state;
-    // +++++++++++_t* parent;
-    // PCB_t** children;
-    // list *threads;  
+    PCB_t* parent;      // who creates me
 
-    // Now we only care about single threaded
-    struct TCB_t *thread;
+    list *threads;      // All threads that this process has, including self thread  
+
+    list *children // saves all forked child
     node all_processes;
     uint32_t* PD;
     mutex_t pcb_mutex;
+    cond_t  pcb_condvar;       // for process exit purposes
 }PCB;
 
 
@@ -66,7 +66,7 @@ typedef struct TCB_t
     unsigned int stack_size;  // 4096 (1 page) by default
     ureg_t registers;  // USER stack pointer is in here!
 
-    // node peer_threads;  // Now we only care about single threaded
+    node peer_threads;
     node all_threads;
     mutex_t tcb_mutex;
 

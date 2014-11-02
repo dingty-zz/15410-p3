@@ -13,34 +13,34 @@
 #include "control_block.h"
 extern TCB *current_thread;
 
-// int _yield(int tid)
-// {	
-// 	// COMPLEX enough
-// 	if (tid == -1)
-// 	{
-// 		schedule();
-// 	} else {
-//         TCB *dest_thread = list_find();
-//         list_insert_last(current_thread, tid);
-//         // run dest_thread
-//     }
-//     return -1;
-// }
+int _yield(int tid)
+{	
+	// COMPLEX enough
+	if (tid == -1)
+	{
+		schedule();
+	} else {
+        TCB *dest_thread = list_find();
+        list_insert_last(current_thread, tid);
+        // run dest_thread
+    }
+    return -1;
+}
 
-// int _deschedule(int *flag)
-// {
-//     current_thread -> state = THREAD_DESCHEDULED;
-//     next_thread = list_delete_first(threads);
-//     run next_thread;
-//     return 0;
-// }
+int _deschedule(int *flag)
+{
+    current_thread -> state = THREAD_DESCHEDULED;
+    next_thread = list_delete_first(threads);
+    run next_thread;
+    return 0;
+}
 
-// int _make_runnable(int pid)
-// {
-//     list_find(thrads) // find the descheduled thread and see if tid = tid
-//     thread -> state = THREAD_RUNNABLE;
-//     return -1;
-// }
+int _make_runnable(int pid)
+{
+    list_find(thrads) // find the descheduled thread and see if tid = tid
+    thread -> state = THREAD_RUNNABLE;
+    return -1;
+}
 
 int _gettid()
 {
@@ -50,10 +50,10 @@ int _gettid()
 
 }
 
-// int _sleep(int ticks)
-// {
-//     return -1;
-// }
+int _sleep(int ticks)
+{
+    return -1;
+}
 
 // int _swexn(void *esp3, swexn_handler_t eip, void *arg, ureg_t *newureg)
 // {

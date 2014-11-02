@@ -26,6 +26,12 @@ void list_init(list *l)
     l -> length = 0;
 }
 
+node *list_begin(list *l) {
+    return l -> head;
+}
+node *list_end(list *l) {
+    return l -> tail;
+}
 
 /** @brief The generic function to delete a specific node from a list
  *

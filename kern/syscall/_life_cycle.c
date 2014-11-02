@@ -17,6 +17,7 @@
 #include "common_kern.h"
 #include "string.h"
 #include "eflags.h"
+#include "mutex_type.h"
 
 extern list process_queue;
 extern uint32_t next_pid;
@@ -80,13 +81,13 @@ int _fork(void)
 
 
     //create a new page directory for the child, which points to the same page tables;
-    uint32_t* parent_table = parent_pcb -> PD;
+    uint32_t *parent_table = parent_pcb -> PD;
     child_pcb -> PD = (uint32_t *) smemalign(PD_SIZE * 4, PT_SIZE * 4);
     int i;
     //point to same page tables;
     for (i = 0; i < PD_SIZE; i++)
     {
-      (child_pcb -> PD)[i] = parent_table[i];
+        (child_pcb -> PD)[i] = parent_table[i];
     }
 
 
@@ -98,6 +99,10 @@ int _fork(void)
     return 0;
 }
 
+/* Two things to do:
+1. add return -1, exec_non_exist
+2. don't increase tid
+*/
 int _exec(char *execname, char *argvec[])
 {
     char *name = (char *)malloc(strlen(execname));
@@ -125,27 +130,27 @@ int _exec(char *execname, char *argvec[])
 
 
     lprintf("The argc==%d", argc);
-      simple_elf_t se_hdr;
+    simple_elf_t se_hdr;
 
     // elf_load_helper(&se_hdr, execname);
     // lprintf("%lx", se_hdr.e_entry);
-  PCB *pcb = (PCB *)malloc(sizeof(PCB));
-  //create a clean page directory
+    PCB *pcb = (PCB *)malloc(sizeof(PCB));
+    //create a clean page directory
     pcb -> PD = init_pd();
-  // set up pcb for this program
+    // set up pcb for this program
     elf_load_helper(&se_hdr, name);
-lprintf("dsfsdf");
-        allocate_pages(pcb -> PD, 
-      (uint32_t)se_hdr.e_txtstart, se_hdr.e_txtlen);
-            getbytes(se_hdr.e_fname, se_hdr.e_txtoff, se_hdr.e_txtlen, 
-      (char *)se_hdr.e_txtstart);
-            lprintf("Doneonoenoennoneoeneonoe");
-            MAGIC_BREAK;
+    lprintf("dsfsdf");
+    allocate_pages(pcb -> PD,
+                   (uint32_t)se_hdr.e_txtstart, se_hdr.e_txtlen);
+    getbytes(se_hdr.e_fname, se_hdr.e_txtoff, se_hdr.e_txtlen,
+             (char *)se_hdr.e_txtstart);
+    lprintf("Doneonoenoennoneoeneonoe");
+    MAGIC_BREAK;
     pcb -> state = PROCESS_RUNNING;
     pcb -> ppid = 0; // who cares this??
     pcb -> pid = next_pid;
     next_pid++;
-    
+
 
     // list_init(pcb -> threads);
     TCB *thread = thr_create(&se_hdr, 1); // please see thread.c
@@ -168,7 +173,7 @@ lprintf("dsfsdf");
     /* We need to do this everytime for a thread to run */
     current_thread = thread;
     // set up kernel stack pointer possibly bugs here
-    set_esp0((uint32_t)(thread -> stack_base + thread -> stack_size));  
+    set_esp0((uint32_t)(thread -> stack_base + thread -> stack_size));
     lprintf("this is the esp, %x", (unsigned int)get_esp0());
     /* Load the elf program using the helper function */
 
@@ -199,27 +204,27 @@ lprintf("dsfsdf");
     //MAGIC_BREAK;
 
     /* Allocate memory for every area */
-    allocate_pages(pcb -> PD, 
-      (uint32_t)se_hdr.e_datstart, se_hdr.e_datlen);
+    allocate_pages(pcb -> PD,
+                   (uint32_t)se_hdr.e_datstart, se_hdr.e_datlen);
     // MAGIC_BREAK;
 
-    allocate_pages(pcb -> PD, 
-      (uint32_t)se_hdr.e_rodatstart, se_hdr.e_rodatlen);
-    allocate_pages(pcb -> PD, 
-      (uint32_t)se_hdr.e_bssstart, se_hdr.e_bsslen);
-    allocate_pages(pcb -> PD, 
-      (uint32_t)0xfffff000, 4096); // possibly bugs here
+    allocate_pages(pcb -> PD,
+                   (uint32_t)se_hdr.e_rodatstart, se_hdr.e_rodatlen);
+    allocate_pages(pcb -> PD,
+                   (uint32_t)se_hdr.e_bssstart, se_hdr.e_bsslen);
+    allocate_pages(pcb -> PD,
+                   (uint32_t)0xfffff000, 4096); // possibly bugs here
 
     lprintf("allocate_pages done!");
     // *(int *)0xffffffff=3;
 
     // MAGIC_BREAK;
     // /* copy data from data field */
-    getbytes(se_hdr.e_fname, se_hdr.e_datoff, se_hdr.e_datlen, 
-      (char *)se_hdr.e_datstart);
+    getbytes(se_hdr.e_fname, se_hdr.e_datoff, se_hdr.e_datlen,
+             (char *)se_hdr.e_datstart);
 
-    getbytes(se_hdr.e_fname, se_hdr.e_rodatoff, se_hdr.e_rodatlen, 
-      (char *)se_hdr.e_rodatstart);
+    getbytes(se_hdr.e_fname, se_hdr.e_rodatoff, se_hdr.e_rodatlen,
+             (char *)se_hdr.e_rodatstart);
     memset((char *)se_hdr.e_bssstart, 0,  se_hdr.e_bsslen);
 
 
@@ -296,35 +301,107 @@ void set_status(int status)
 
 void vanish(void)
 {
-    list_delete(&thread_queue, &current_thread -> all_threads);
+    // Get pcb for current process
+    PCB *current_pcb = current_thread -> pcb;
 
-    PCB *pcb = current_process = current_thread -> pcb;
-
-    if (list_length(pcb -> peer_threads) == 1) // if this is the last thread
+    // If the parent has already exited
+    if (current_pcb -> parent == NULL)
     {
-        destroy_page_directory(pcb -> PD);
-        sfree(current_thread -> stack_base, current_thread -> stack_size);
-        // Make the exit status available to parent task, or init
-        free(tcb);
-        free(pcb);
-    } else {
-        // display to the console
-        // set_status(-2)
-        // free resources
-        sfree(current_thread -> stack_base, current_thread -> stack_size);
-        free(tcb);
+        // TODO report the status to init
     }
-        pick a next thread to run, same thing in context switch
-    while(1) {
+    list *threads = current_pcb -> threads;
+    node *n;
+
+    // check how many peers have already exited
+    int live_count = 0;
+    for (n = list_begin (threads); n != list_end (threads); n = n -> next)
+    {
+        TCB *tcb = list_entry(n, TCB, threads);
+        if (tcb -> state != THREAD_EXIT)
+        {
+            live_count++;
+        }
+    }
+
+    if (live_count <= 1) // if this is the last thread
+    {
+        for (n = list_begin (threads); n != list_end (threads); n = n -> next)
+        {
+            TCB *tcb = list_entry(n, TCB, threads);
+            if (tcb -> tid != current_thread -> tid)      // We only free tcb that is not the current tcb
+            {
+                sfree(tcb -> stack_base, tcb -> stack_size);
+                free(tcb);
+                list_delete(threads, n);
+            }
+
+        }
+
+        // Make the exit status available to parent task, or init
+        if (current_pcb -> parent -> state = PROCESS_EXIT)
+        {
+            // todo report the state to init
+        }
+        pcb -> state = PROCESS_EXIT;
+        cond_signal(pcb -> pcb_condvar);    // signal that I am exited, wait for parent to reap me
+    }
+    else
+    {
+        // display to the console by print()....
+        current_thread -> state = THREAD_EXIT;
 
     }
+        // pick a next thread to run, same thing in context switch lock needed?
+    schedule();
+
 
 }
 
-// int wait(int *status_ptr)
-// {
+int wait(int *status_ptr)
+{
+    // checkout ptr is not in kernel space, writable or not
 
-//     return -1;
+    // whether ptr is NULL
+    PCB *current_pcb = current_thread -> pcb;
+    list *children = current_pcb -> children
+    node *n;
+    for (n = list_begin (children); n != list_end (children); n = n -> next)
+    {
+        PCB *pcb = list_entry(n, PCB, children);
+        // Found one already exited child
+        if (pcb -> state == THREAD_EXIT)
+        {
+            int pid = pcb -> pid;
+            // collects the return status
+            if (status_ptr != NULL)
+            {
+                *status_ptr = pcb -> return_state;
+            }
+            // Reap this child
+            mutex_destory(pcb -> pcb_mutex);
+            cond_destory(pcb -> pcb_condvar);
+            free(pcb -> PD);
 
-// }
+            // free lists
+            free(pcb);
+            return pid;
+        }
+    }
+    // If no children is exited, wait till one of them exits
+    for (n = list_begin (children); n != list_end (children); n = n -> next) {
+        PCB *pcb = list_entry(n, PCB, children);
+        cond_wait(pcb -> pcb_mutex, pcb -> pcb_condvar);
+    }
+    // Reap this child
+    //free
 
+    
+}
+
+void destroy_pcb(PCB *pcb) {
+
+}
+
+void destroy_tcb(TCB *tcb) {
+
+}
