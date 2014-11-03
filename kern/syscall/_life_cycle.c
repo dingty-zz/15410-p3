@@ -93,8 +93,8 @@ int _fork(void)
 
     //insert child to the list of threads and processes
     list_insert_last(&process_queue, &child_pcb->all_processes);
-    list_insert_last(&thread_queue, &child_tcb->all_threads);
-    list_insert_last(&thread_queue, &parent_tcb->all_threads);
+    list_insert_last(&runnable_queue, &child_tcb->all_threads);
+    list_insert_last(&runnable_queue, &parent_tcb->all_threads);
 
     return 0;
 }
@@ -379,7 +379,7 @@ int wait(int *status_ptr)
             }
             // Reap this child
             mutex_destory(pcb -> pcb_mutex);
-            cond_destory(pcb -> pcb_condvar);
+            // cond_destory(pcb -> pcb_condvar);
             free(pcb -> PD);
 
             // free lists
@@ -390,7 +390,9 @@ int wait(int *status_ptr)
     // If no children is exited, wait till one of them exits
     for (n = list_begin (children); n != list_end (children); n = n -> next) {
         PCB *pcb = list_entry(n, PCB, children);
-        cond_wait(pcb -> pcb_mutex, pcb -> pcb_condvar);
+        // cond_wait(pcb -> pcb_mutex, pcb -> pcb_condvar);
+        // deschedule is needed
+        schedule(-1);
     }
     // Reap this child
     //free

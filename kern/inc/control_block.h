@@ -26,6 +26,8 @@
 #define THREAD_DESCHEDULED 2     // only set when deschedule() is called
 #define THREAD_SLEEPING 3
 #define THREAD_INIT 4
+// act as lock, the scheduler can't schedule this thread and just pass over
+#define THREAD_NONSCHEDULABLE 5  
 
 #define PROCESS_EXIT -2
 #define PROCESS_BLOCKED -1
@@ -49,7 +51,6 @@ typedef struct PCB_t
     node all_processes;
     uint32_t* PD;
     mutex_t pcb_mutex;
-    cond_t  pcb_condvar;       // for process exit purposes
 }PCB;
 
 
@@ -69,7 +70,7 @@ typedef struct TCB_t
     node peer_threads;
     node all_threads;
     mutex_t tcb_mutex;
-
+    int ticks;
     // struct TCB* prev;
     // struct TCB* next;
     // struct TCB* wait_next;
@@ -85,10 +86,10 @@ mutex_t pid_lock;
 uint32_t next_pid;
 
 mutex_t thread_queue_lock;
-list thread_queue;
+list runnable_queue;
 
-mutex_t blocked_thread_queue_lock;
-list blocked_thread_queue;
+// mutex_t blocked_thread_queue_lock;
+// list blocked_thread_queue;
 
 mutex_t process_queue_lock;
 list process_queue;

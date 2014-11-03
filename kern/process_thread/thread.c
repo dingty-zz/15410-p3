@@ -28,7 +28,7 @@
  **/
 int thr_init()
 {
-    list_init(&thread_queue);
+    list_init(&runnable_queue);
     next_tid = 1;
     return 0;
 }
@@ -79,7 +79,7 @@ TCB *thr_create(simple_elf_t *se_hdr, int run)
     if (!run)
     {
         // if not run, we put it in the run queue
-        list_insert_last(&thread_queue, &tcb -> all_threads);
+        list_insert_last(&runnable_queue, &tcb -> all_threads);
         tcb -> state = THREAD_INIT;
     }
     return tcb;

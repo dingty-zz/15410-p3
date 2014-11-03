@@ -371,3 +371,12 @@ void release_free_frame(uint32_t address)
 
 // parsing the virtual address
 // struct virtual_addr parse(uint32_t virtual_addr);
+
+
+// 0 fail 1 success
+int verify_user_addr(void *addr) {
+    int is_null = addr == NULL;
+    int is_in_kernel = addr < (void *)0x01000000;
+    int has_mapping = has_mapping();
+    return !is_null && !is_in_kernel && has_mapping;
+}

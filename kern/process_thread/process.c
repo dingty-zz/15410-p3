@@ -18,7 +18,7 @@
 #include "eflags.h"
 #include "mutex_type.h"
 
-// list thread_queue;
+// list runnable_queue;
 // uint32_t next_tid = 0 ;
 
 uint32_t next_pid = 0;

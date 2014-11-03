@@ -11,48 +11,103 @@
  */
 #include <syscall.h>
 #include "control_block.h"
-extern TCB *current_thread;
+#include "mutex_type.h"
 
+extern TCB *current_thread;
+extern list runnable_queue;
+
+mutex_t sched_lock;
 int _yield(int tid)
-{	
-	// COMPLEX enough
-	if (tid == -1)
-	{
-		schedule();
-	} else {
-        TCB *dest_thread = list_find();
-        list_insert_last(current_thread, tid);
-        // run dest_thread
+{
+
+    if (tid == -1)
+    {
+        schedule();
+        return 0;   // can return back here??
     }
-    return -1;
+    else
+    {
+        node *n;
+        for (n = list_begin (&blocked_thread_queue); n != list_end(&blocked_thread_queue); n = n -> next)
+        {
+            TCB *tcb = list_entry(n, TCB, all_threads);
+            if (tcb -> tid == tid)
+            {
+                return -1;
+            }
+        }
+
+        for (n = list_begin (&runnable_queue); n != list_end(&runnable_queue); n = n -> next)
+        {
+            TCB *tcb = list_entry(n, TCB, all_threads);
+            if (tcb -> tid == tid)
+            {
+                list_insert_last(current_thread, tid)
+            }
+        }
+    }
+
+    return schedule(tid);
 }
 
-int _deschedule(int *flag)
+int _deschedule(int *reject)
 {
+    // check pointer
+    if (*reject != 0)
+    {
+        return 0;
+    }
     current_thread -> state = THREAD_DESCHEDULED;
-    next_thread = list_delete_first(threads);
-    run next_thread;
+    schedule(-1);
     return 0;
 }
 
-int _make_runnable(int pid)
+int _make_runnable(int tid)
 {
-    list_find(thrads) // find the descheduled thread and see if tid = tid
+    if (tid <= 0)
+    {
+        return -1;
+    }
+    // find the descheduled thread and see if tid = tid
+    for (n = list_begin (&runnable_queue); n != list_end(&runnable_queue); n = n -> next)
+    {
+        TCB *tcb = list_entry(n, TCB, all_threads);
+        if (tcb -> tid == tid)
+        {
+            if (tcb -> state == THREAD_RUNNABLE ||
+            	tcb -> state == THREAD_BLOCKED)
+            {
+                return -1;
+            }
+        }
+    }
     thread -> state = THREAD_RUNNABLE;
-    return -1;
+    return 0;
 }
 
 int _gettid()
 {
     // return the tid from the currenspoding entry in tid
+
     return current_thread -> tid;
-    // return 5;
+
 
 }
 
 int _sleep(int ticks)
 {
-    return -1;
+	if (ticks < 0)
+	{
+	    return -1;	
+	} else if (ticks == 0)
+	{
+		return 0;
+	}else{
+		current_thread -> ticks = ticks;
+		current_thread -> state = THREAD_SLEEPING;
+		schedule(-1);
+	}
+	return 0;
 }
 
 // int _swexn(void *esp3, swexn_handler_t eip, void *arg, ureg_t *newureg)

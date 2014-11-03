@@ -21,6 +21,7 @@
 #include <x86/asm.h>
 // #include "linked_list.c"
 
+// mutex_t mutex;
 #define offsetoff(TYPE, MEMBER) ((size_t) &((TYPE *) 0)->MEMBER)
 #define list_entry(LIST_ELEM, STRUCT, MEMBER)    \
     ((STRUCT *) ((uint8_t *) LIST_ELEM    \
@@ -41,10 +42,10 @@ extern void enter_user_mode(uint32_t ss,
                             uint32_t edi);
 
 unsigned int seconds;
-extern list thread_queue;
+extern list runnable_queue;
 extern TCB *current_thread;  // indicates the current runnign thread
 void schedule();
-TCB * context_switch(TCB *current, TCB *next);
+TCB *context_switch(TCB *current, TCB *next);
 extern void do_switch(TCB *current, TCB *next, int state);
 void prepare_init_thread(TCB *next);
 
@@ -62,51 +63,67 @@ void tick(unsigned int numTicks)
     }
 
 }
-
-void schedule()
+// have the priority to schedule the blocked thread?    
+void schedule(int tid)
 {
-    disable_interrupts();
+    // Unless the current thread is non-schedulable, and there is no
+    // runnable thread, calling schedule must
+    // result in a context switch, finding a schedulable thread as much
+    // as possible
 
-    // pop a thread from the thread_queue
-    node *n  = list_delete_first(&thread_queue);
-    lprintf("This node is %p", n);
-    if (n == 0)
+    // If the current is non schedulable.
+    if (current_thread -> state == THREAD_NONSCHEDULABLE)
     {
-        lprintf("ohohoh");
-        MAGIC_BREAK;
+        return;
     }
-    TCB *next_thread = list_entry(n, TCB, all_threads);
-    lprintf("The next thread addr is %p", next_thread);
-    lprintf("getcr3 %x", (unsigned int)get_cr3());
+    disable_interrupts();
+    if (tid == -1)
+    {
 
-    list_insert_last(&thread_queue, &current_thread->all_threads);
+        // pop a thread from the runnable_queue
+        node *n  = list_delete_first(&runnable_queue);
+        lprintf("This node is %p", n);
+        if (n == 0)
+        {
+            lprintf("ohohoh");
+            MAGIC_BREAK;
+        }
+        TCB *next_thread = list_entry(n, TCB, all_threads);
+        if (next_thread -> )
+        {
+            /* code */
+        }
+        lprintf("The next thread addr is %p", next_thread);
+        lprintf("getcr3 %x", (unsigned int)get_cr3());
 
-    // MAGIC_BREAK;
-    // lprintf("Switch from current: %p, to next: %p\n", current_thread, next_thread);
-   current_thread = context_switch(current_thread, next_thread);
-     
-    lprintf(" current running: %p\n", current_thread);
+        list_insert_last(&runnable_queue, &current_thread->all_threads);
+
+        // MAGIC_BREAK;
+        // lprintf("Switch from current: %p, to next: %p\n", current_thread, next_thread);
+        current_thread = context_switch(current_thread, next_thread);
+
+        lprintf(" current running: %p\n", current_thread);
+    }
 
     enable_interrupts();
 }
 
-// note that this implementation is NOT OK because you have to set esp to it's appropriate place
 
-TCB * context_switch(TCB *current, TCB *next)
+TCB *context_switch(TCB *current, TCB *next)
 {
     lprintf("Switch from current: %p, to next: %p\n", current, next);
 
     // MAGIC_BREAK;
-        set_cr3((uint32_t)next -> pcb -> PD);
+    set_cr3((uint32_t)next -> pcb -> PD);
     // MAGIC_BREAK;
-    
-    
+
+
     set_esp0((uint32_t)(next -> stack_base + next -> stack_size));
     do_switch(current, next, next -> state);
     // TCB *temp = next;
     // next = current;
     // current = temp;
-   lprintf("(^_^)Switch from current: %p, to next: %p\n", current, next);
+    lprintf("(^_^)Switch from current: %p, to next: %p\n", current, next);
 
 
 

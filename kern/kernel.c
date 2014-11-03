@@ -27,7 +27,7 @@ extern KF *mm_init();
 void allocate_page(uint32_t virtual_addr, size_t size);
 extern void tick(unsigned int numTicks);
 extern int malloc_init();
-// extern list thread_queue;
+// extern list runnable_queue;
 // extern list process_queue;
 static KF *frame_base = 0;
 
