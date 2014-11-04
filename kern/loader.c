@@ -47,7 +47,7 @@ int getbytes( const char *filename, int offset, int size, char *buf )
         }
     }
     memcpy(buf, (void *)exec2obj_userapp_TOC[i].execbytes + offset, size);
-     lprintf("The address for execbytes is: %p, %p", exec2obj_userapp_TOC[i].execbytes, &exec2obj_userapp_TOC[i]);
+    //lprintf("The address for execbytes is: %p, %p", exec2obj_userapp_TOC[i].execbytes, &exec2obj_userapp_TOC[i]);
     return size;
 }
 

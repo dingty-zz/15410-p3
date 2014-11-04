@@ -11,13 +11,12 @@ void _halt(void)
     while(1);
 }
 
-int readfile(char *filename, char *buf, int count, int offset)
+int _readfile(char *filename, char *buf, int count, int offset)
 {
 	// verify filename ,buf
 	if (count < 0 || offset < 0)
 	{
 	return -1;
-		
 	}
 	int size = 0;
 	current_thread -> state = THREAD_NONSCHEDULABLE;
