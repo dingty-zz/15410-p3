@@ -1,8 +1,8 @@
-
+#defie
 
 .global gettid
 
-.extern _gettid
+.extern sys_gettid
 
 gettid:
 
@@ -19,7 +19,7 @@ gettid:
 	pushl 	%fs
 	pushl 	%gs
 
-	call 	_gettid
+	call 	sys_gettid
 
 	popl	%gs	
 	popl	%fs	

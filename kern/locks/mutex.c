@@ -13,8 +13,8 @@
 */
 #include <syscall.h>
 #include "mutex_type.h"
-#include "malloc.h"
 #include "control_block.h"
+#include "atomic_xchange.h"
 
 extern TCB *current_thread;
 /** @brief The function to initialize a mutex, which is unlocked initially

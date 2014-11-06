@@ -42,7 +42,7 @@ int handler_install(void (*tickback)(unsigned int))
     // _handler_install(0x5, BR);
     // _handler_install(0x6, UD);
     // _handler_install(0x7, NM);
-    // // _handler_install(0x8, DF);
+    // _handler_install(0x8, DF);
     // _handler_install(0x10, TS);
     // _handler_install(0x11, NP);
     // _handler_install(0x12, SS);
@@ -77,10 +77,6 @@ int handler_install(void (*tickback)(unsigned int))
     _handler_install(KEY_IDT_ENTRY, keyboard_wrapper);
     /* initialize system call handlers */
 
-
-
-    _handler_install(GETTID_INT, (void *)gettid);
-    // _handler_install(VANISH_INT, (void *)gettid);
     _handler_install(EXEC_INT, (void *)exec);
     _handler_install(FORK_INT, (void *)fork);
 

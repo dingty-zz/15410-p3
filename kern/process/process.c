@@ -18,6 +18,8 @@
 #include "eflags.h"
 #include "mutex_type.h"
 #include "enter_user_mode.h"
+#include "thread.h"
+#include "vm_routines.h"
 
 // list runnable_queue;
 // uint32_t next_tid = 0 ;
@@ -25,8 +27,6 @@
 uint32_t next_pid = 0;
 
 void allocate_pages(uint32_t *pd, uint32_t virtual_addr, size_t size);
-extern TCB *thr_create(simple_elf_t *se_hdr, int run);
-extern uint32_t *init_pd();
 
 extern TCB *current_thread;
 

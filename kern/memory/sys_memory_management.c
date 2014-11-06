@@ -6,9 +6,11 @@
  *  @author Tianyuan Ding (tding)
  *  @bug No known bugs
  */
-void allocate_pages(uint32_t *pd, uint32_t virtual_addr, size_t size);
-void free_pages(uint32_t *pd, uint32_t virtual_addr, size_t size);
+#include "vm_routines.h"
+#include "control_block.h"
+
 extern TCB *current_thread;
+
 /** @brief Release a frame frame and mark it as freed only when refcount = 0.
  *         If so, let free_frame point to it.
  *

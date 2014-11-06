@@ -11,14 +11,14 @@
 #include "eflags.h"
 #include "mutex_type.h"
 #include "enter_user_mode.h"
+#include "process.h"
+#include "vm_routines.h"
+#include "thread.h"
+
 
 extern list process_queue;
 extern uint32_t next_pid;
-extern int process_create(const char *filename, int run);
-void allocate_pages(uint32_t *pd, uint32_t virtual_addr, size_t size);
 
-extern TCB *thr_create(simple_elf_t *se_hdr, int run);
-extern uint32_t *init_pd();
 extern TCB *current_thread;
 
 /* Two things to do:

@@ -1,5 +1,5 @@
  /**
- * @file do_switch.h
+ * @file thread.h
  *
  * @brief This file defines two status of the spinlock and 
  *		  several lock manipulation functions.
@@ -9,12 +9,16 @@
  *
  */
 
-#ifndef _DO_SWITCH_H
-#define _DO_SWITCH_H
+#ifndef _THREAD_H
+#define _THREAD_H
 
 #include "control_block.h"
  
-void do_switch(TCB *current, TCB *next, int state);
+int thr_init();
+
+TCB *thr_create(simple_elf_t *se_hdr, int run);
+
+int thr_exit();
 
 
-#endif /* _DO_SWITCH_H */
+#endif /* _THREAD_H */

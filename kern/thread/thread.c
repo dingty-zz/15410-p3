@@ -29,6 +29,7 @@
 int thr_init()
 {
     list_init(&runnable_queue);
+    list_init(&blocked_queue);
     next_tid = 1;
     return 0;
 }

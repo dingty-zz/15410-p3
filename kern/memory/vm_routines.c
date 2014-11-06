@@ -1,4 +1,4 @@
-/** @file mem_memt.c
+/** @file vm_routines.c
  *
  *  @brief This file includes paging handling routines
 *          1. General design, PD, PT descrptions
@@ -10,6 +10,7 @@
  */
 
 #include <syscall.h>
+#include "vm_routines.h"
 #include "cr.h"
 #include <malloc.h>
 #include "simics.h"
@@ -17,12 +18,7 @@
 #include "string.h"
 static KF *frame_base;      // always fixed
 static KF *free_frame;      // points to the first free frame where refcount = 0
-void init_free_frame();
-uint32_t acquire_free_frame();
-void release_free_frame(uint32_t address);
-int virtual_map_physical(uint32_t *PD, uint32_t pd_index, uint32_t pt_index);
-int virtual_unmap_physical(uint32_t *PD, uint32_t pd_index, uint32_t pt_index);
-void destroy_page_table(uint32_t pt);
+
 /** @brief Initialize the whole memory system, immediately
  *         called when the kernel enters to enable paging
  *

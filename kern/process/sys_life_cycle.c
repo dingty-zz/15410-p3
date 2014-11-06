@@ -19,11 +19,11 @@
 #include "eflags.h"
 #include "mutex_type.h"
 #include "simics.h"
+#include "vm_routines.h"
 
 extern list process_queue;
 extern uint32_t next_pid;
-extern int process_create(const char *filename, int run);
-void allocate_pages(uint32_t *pd, uint32_t virtual_addr, size_t size);
+
 
 extern TCB *current_thread;
 

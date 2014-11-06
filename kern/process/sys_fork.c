@@ -10,6 +10,7 @@
 #include "string.h"
 #include "eflags.h"
 #include "mutex_type.h"
+#include "vm_routines.h"
 
 /** @brief Determine if the given queue is empty
  *

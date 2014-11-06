@@ -24,32 +24,33 @@
 			popl	%edi	\
 			popl	%ebp	\
 
-.global halt
-.global readfile
+.global new_pages
+.global remove_pages
 
-.extern sys_halt
-.extern sys_readfile
+.extern sys_new_pages
+.extern sys_remove_pages
 
-halt:
-
-	PUSHREGS
-
-	call 	sys_halt
-
-	# This function won't return
-
-
-
-readfile:
+new_pages:
 
 	PUSHREGS
 
-	pushl 	12(%esi)	# offset
-	pushl 	8(%esi)		# count
-	pushl 	4(%esi)		# buf
-	pushl 	(%esi)		# filename
-	call 	sys_readfile
+	pushl 	4(%esi)
+	pushl 	(%esi)
+	call 	sys_new_pages
 
 	POPREGS
 
-	iret
+	iret	
+
+
+
+remove_pages:
+
+	PUSHREGS
+
+	pushl 	%esi
+	call 	sys_remove_pages
+
+	POPREGS
+
+	iret	

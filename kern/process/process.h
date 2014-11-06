@@ -12,9 +12,14 @@
 #ifndef _PROCESS_H
 #define _PROCESS_H
 
-#include "control_block.h"
  
-void do_switch(TCB *current, TCB *next, int state);
+int process_init();
+
+
+int process_create(const char *filename, int run);
+
+
+int process_exit();
 
 
 #endif /* _PROCESS_H */

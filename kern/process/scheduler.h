@@ -9,12 +9,11 @@
  *
  */
 
-#ifndef _DO_SWITCH_H
-#define _DO_SWITCH_H
+#ifndef _SCHEDULER_H
+#define _SCHEDULER_H
 
-#include "control_block.h"
  
-void do_switch(TCB *current, TCB *next, int state);
+void schedule(int tid);
 
 
-#endif /* _DO_SWITCH_H */
+#endif /* _SCHEDULER_H */

@@ -1,10 +1,13 @@
 #include <syscall.h>
+#include "simics.h"
+#include "loader.h"
 
+extern TCB *current_thread;
 
 void sys_halt(void)
 {
 	clear_console();        
-    printf("Shutting down...");
+    lprintf("Shutting down...");
     sim_halt();
 
     // TODO power off
