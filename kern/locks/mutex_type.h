@@ -11,7 +11,6 @@
 #define _MUTEX_TYPE_H
 
 #include "linked_list.h"
-#include "spinlock_type.h"
  
 #define MUTEX_LOCKED 1
 #define MUTEX_UNLOCKED 0
@@ -19,7 +18,8 @@
 
 typedef struct mutex {
     int status;			// The status for the mutex
-    spinlock_t lock;	// The core functioning spinlock
+    int tid;			// The thread who holds it
+    int count;			// Number of threads who holds the lock
 } mutex_t;
 
 int mutex_init(mutex_t *mp);

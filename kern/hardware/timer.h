@@ -24,4 +24,5 @@ int timer_handler();
  **/
 void setup_timer(void (*tickback)(unsigned int));
 
+unsigned int sys_get_ticks()
 #endif

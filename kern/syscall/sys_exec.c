@@ -10,24 +10,13 @@
 #include "string.h"
 #include "eflags.h"
 #include "mutex_type.h"
+#include "enter_user_mode.h"
 
 extern list process_queue;
 extern uint32_t next_pid;
 extern int process_create(const char *filename, int run);
 void allocate_pages(uint32_t *pd, uint32_t virtual_addr, size_t size);
 
-extern void enter_user_mode(uint32_t ss,
-                            uint32_t esp,
-                            uint32_t eflags,
-                            uint32_t cs,
-                            uint32_t eip,
-                            uint32_t eax,
-                            uint32_t ecx,
-                            uint32_t edx,
-                            uint32_t ebx,
-                            uint32_t ebp,
-                            uint32_t esi,
-                            uint32_t edi);
 extern TCB *thr_create(simple_elf_t *se_hdr, int run);
 extern uint32_t *init_pd();
 extern TCB *current_thread;
@@ -36,7 +25,7 @@ extern TCB *current_thread;
 1. add return -1, exec_non_exist
 2. don't increase tid
 */
-int _exec(char *execname, char *argvec[])
+int sys_exec(char *execname, char *argvec[])
 {
     char *name = (char *)malloc(strlen(execname));
     memcpy(name, execname, strlen(execname));

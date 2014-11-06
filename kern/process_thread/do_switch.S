@@ -1,4 +1,3 @@
-
 .extern prepare_init_thread
 .global do_switch
 

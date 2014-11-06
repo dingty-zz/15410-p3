@@ -9,7 +9,6 @@
 #include "linked_list.h"
 #include "control_block.h"
 #include "simics.h"
-#include "linked_list.h"
 #include "seg.h"
 #include "cr.h"
 #include "simics.h"
@@ -19,34 +18,20 @@
 #include "string.h"
 #include "eflags.h"
 #include <x86/asm.h>
-// #include "linked_list.c"
+#include "do_switch.h"
+#include "enter_user_mode.h"
+#include "timer.h"
 
-// mutex_t mutex;
 #define offsetoff(TYPE, MEMBER) ((size_t) &((TYPE *) 0)->MEMBER)
 #define list_entry(LIST_ELEM, STRUCT, MEMBER)    \
     ((STRUCT *) ((uint8_t *) LIST_ELEM    \
                  - offsetoff (STRUCT, MEMBER)))
-
-
-extern void enter_user_mode(uint32_t ss,
-                            uint32_t esp,
-                            uint32_t eflags,
-                            uint32_t cs,
-                            uint32_t eip,
-                            uint32_t eax,
-                            uint32_t ecx,
-                            uint32_t edx,
-                            uint32_t ebx,
-                            uint32_t ebp,
-                            uint32_t esi,
-                            uint32_t edi);
 
 unsigned int seconds;
 extern list runnable_queue;
 extern TCB *current_thread;  // indicates the current runnign thread
 void schedule();
 TCB *context_switch(TCB *current, TCB *next);
-extern void do_switch(TCB *current, TCB *next, int state);
 void prepare_init_thread(TCB *next);
 
 void tick(unsigned int numTicks)
@@ -63,47 +48,73 @@ void tick(unsigned int numTicks)
     }
 
 }
-// have the priority to schedule the blocked thread?    
+// have the priority to schedule the blocked thread?  i think so
 void schedule(int tid)
 {
+    disable_interrupts();
+    // Before actual context switching, we make sleeping thread to be
+    // runnable if it's the time to wake up
+    node *n;
+    for (n = list_begin(&blocked_queue); n != list_end(&blocked_queue); n = n -> next)
+    {
+        TCB *tcb = list_entry(n, TCB, thread_list);
+        if (tcb -> state == THREAD_SLEEPING)
+        {
+            if (tcb -> start_ticks + tcb -> duration < sys_get_ticks())
+            {
+                tcb -> state = THREAD_RUNNABLE;
+                list_delete(&blocked_queue, n);
+                list_insert_last(&runnable_queue, n);
+            }
+        }
+    }
+
     // Unless the current thread is non-schedulable, and there is no
     // runnable thread, calling schedule must
     // result in a context switch, finding a schedulable thread as much
     // as possible
 
-    // If the current is non schedulable.
-    if (current_thread -> state == THREAD_NONSCHEDULABLE)
-    {
-        return;
-    }
-    disable_interrupts();
+
+    // TODO, schedule halt for spinning
+
+
+    TCB *next_thread = NULL;
     if (tid == -1)
     {
-
         // pop a thread from the runnable_queue
         node *n  = list_delete_first(&runnable_queue);
-        lprintf("This node is %p", n);
-        if (n == 0)
-        {
-            lprintf("ohohoh");
-            MAGIC_BREAK;
-        }
-        TCB *next_thread = list_entry(n, TCB, all_threads);
-        if (next_thread -> )
-        {
-            /* code */
-        }
-        lprintf("The next thread addr is %p", next_thread);
-        lprintf("getcr3 %x", (unsigned int)get_cr3());
-
-        list_insert_last(&runnable_queue, &current_thread->all_threads);
-
-        // MAGIC_BREAK;
-        // lprintf("Switch from current: %p, to next: %p\n", current_thread, next_thread);
-        current_thread = context_switch(current_thread, next_thread);
-
-        lprintf(" current running: %p\n", current_thread);
+        TCB *next_thread = list_entry(n, TCB, thread_list);
     }
+    else      // Search for a specific thread
+    {
+        next_thread = list_search_tid(&runnable_queue, tid);
+    }
+
+    lprintf("The next thread addr is %p", next_thread);
+    lprintf("getcr3 %x", (unsigned int)get_cr3());
+
+    switch (current_thread -> state)
+    {
+
+        case THREAD_EXIT:
+            break;      // we don't put the current thread back to queue
+
+        case THREAD_BLOCKED:
+        case THREAD_WAITING:
+            list_insert_last(&blocked_queue, &current_thread->thread_list);
+            break;
+
+        default:
+            list_insert_last(&runnable_queue, &current_thread->thread_list);
+    }
+
+    // MAGIC_BREAK;
+    // lprintf("Switch from current: %p, to next: %p\n", current_thread, next_thread);
+    current_thread = context_switch(current_thread, next_thread);
+
+    lprintf(" current running: %p\n", current_thread);
+
+
 
     enable_interrupts();
 }
@@ -151,4 +162,23 @@ void prepare_init_thread(TCB *next)
                     next -> registers.eflags,
                     next -> registers.esp,
                     next -> registers.ss);
+}
+
+/** @brief The generic function to search for a specific tid in a list
+ *
+ *  @param l the pointer to the node with that specific tid
+ *  @return the node that matches the tid
+ */
+TCB *list_search_tid(list *l, int tid)
+{
+    if (l == NULL) return NULL;
+    node *temp = l -> head;
+    while (temp)
+    {
+        TCB *thread = list_entry(temp, TCB, l);
+        if (thread -> tid == tid)
+            return thread;
+        temp = temp -> next;
+    }
+    return NULL;
 }

@@ -79,7 +79,7 @@ TCB *thr_create(simple_elf_t *se_hdr, int run)
     if (!run)
     {
         // if not run, we put it in the run queue
-        list_insert_last(&runnable_queue, &tcb -> all_threads);
+        list_insert_last(&runnable_queue, &tcb -> thread_list);
         tcb -> state = THREAD_INIT;
     }
     return tcb;

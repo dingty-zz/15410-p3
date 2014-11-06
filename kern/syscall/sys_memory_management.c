@@ -17,7 +17,7 @@ extern TCB *current_thread;
  *  @param address address must be both
  physical address and 4KB aligned (really ?)
  **/
-int _new_pages(void *addr, int len)
+int sys_new_pages(void *addr, int len)
 {
     /* If either the address is invalid or len is not aligned,
      * return a negative number */
@@ -40,7 +40,7 @@ freed only when refcount = 0.
  *  @param address address must be both physical
  ddress and 4KB aligned (really ?)
  **/
-int _remove_pages(void *addr)
+int sys_remove_pages(void *addr)
 {
     if (addr == NULL ||                     // addr is null
             (uint32_t)addr < 0x01000000 ||      // addr is in kernel memory

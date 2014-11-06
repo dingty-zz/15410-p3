@@ -23,7 +23,7 @@
 #define THREAD_BLOCKED -1
 #define THREAD_RUNNING 0
 #define THREAD_RUNNABLE 1
-#define THREAD_DESCHEDULED 2     // only set when deschedule() is called
+#define THREAD_WAITING 2     // only set when deschedule() is called
 #define THREAD_SLEEPING 3
 #define THREAD_INIT 4
 // act as lock, the scheduler can't schedule this thread and just pass over
@@ -63,12 +63,16 @@ typedef struct TCB_t
     int tid;
     int state;
 
+    // For thread sleeping
+    unsigned int start_ticks;
+    unsigned int duration;
+
     void *stack_base;           // KERNEL stack base
     unsigned int stack_size;  // 4096 (1 page) by default
     ureg_t registers;  // USER stack pointer is in here!
 
     node peer_threads;
-    node all_threads;
+    node thread_list;
     mutex_t tcb_mutex;
     int ticks;
     // struct TCB* prev;
@@ -85,12 +89,15 @@ uint32_t next_tid;
 mutex_t pid_lock;
 uint32_t next_pid;
 
-mutex_t thread_queue_lock;
+mutex_t runnable_queue_lock;
 list runnable_queue;
 
-// mutex_t blocked_thread_queue_lock;
-// list blocked_thread_queue;
 
+// Both THREAD_BLOCKED and THREAD_SLEEPING are put in this queue
+mutex_t blocked_queue_lock;
+list blocked_queue;
+
+// Not sure if this is useful
 mutex_t process_queue_lock;
 list process_queue;
 

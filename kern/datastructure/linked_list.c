@@ -79,23 +79,6 @@ node *list_delete_last(list *l)
     return list_delete(l, l -> tail);
 }
 
-// /** @brief The generic function to search for a specific tid in a list
-//  *
-//  *  @param l the pointer to the node with that specific tid
-//  *  @return the node that matches the tid
-//  */
-// node *list_search(list *l, )
-// {
-//     if (l == NULL) return NULL;
-//     node *temp = l -> head;
-//     while (temp)
-//     {
-//         if (temp -> tid == tid)
-//             return temp;
-//         temp = temp -> next;
-//     }
-//     return NULL;
-// }
 
 /** @brief Insert a node at the first place in the linked list
  *

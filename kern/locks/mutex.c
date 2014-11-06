@@ -14,8 +14,9 @@
 #include <syscall.h>
 #include "mutex_type.h"
 #include "malloc.h"
-#include "spinlock_type.h"
+#include "control_block.h"
 
+extern TCB *current_thread;
 /** @brief The function to initialize a mutex, which is unlocked initially
  *
  *  @param mp A pointer to the mutex
@@ -24,7 +25,8 @@
 int mutex_init(mutex_t *mp)
 {
     mp -> status = MUTEX_UNLOCKED;
-    spinlock_init(&(mp -> lock));
+    mp -> count = 0;
+    mp -> tid = -1;
     return 0;
 }
 
@@ -35,10 +37,8 @@ int mutex_init(mutex_t *mp)
  */
 void mutex_destroy(mutex_t *mp)
 {
-    spinlock_destroy(&mp -> lock); // Destroy a spinlock
-
     // Vanish when trying to destroy a locking mutex
-    if (mp -> status == MUTEX_LOCKED) vanish();  
+    if (mp -> status == MUTEX_LOCKED || mp -> count > 0) vanish();  
     mp -> status = MUTEX_UNAVAILABLE;
 }
 
@@ -49,9 +49,11 @@ void mutex_destroy(mutex_t *mp)
  */
 void mutex_lock(mutex_t *mp)
 {
-    if (mp -> status == MUTEX_UNAVAILABLE) return;
-    spinlock_lock(&mp -> lock);
-    mp -> status = MUTEX_LOCKED;
+    mp -> count++;
+    int is_locked;
+    while ((is_locked = atomic_xchange(&(mp->state)))) 
+        schedule(mp -> tid);     // yield to the thread who holds the lock
+    mp -> tid = current_thread -> tid;
 }
 
 /** @brief The function to initialize the doubly linked list
@@ -61,8 +63,8 @@ void mutex_lock(mutex_t *mp)
  */
 void mutex_unlock(mutex_t *mp)
 {
-    if (mp -> status == MUTEX_UNAVAILABLE) return;
+    mp -> count--;
+    mp -> tid = -1;
     mp -> status = MUTEX_UNLOCKED;
-    spinlock_unlock(&mp -> lock);
 }
 
