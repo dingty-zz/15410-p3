@@ -22,18 +22,19 @@
 #include "mem_internals.h"
 /* x86 specific includes */
 #include <x86/asm.h>                /* enable_interrupts() */
-extern int handler_install(void (*tickback)(unsigned int));
-extern KF *mm_init();
-void allocate_page(uint32_t virtual_addr, size_t size);
-extern void tick(unsigned int numTicks);
-extern int malloc_init();
-// extern list runnable_queue;
-// extern list process_queue;
-static KF *frame_base = 0;
 
-extern int process_create(const char *filename, int run);
-extern int process_init();
-extern int thr_init();
+/* Include all related header files in kern/ */
+#include "handler_install.h"
+#include "vm_routines.h"
+#include "process.h"
+#include "thread.h"
+#include "kernel.h"
+
+// In scheduler.c
+extern void tick(unsigned int numTicks);
+
+extern int malloc_init();
+
 /** @brief Kernel entrypoint.
  *
  *  This is the entrypoint for the kernel.
@@ -42,28 +43,17 @@ extern int thr_init();
  */
 int kernel_main(mbinfo_t *mbinfo, int argc, char **argv, char **envp)
 {
-    /*
-     * When kernel_main() begins, interrupts are DISABLED.
-     * You should delete this comment, and enable them --
-     * when you are ready.
-     */
 
+    // Init all subsystems
     malloc_init();
     handler_install(tick);
-    lprintf("Hello from a brand new kernel! %lu", get_esp0());
-
     clear_console();
-
-    frame_base = mm_init();
+    mm_init();
     process_init();
     thr_init();
-
-    lprintf("The frame_base is : %p", frame_base);
-
-
-
     enable_interrupts();
 
+    lprintf("Hello from a brand new kernel!");    
     // process_create("ck1", 1);   // we hang this thread
 
     // process_create("merchant", 0);   // we run this thread
@@ -88,4 +78,3 @@ int kernel_main(mbinfo_t *mbinfo, int argc, char **argv, char **envp)
 
     return 0;
 }
-

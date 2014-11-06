@@ -35,7 +35,7 @@ int sys_yield(int tid)
         node *n;
         for (n = list_begin(&blocked_queue); n != list_end(&blocked_queue); n = n -> next)
         {
-            TCB *tcb = list_entry(n, TCB, thread_list);
+            TCB *tcb = list_entry(n, TCB, blocked_queue);
             if (tcb -> tid == tid)
             {
                 return -1;
@@ -58,7 +58,7 @@ int sys_yield(int tid)
         mutex_lock(&runnable_queue_lock);
         for (n = list_begin (&runnable_queue); n != list_end(&runnable_queue); n = n -> next)
         {
-            TCB *tcb = list_entry(n, TCB, thread_list);
+            TCB *tcb = list_entry(n, TCB, runnable_queue);
             if (tcb -> tid == tid)
             {
                 exist = 1;
@@ -86,6 +86,7 @@ int sys_deschedule(int *reject)
     {
         return 0;
     }
+    // atomicity??
     mutex_lock(&current_thread -> lock);
     // Set status to blocked
     current_thread -> state = THREAD_BLOCKED;
@@ -109,7 +110,7 @@ int sys_make_runnable(int tid)
     mutex_lock(&runnable_queue_lock);
     for (n = list_begin (&runnable_queue); n != list_end(&runnable_queue); n = n -> next)
     {
-        TCB *tcb = list_entry(n, TCB, thread_list);
+        TCB *tcb = list_entry(n, TCB, runnable_queue);
         if (tcb -> tid == tid)
         {
             if (tcb -> state == THREAD_RUNNABLE)
@@ -127,7 +128,7 @@ int sys_make_runnable(int tid)
     mutex_lock(&blocked_queue);
     for (n = list_begin(&blocked_queue); n != list_end(&blocked_queue); n = n -> next)
     {
-        target = list_entry(n, TCB, thread_list);
+        target = list_entry(n, TCB, runnable_queue);
         if (target -> tid == tid && target -> state == THREAD_BLOCKED)
         {
             exist = 1;
@@ -157,7 +158,6 @@ int sys_gettid()
     mutex_unlock(&current_thread -> tcb_mutex);
     return;
 
-
 }
 
 int sys_sleep(int ticks)
@@ -174,7 +174,7 @@ int sys_sleep(int ticks)
     {
         mutex_lock(&current_thread -> tcb_mutex);
         current_thread -> duration = ticks;
-        current_thread -> start_ticks = _get_ticks();
+        current_thread -> start_ticks = sys_get_ticks();
         current_thread -> state = THREAD_SLEEPING;
         mutex_unlock(&current_thread -> tcb_mutex);
 

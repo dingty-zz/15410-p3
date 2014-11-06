@@ -15,6 +15,7 @@
 #include "mutex_type.h"
 #include "control_block.h"
 #include "atomic_xchange.h"
+#include "scheduler.h"
 
 extern TCB *current_thread;
 /** @brief The function to initialize a mutex, which is unlocked initially
@@ -38,7 +39,8 @@ int mutex_init(mutex_t *mp)
 void mutex_destroy(mutex_t *mp)
 {
     // Vanish when trying to destroy a locking mutex
-    if (mp -> status == MUTEX_LOCKED || mp -> count > 0) vanish();  
+    if (mp -> status == MUTEX_LOCKED || mp -> count > 0) 
+        return;    
     mp -> status = MUTEX_UNAVAILABLE;
 }
 
@@ -50,7 +52,7 @@ void mutex_destroy(mutex_t *mp)
 void mutex_lock(mutex_t *mp)
 {
     mp -> count++;
-    int is_locked;
+    int is_locked = 0;
     while ((is_locked = atomic_xchange(&(mp->state)))) 
         schedule(mp -> tid);     // yield to the thread who holds the lock
     mp -> tid = current_thread -> tid;

@@ -26,8 +26,7 @@
 #define THREAD_WAITING 2     // only set when deschedule() is called
 #define THREAD_SLEEPING 3
 #define THREAD_INIT 4
-// act as lock, the scheduler can't schedule this thread and just pass over
-#define THREAD_NONSCHEDULABLE 5  
+
 
 #define PROCESS_EXIT -2
 #define PROCESS_BLOCKED -1
@@ -42,15 +41,15 @@ typedef struct PCB_t
     int special;  // if this process is idle, then never delete out of queue
     int pid;
     int state; //running, ready, block
-    int return_state;
+    int return_state;   // This is the return state for this process, set by set_status
     PCB_t* parent;      // who creates me
 
     list *threads;      // All threads that this process has, including self thread  
 
     list *children // saves all forked child
-    node all_processes;
+    node all_processes_node;
     uint32_t* PD;
-    mutex_t pcb_mutex;
+
 }PCB;
 
 
@@ -71,36 +70,31 @@ typedef struct TCB_t
     unsigned int stack_size;  // 4096 (1 page) by default
     ureg_t registers;  // USER stack pointer is in here!
 
-    node peer_threads;
-    node thread_list;
+    node peer_threads_node;
+    node thread_list_node;
     mutex_t tcb_mutex;
-    int ticks;
-    // struct TCB* prev;
-    // struct TCB* next;
-    // struct TCB* wait_next;
-    // struct TCB* wait_prev;
+
 }TCB;
 
+// This points the current running thread
+TCB *current_thread;
 
 // Information about processes/threads in the kernel
-mutex_t tid_lock;
 uint32_t next_tid;
 
-mutex_t pid_lock;
 uint32_t next_pid;
-
-mutex_t runnable_queue_lock;
-list runnable_queue;
-
 
 // Both THREAD_BLOCKED and THREAD_SLEEPING are put in this queue
 mutex_t blocked_queue_lock;
 list blocked_queue;
 
+// THREAD_RUNNABLE is put in this queue
+mutex_t runnable_queue_lock;
+list runnable_queue;
+
 // Not sure if this is useful
 mutex_t process_queue_lock;
 list process_queue;
 
-TCB *current_thread;
 
 #endif /* _CONTROL_B_H */

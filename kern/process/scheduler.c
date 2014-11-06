@@ -30,9 +30,6 @@
 unsigned int seconds;
 extern list runnable_queue;
 extern TCB *current_thread;  // indicates the current runnign thread
-void schedule();
-TCB *context_switch(TCB *current, TCB *next);
-void prepare_init_thread(TCB *next);
 
 void tick(unsigned int numTicks)
 {
@@ -41,8 +38,9 @@ void tick(unsigned int numTicks)
         ++seconds;
         if (seconds % 5 == 0)
         {
-            lprintf("5 seconds, let's do something\n");
+            lprintf("5 seconds, let's context switch\n");
             schedule();     // schedule
+            lprintf("\nNow we are running in a different thread");
         }
 
     }
@@ -57,7 +55,7 @@ void schedule(int tid)
     node *n;
     for (n = list_begin(&blocked_queue); n != list_end(&blocked_queue); n = n -> next)
     {
-        TCB *tcb = list_entry(n, TCB, thread_list);
+        TCB *tcb = list_entry(n, TCB, runnable_queue);
         if (tcb -> state == THREAD_SLEEPING)
         {
             if (tcb -> start_ticks + tcb -> duration < sys_get_ticks())
@@ -83,7 +81,7 @@ void schedule(int tid)
     {
         // pop a thread from the runnable_queue
         node *n  = list_delete_first(&runnable_queue);
-        TCB *next_thread = list_entry(n, TCB, thread_list);
+        list_entry(n, TCB, runnable_queue);
     }
     else      // Search for a specific thread
     {
@@ -91,21 +89,20 @@ void schedule(int tid)
     }
 
     lprintf("The next thread addr is %p", next_thread);
-    lprintf("getcr3 %x", (unsigned int)get_cr3());
+    lprintf("Before switching, the current getcr3 is %x", (unsigned int)get_cr3());
 
     switch (current_thread -> state)
     {
-
         case THREAD_EXIT:
             break;      // we don't put the current thread back to queue
 
         case THREAD_BLOCKED:
         case THREAD_WAITING:
-            list_insert_last(&blocked_queue, &current_thread->thread_list);
+            list_insert_last(&blocked_queue, &current_thread->thread_list_node);
             break;
 
         default:
-            list_insert_last(&runnable_queue, &current_thread->thread_list);
+            list_insert_last(&runnable_queue, &current_thread->thread_list_node);
     }
 
     // MAGIC_BREAK;
@@ -113,9 +110,6 @@ void schedule(int tid)
     current_thread = context_switch(current_thread, next_thread);
 
     lprintf(" current running: %p\n", current_thread);
-
-
-
     enable_interrupts();
 }
 

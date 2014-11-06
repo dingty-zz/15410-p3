@@ -9,8 +9,6 @@
  */
 #ifndef _MUTEX_TYPE_H
 #define _MUTEX_TYPE_H
-
-#include "linked_list.h"
  
 #define MUTEX_LOCKED 1
 #define MUTEX_UNLOCKED 0

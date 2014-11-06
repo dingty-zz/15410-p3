@@ -23,11 +23,6 @@
 /* Configure the timer to generate interrupts every 10 milliseconds. */
 #define FREQ 100
 
-extern void timer_wrapper();
-extern void keyboard_wrapper();
-extern void setup_timer(void (*tickback)(unsigned int));
-extern void setup_keyboard();
-
 static void _handler_install(int idt_entry, void (*handler)());
 
 int handler_install(void (*tickback)(unsigned int))

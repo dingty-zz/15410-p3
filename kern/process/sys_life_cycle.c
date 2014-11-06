@@ -21,10 +21,6 @@
 #include "simics.h"
 #include "vm_routines.h"
 
-extern list process_queue;
-extern uint32_t next_pid;
-
-
 extern TCB *current_thread;
 
 int sys_thread_fork(void)
@@ -86,9 +82,9 @@ void sys_vanish(void)
 
 
     list *threads = current_pcb -> threads;
-    node *n;
 
-    // Count how many peers have already exited
+    node *n;
+    // Count how many peers haven't already exited
     int live_count = 0;
     for (n = list_begin (threads); n != list_end (threads); n = n -> next)
     {
@@ -108,8 +104,8 @@ void sys_vanish(void)
             if (tcb -> tid != current_thread -> tid)
             {
                 list_delete(threads, n);
-                list_delete(blocked_queue, n);
-                list_delete(runnable_queue, n);
+                list_delete(&blocked_queue, n);
+                list_delete(&runnable_queue, n);
                 sfree(tcb -> stack_base, tcb -> stack_size);
                 free(tcb);
             }
@@ -118,10 +114,11 @@ void sys_vanish(void)
         pcb -> state = PROCESS_EXIT;
 
         PCB *parent = current_pcb -> parent;
-        // Make the exit status available to parent task, or init
-        // If the parent has already exited
+
+        // If the parent has already exited, wake up init
         if (parent == NULL || parent -> state == PROCESS_EXIT)
         {
+
             lprintf(" todo report the state to init");
             MAGIC_BREAK;
         }
@@ -135,7 +132,7 @@ void sys_vanish(void)
             TCB *waiting_thread = NULL;
             for (n = list_begin(&parent_threads); n != list_end(&parent_threads); n = n -> next)
             {
-                waiting_thread = list_entry(n, TCB, peer_threads);
+                waiting_thread = list_entry(n, TCB, parent_threads);
                 // If we find a thread that is waiting, we delete it from the waiting
                 // queue and make it runnable
                 if (waiting_thread -> state == THREAD_WAITING)
@@ -149,7 +146,7 @@ void sys_vanish(void)
                     mutex_unlock(&waiting_thread -> tcb_mutex);
 
                     mutex_lock(&runnable_queue_lock);
-                    list_insert_last(&runnable_queue, &waiting_thread->thread_list);
+                    list_insert_last(&runnable_queue, &waiting_thread->thread_list_node);
                     mutex_unlock(&runnable_queue_lock);
                     break;
                 }
@@ -158,7 +155,7 @@ void sys_vanish(void)
 
     }
     mutex_unlock(&current_thread -> tcb_mutex);
-    // pick a next thread to run, same thing in context switch lock needed?
+    // context switch it back
     schedule(-1);
 
 }
@@ -167,7 +164,6 @@ int sys_wait(int *status_ptr)
 {
     // checkout ptr is not in kernel space, writable or not
 
-    // whether ptr is NULL
     PCB *current_pcb = current_thread -> pcb;
     list *children = current_pcb -> children;
     node *n;
@@ -185,10 +181,10 @@ int sys_wait(int *status_ptr)
                 *status_ptr = pcb -> return_state;
             }
             // Reap this child
+            list_delete(children, n);
 
             free(pcb -> PD);
 
-            // free lists
             free(pcb);
             return pid;
         }
@@ -213,10 +209,10 @@ int sys_wait(int *status_ptr)
                 *status_ptr = pcb -> return_state;
             }
             // Reap this child
+            list_delete(children, n);
 
             free(pcb -> PD);
 
-            // free lists
             free(pcb);
             return pid;
         }

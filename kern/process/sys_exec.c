@@ -27,16 +27,27 @@ extern TCB *current_thread;
 */
 int sys_exec(char *execname, char *argvec[])
 {
+    simple_elf_t se_hdr;
+    int result = elf_load_helper(&se_hdr, filename);
+
+    if (result == NOT_PRESENT || result == ELF_NOTELF)
+    {
+        // error, the file doesn't exist
+        return -1;
+    }
     char *name = (char *)malloc(strlen(execname));
     memcpy(name, execname, strlen(execname));
     lprintf("The execname is %s", name);
     lprintf("char %s, argvec: %p", execname, argvec);
+
+    // Count the number of arguments
     int argc = 0;
     while (argvec[argc] != 0)
     {
-
         argc++;
     }
+
+    // Copy the content to the kernel stack
     char *argv[argc];
     int j = 0;
     for (j = 0; j < argc; ++j)
@@ -52,104 +63,35 @@ int sys_exec(char *execname, char *argvec[])
 
 
     lprintf("The argc==%d", argc);
-    simple_elf_t se_hdr;
 
-    // elf_load_helper(&se_hdr, execname);
-    // lprintf("%lx", se_hdr.e_entry);
-    PCB *pcb = (PCB *)malloc(sizeof(PCB));
-    //create a clean page directory
-    pcb -> PD = init_pd();
-    // set up pcb for this program
-    elf_load_helper(&se_hdr, name);
-    lprintf("dsfsdf");
-    allocate_pages(pcb -> PD,
-                   (uint32_t)se_hdr.e_txtstart, se_hdr.e_txtlen);
-    getbytes(se_hdr.e_fname, se_hdr.e_txtoff, se_hdr.e_txtlen,
-             (char *)se_hdr.e_txtstart);
-    lprintf("Doneonoenoennoneoeneonoe");
-    MAGIC_BREAK;
-    pcb -> state = PROCESS_RUNNING;
-    pcb -> ppid = 0; // who cares this??
-    pcb -> pid = next_pid;
+    // set up process for this program
+    process -> special = 0;
+    process -> state = PROCESS_RUNNABLE;   // currently unused
+    process -> pid = next_pid;
     next_pid++;
+    process -> return_state = 0;
+    process -> parent = NULL;
 
+    list_init(process -> threads);
+    list_init(process -> children);
 
-    // list_init(pcb -> threads);
-    TCB *thread = thr_create(&se_hdr, 1); // please see thread.c
-    pcb -> thread =  thread;
+    list_insert_last(&process_queue, &process -> all_processes_node);
 
+ // Load the program, copy the content to the memory and get the eip
+    unsigned int eip = program_loader(se_hdr, process);
 
-    list_insert_last(&process_queue, &pcb -> all_processes);
+    // Create a single thread for this process
+    TCB *thread = thr_create(eip, run); // please see thread.c
+    list_insert_last(&process -> thread, &thread -> peer_threads_node);
 
+    thread -> pcb = process;  // cycle reference :)
 
-    thread -> pcb = pcb;  // cycle reference :)
-
-
-    if (0)  // if not run ,we return
-    {
-        MAGIC_BREAK;
-
-        return 0 ;
-    }
-    MAGIC_BREAK;
     /* We need to do this everytime for a thread to run */
     current_thread = thread;
     // set up kernel stack pointer possibly bugs here
     set_esp0((uint32_t)(thread -> stack_base + thread -> stack_size));
-    lprintf("this is the esp, %x", (unsigned int)get_esp0());
-    /* Load the elf program using the helper function */
 
-    // lprintf("\n");
-
-    lprintf("e_txtstart: %lx", se_hdr.e_txtstart);
-    lprintf("e_txtoff: %lu", se_hdr.e_txtoff);
-    lprintf("e_txtlen: %lu", se_hdr.e_txtlen);
-
-
-    lprintf("e_datstart: %lx", se_hdr.e_datstart);
-    lprintf("e_datoff: %lu", se_hdr.e_datoff);
-    lprintf("e_datlen: %lu", se_hdr.e_datlen);
-
-
-    lprintf("e_rodatstart: %lx", se_hdr.e_rodatstart);
-    lprintf("e_rodatoff: %lu", se_hdr.e_rodatoff);
-    lprintf("e_rodatlen: %lu", se_hdr.e_rodatlen);
-
-
-    lprintf("e_bssstart: %lx", se_hdr.e_bssstart);
-    lprintf("e_bsslen: %lu", se_hdr.e_bsslen);
-
-
-    lprintf("before zeroth break");
-    // *(int *)0xffffffff=3;
-
-    //MAGIC_BREAK;
-
-    /* Allocate memory for every area */
-    allocate_pages(pcb -> PD,
-                   (uint32_t)se_hdr.e_datstart, se_hdr.e_datlen);
-    // MAGIC_BREAK;
-
-    allocate_pages(pcb -> PD,
-                   (uint32_t)se_hdr.e_rodatstart, se_hdr.e_rodatlen);
-    allocate_pages(pcb -> PD,
-                   (uint32_t)se_hdr.e_bssstart, se_hdr.e_bsslen);
-    allocate_pages(pcb -> PD,
-                   (uint32_t)0xfffff000, 4096); // possibly bugs here
-
-    lprintf("allocate_pages done!");
-    // *(int *)0xffffffff=3;
-
-    // MAGIC_BREAK;
-    // /* copy data from data field */
-    getbytes(se_hdr.e_fname, se_hdr.e_datoff, se_hdr.e_datlen,
-             (char *)se_hdr.e_datstart);
-
-    getbytes(se_hdr.e_fname, se_hdr.e_rodatoff, se_hdr.e_rodatlen,
-             (char *)se_hdr.e_rodatstart);
-    memset((char *)se_hdr.e_bssstart, 0,  se_hdr.e_bsslen);
-
-
+    // Copy the content to the new user stack
     char *dest = (char *)0xffffffff;
     char *vector[argc + 1];
 
@@ -186,16 +128,6 @@ int sys_exec(char *execname, char *argvec[])
 
 
     MAGIC_BREAK;
-
-
-    lprintf("before second break");
-
-    MAGIC_BREAK;
-
-    /* We need to do this everytime for a thread to run */
-    current_thread = thread;
-    set_esp0((uint32_t)(thread -> stack_base + thread -> stack_size));  // set up kernel stack pointer possibly bugs here
-    lprintf("this is the esp, %x", (unsigned int)get_esp0());
 
     enter_user_mode(thread -> registers.edi,     // let it run, enter ring 3!
                     thread -> registers.esi,

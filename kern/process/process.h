@@ -11,9 +11,12 @@
 
 #ifndef _PROCESS_H
 #define _PROCESS_H
-
+#include <elf/elf_410.h>
  
-int process_init();
+void process_init();
+
+
+unsigned int program_loader(simple_elf_t *se_hdr, PCB *process);
 
 
 int process_create(const char *filename, int run);

@@ -15,5 +15,8 @@
  
 void schedule(int tid);
 
+TCB *context_switch(TCB *current, TCB *next);
+
+void prepare_init_thread(TCB *next);
 
 #endif /* _SCHEDULER_H */

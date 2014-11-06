@@ -27,7 +27,7 @@ static KF *free_frame;      // points to the first free frame where refcount = 0
  *  @param q The pointer to the queue
  *  @return int 1 means not empty and 0 otherwise
  **/
-KF *mm_init()
+void mm_init()
 {
     init_free_frame();
 
@@ -69,8 +69,7 @@ KF *mm_init()
     lprintf("the cr0 %u", (unsigned int)get_cr0);
     set_cr4(get_cr4() | CR4_PGE);
     set_cr0(get_cr0() | CR0_PG);
-    // MAGIC_BREAK;
-    return frame_base;
+    
 }
 
 /* Map an unmapped virtual memory to physical memory */
