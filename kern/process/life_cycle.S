@@ -61,7 +61,7 @@ set_status:
 
 	pushl 	%esi
 	call 	sys_set_status
-	pushl 	%esi
+	popl 	%esi
 
 	POPREGS
 

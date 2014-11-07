@@ -73,8 +73,8 @@ int sys_exec(char *execname, char *argvec[])
     process -> return_state = 0;
     process -> parent = NULL;
 
-    list_init(process -> threads);
-    list_init(process -> children);
+    list_init(&process -> threads);
+    list_init(&process -> children);
 
     list_insert_last(&process_queue, &process -> all_processes_node);
 
@@ -83,7 +83,7 @@ int sys_exec(char *execname, char *argvec[])
 
     // Create a single thread for this process
     TCB *thread = thr_create(eip, 1); // please see thread.c
-    list_insert_last(process -> threads, &thread -> peer_threads_node);
+    list_insert_last(&process -> threads, &thread -> peer_threads_node);
 
     thread -> pcb = process;  // cycle reference :)
 

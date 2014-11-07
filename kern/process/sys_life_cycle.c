@@ -42,10 +42,10 @@ int sys_thread_fork(void)
     current_thread -> registers.edi = kernel_stack[0];
 
     PCB* common_pcb = current_thread -> pcb;
-    list* threads = common_pcb -> threads;
+    list threads = common_pcb -> threads;
 
     TCB *child_tcb = (TCB *)malloc(sizeof(TCB));
-    list_insert_last(threads, &child_tcb->peer_threads_node);
+    list_insert_last(&threads, &child_tcb->peer_threads_node);
     list_insert_last(&runnable_queue, &child_tcb->thread_list_node);
     child_tcb -> pcb = common_pcb;
     child_tcb -> tid = next_tid;
@@ -83,29 +83,30 @@ void sys_vanish(void)
     current_thread -> state = THREAD_EXIT;
 
 
-    list *threads = current_pcb -> threads;
-
+    list threads = current_pcb -> threads;
+    lprintf("%p", &threads);
     node *n;
     // Count how many peers haven't already exited
     int live_count = 0;
-    for (n = list_begin (threads); n != list_end (threads); n = n -> next)
+    for (n = list_begin (&threads); n != list_end (&threads); n = n -> next)
     {
         TCB *tcb = list_entry(n, TCB, peer_threads_node);
         if (tcb -> state != THREAD_EXIT)
         {
+            lprintf("%d", live_count);
             live_count++;
         }
     }
 
     if (live_count == 1) // if this is the last thread
     {
-        for (n = list_begin(threads); n != list_end(threads); n = n -> next)
+        for (n = list_begin(&threads); n != list_end(&threads); n = n -> next)
         {
             TCB *tcb = list_entry(n, TCB, peer_threads_node);
             // We only reap threads that is not the current thread
             if (tcb -> tid != current_thread -> tid)
             {
-                list_delete(threads, n);
+                list_delete(&threads, n);
                 list_delete(&blocked_queue, n);
                 list_delete(&runnable_queue, n);
                 sfree(tcb -> stack_base, tcb -> stack_size);
@@ -130,10 +131,10 @@ void sys_vanish(void)
             // Find a thread that waits to reap this process(thread)
             // because we can ensure that there is only one thread left
             // for this process
-            list *parent_threads = parent -> threads;
+            list parent_threads = parent -> threads;
             TCB *waiting_thread = NULL;
-            for (n = list_begin(parent_threads); 
-                 n != list_end(parent_threads); 
+            for (n = list_begin(&parent_threads); 
+                 n != list_end(&parent_threads); 
                  n = n -> next)
             {
                 waiting_thread = list_entry(n, TCB, peer_threads_node);
@@ -169,10 +170,10 @@ int sys_wait(int *status_ptr)
     // checkout ptr is not in kernel space, writable or not
 
     PCB *current_pcb = current_thread -> pcb;
-    list *children = current_pcb -> children;
+    list child_pros = current_pcb -> children;
     node *n;
 
-    for (n = list_begin (children); n != list_end (children); n = n -> next)
+    for (n = list_begin (&child_pros); n != list_end (&child_pros); n = n -> next)
     {
         PCB *pcb = list_entry(n, PCB, children);
         // Found one already exited child
@@ -185,7 +186,7 @@ int sys_wait(int *status_ptr)
                 *status_ptr = pcb -> return_state;
             }
             // Reap this child
-            list_delete(children, n);
+            list_delete(&child_pros, n);
 
             free(pcb -> PD);
 
@@ -193,14 +194,14 @@ int sys_wait(int *status_ptr)
             return pid;
         }
     }
-    // If no children is exited, wait till one of them exits
+    // If no child_pros is exited, wait till one of them exits
     mutex_lock(&current_thread -> tcb_mutex);
     current_thread -> state = THREAD_WAITING;
     mutex_unlock(&current_thread -> tcb_mutex);
 
     schedule(-1);
     // Do the thing again once one exited child wake me up
-    for (n = list_begin (children); n != list_end (children); n = n -> next)
+    for (n = list_begin (&child_pros); n != list_end (&child_pros); n = n -> next)
     {
         PCB *pcb = list_entry(n, PCB, children);
         // Found one already exited child
@@ -213,7 +214,7 @@ int sys_wait(int *status_ptr)
                 *status_ptr = pcb -> return_state;
             }
             // Reap this child
-            list_delete(children, n);
+            list_delete(&child_pros, n);
 
             free(pcb -> PD);
 

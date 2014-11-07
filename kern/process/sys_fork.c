@@ -72,8 +72,8 @@ int sys_fork(void)
     next_pid++;
     child_pcb -> state = PROCESS_RUNNING;
     child_pcb -> parent = parent_pcb;
-    list_insert_last(child_pcb -> threads, &child_tcb->thread_list_node);
-    list_insert_last(parent_pcb -> children, &child_pcb -> all_processes_node);
+    list_insert_last(&child_pcb -> threads, &child_tcb->thread_list_node);
+    list_insert_last(&parent_pcb -> children, &child_pcb -> all_processes_node);
 
     //return values are different;
     child_tcb -> registers.eax = 0;

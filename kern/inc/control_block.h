@@ -42,9 +42,9 @@ typedef struct PCB_t
     int return_state;   // This is the return state for this process, set by set_status
     struct PCB_t* parent;      // who creates me
 
-    list *threads;      // All threads that this process has, including self thread  
+    list threads;      // All threads that this process has, including self thread  
 
-    list *children; // saves all forked child
+    list children; // saves all forked child
     node all_processes_node;
     uint32_t* PD;
 
