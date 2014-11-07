@@ -71,6 +71,10 @@ int handler_install(void (*tickback)(unsigned int))
 
     _handler_install(EXEC_INT, (void *)exec);
     _handler_install(FORK_INT, (void *)fork);
+    _handler_install(GETTID_INT, (void *)gettid);
+    _handler_install(WAIT_INT, (void *)wait);
+    _handler_install(SET_STATUS_INT, (void *)set_status);
+    _handler_install(VANISH_INT, (void *)vanish);
 
 
     return 0;

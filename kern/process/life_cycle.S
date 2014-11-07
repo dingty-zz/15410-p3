@@ -5,12 +5,14 @@
 .global thread_fork
 .global wait
 .global vanish
+.global set_status
 
 .extern sys_fork
 .extern sys_exec
 .extern sys_thread_fork
 .extern sys_wait
 .extern sys_vanish
+.extern sys_set_status
 
 fork:
 	PUSHREGS
@@ -48,6 +50,18 @@ wait:
 
 	pushl 	%esi
 	call 	sys_wait
+	popl 	%esi
+	POPREGS
+
+	iret
+
+set_status:
+
+	PUSHREGS
+
+	pushl 	%esi
+	call 	sys_set_status
+	pushl 	%esi
 
 	POPREGS
 
