@@ -1,6 +1,6 @@
 #include <syscall.h>
 #include "control_block.h"
-#include "linked_list.h"
+#include "datastructure/linked_list.h"
 #include "seg.h"
 #include "cr.h"
 #include "simics.h"
@@ -9,9 +9,9 @@
 #include "common_kern.h"
 #include "string.h"
 #include "eflags.h"
-#include "mutex_type.h"
-#include "vm_routines.h"
-
+#include "locks/mutex_type.h"
+#include "memory/vm_routines.h"
+#include "mem_internals.h"
 /** @brief Determine if the given queue is empty
  *
  *  If top == bottom, we know there are nothing in the queue.
@@ -23,7 +23,9 @@
 int sys_fork(void)
 {
     //update current threads' registers
-    unsigned int *kernel_stack = (unsigned int *)(current_thread -> stack_base + current_thread->stack_size - 52);
+    unsigned int *kernel_stack = 
+    (unsigned int *)(current_thread -> stack_base + 
+                     current_thread->stack_size - 52);
     lprintf("the kernel_stack is : %p", kernel_stack);
     current_thread -> registers.ss = kernel_stack[12];
     current_thread -> registers.esp = kernel_stack[11];
@@ -56,7 +58,8 @@ int sys_fork(void)
     child_tcb -> state = THREAD_INIT;
     child_tcb -> stack_size = parent_tcb -> stack_size;
     child_tcb -> stack_base = smemalign(4, child_tcb -> stack_size);
-    child_tcb -> esp = child_tcb -> stack_base + child_tcb -> stack_size;
+    child_tcb -> esp = (uint32_t)child_tcb -> stack_base + 
+                       (uint32_t)child_tcb -> stack_size;
     /*copy the general user space registers*/
     // push_registers(current_thread -> registers,child_tcb->base);
 
@@ -69,8 +72,8 @@ int sys_fork(void)
     next_pid++;
     child_pcb -> state = PROCESS_RUNNING;
     child_pcb -> parent = parent_pcb;
-    list_insert_last(child_pcb -> threads, child_tcb->thread_list_node);
-    list_insert_last(parent_pcb -> children, child_pcb -> all_processes_node);
+    list_insert_last(child_pcb -> threads, &child_tcb->thread_list_node);
+    list_insert_last(parent_pcb -> children, &child_pcb -> all_processes_node);
 
     //return values are different;
     child_tcb -> registers.eax = 0;
@@ -121,8 +124,8 @@ int sys_fork(void)
     lprintf("finished!");
 
     // insert child to the list of threads and processes
-    list_insert_last(&process_queue, &child_pcb->all_processes);
-    list_insert_last(&runnable_queue, &child_tcb->all_threads);
+    list_insert_last(&process_queue, &child_pcb->all_processes_node);
+    list_insert_last(&runnable_queue, &child_tcb->thread_list_node);
     // list_insert_last(&thread_queue, &parent_tcb->all_threads);
     lprintf("ready to return! child pid:%d", child_pcb -> pid);
     MAGIC_BREAK;   

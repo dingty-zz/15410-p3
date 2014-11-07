@@ -8,7 +8,7 @@
  */
 #include <syscall.h>
 #include "control_block.h"
-#include "linked_list.h"
+#include "datastructure/linked_list.h"
 #include "seg.h"
 #include "cr.h"
 #include "simics.h"
@@ -17,15 +17,16 @@
 #include "common_kern.h"
 #include "string.h"
 #include "eflags.h"
-#include "mutex_type.h"
+#include "locks/mutex_type.h"
 #include "simics.h"
-#include "vm_routines.h"
-
+#include "memory/vm_routines.h"
+#include "scheduler.h"
 extern TCB *current_thread;
 
 int sys_thread_fork(void)
 {
-    unsigned int *kernel_stack = (unsigned int *)(current_thread -> stack_base + current_thread->stack_size - 52);
+    unsigned int *kernel_stack = 
+    (unsigned int *)(current_thread -> stack_base + current_thread->stack_size - 52);
     lprintf("the kernel_stack is : %p", kernel_stack);
     current_thread -> registers.ss = kernel_stack[12];
     current_thread -> registers.esp = kernel_stack[11];
@@ -44,17 +45,18 @@ int sys_thread_fork(void)
     list* threads = common_pcb -> threads;
 
     TCB *child_tcb = (TCB *)malloc(sizeof(TCB));
-    list_insert_last(threads, child_tcb->peer_threads_node);
-    list_insert_last(&runnable_queue, child_tcb->thread_list_node);
+    list_insert_last(threads, &child_tcb->peer_threads_node);
+    list_insert_last(&runnable_queue, &child_tcb->thread_list_node);
     child_tcb -> pcb = common_pcb;
     child_tcb -> tid = next_tid;
     next_tid++;
 
     child_tcb -> state = THREAD_INIT;
-    child_tcb -> stack_size = parent_tcb -> stack_size;
+    child_tcb -> stack_size = current_thread -> stack_size;
     child_tcb -> stack_base = smemalign(4, child_tcb -> stack_size);
-    child_tcb -> esp = stack_base+stack_size;
-    child_tcb -> registers = parent_tcb -> registers;
+    child_tcb -> esp = 
+    (uint32_t)child_tcb->stack_base+(uint32_t)child_tcb->stack_size;
+    child_tcb -> registers = current_thread -> registers;
 
     child_tcb -> registers.eax = 0;
 
@@ -88,7 +90,7 @@ void sys_vanish(void)
     int live_count = 0;
     for (n = list_begin (threads); n != list_end (threads); n = n -> next)
     {
-        TCB *tcb = list_entry(n, TCB, threads);
+        TCB *tcb = list_entry(n, TCB, peer_threads_node);
         if (tcb -> state != THREAD_EXIT)
         {
             live_count++;
@@ -99,7 +101,7 @@ void sys_vanish(void)
     {
         for (n = list_begin(threads); n != list_end(threads); n = n -> next)
         {
-            TCB *tcb = list_entry(n, TCB, threads);
+            TCB *tcb = list_entry(n, TCB, peer_threads_node);
             // We only reap threads that is not the current thread
             if (tcb -> tid != current_thread -> tid)
             {
@@ -111,7 +113,7 @@ void sys_vanish(void)
             }
         }
 
-        pcb -> state = PROCESS_EXIT;
+        current_pcb -> state = PROCESS_EXIT;
 
         PCB *parent = current_pcb -> parent;
 
@@ -130,9 +132,11 @@ void sys_vanish(void)
             // for this process
             list *parent_threads = parent -> threads;
             TCB *waiting_thread = NULL;
-            for (n = list_begin(&parent_threads); n != list_end(&parent_threads); n = n -> next)
+            for (n = list_begin(parent_threads); 
+                 n != list_end(parent_threads); 
+                 n = n -> next)
             {
-                waiting_thread = list_entry(n, TCB, parent_threads);
+                waiting_thread = list_entry(n, TCB, peer_threads_node);
                 // If we find a thread that is waiting, we delete it from the waiting
                 // queue and make it runnable
                 if (waiting_thread -> state == THREAD_WAITING)

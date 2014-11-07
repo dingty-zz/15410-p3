@@ -6,7 +6,7 @@
  *  @author Tianyuan Ding (tding)
  *  @bug No known bugs
  */
-#include "linked_list.h"
+#include "datastructure/linked_list.h"
 #include "control_block.h"
 #include "simics.h"
 #include "seg.h"
@@ -20,12 +20,9 @@
 #include <x86/asm.h>
 #include "do_switch.h"
 #include "enter_user_mode.h"
-#include "timer.h"
+#include "hardware/timer.h"
+#include "scheduler.h"
 
-#define offsetoff(TYPE, MEMBER) ((size_t) &((TYPE *) 0)->MEMBER)
-#define list_entry(LIST_ELEM, STRUCT, MEMBER)    \
-    ((STRUCT *) ((uint8_t *) LIST_ELEM    \
-                 - offsetoff (STRUCT, MEMBER)))
 
 unsigned int seconds;
 extern list runnable_queue;
@@ -39,7 +36,7 @@ void tick(unsigned int numTicks)
         if (seconds % 5 == 0)
         {
             lprintf("5 seconds, let's context switch\n");
-            schedule();     // schedule
+            schedule(-1);     // schedule
             lprintf("\nNow we are running in a different thread");
         }
 
@@ -55,7 +52,7 @@ void schedule(int tid)
     node *n;
     for (n = list_begin(&blocked_queue); n != list_end(&blocked_queue); n = n -> next)
     {
-        TCB *tcb = list_entry(n, TCB, runnable_queue);
+        TCB *tcb = list_entry(n, TCB, thread_list_node);
         if (tcb -> state == THREAD_SLEEPING)
         {
             if (tcb -> start_ticks + tcb -> duration < sys_get_ticks())
@@ -81,7 +78,7 @@ void schedule(int tid)
     {
         // pop a thread from the runnable_queue
         node *n  = list_delete_first(&runnable_queue);
-        list_entry(n, TCB, runnable_queue);
+        next_thread = list_entry(n, TCB, thread_list_node);
     }
     else      // Search for a specific thread
     {
@@ -169,7 +166,7 @@ TCB *list_search_tid(list *l, int tid)
     node *temp = l -> head;
     while (temp)
     {
-        TCB *thread = list_entry(temp, TCB, l);
+        TCB *thread = list_entry(temp, TCB, thread_list_node);
         if (thread -> tid == tid)
             return thread;
         temp = temp -> next;

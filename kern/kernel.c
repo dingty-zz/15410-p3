@@ -25,10 +25,9 @@
 
 /* Include all related header files in kern/ */
 #include "handler_install.h"
-#include "vm_routines.h"
-#include "process.h"
-#include "thread.h"
-#include "kernel.h"
+#include "memory/vm_routines.h"
+#include "process/process.h"
+#include "thread/thread_basic.h"
 
 // In scheduler.c
 extern void tick(unsigned int numTicks);

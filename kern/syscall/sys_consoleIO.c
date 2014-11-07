@@ -1,7 +1,8 @@
 #include <syscall.h>
 #include "console.h"
-#include "keyboard.h"
-
+#include "hardware/keyboard.h"
+#include "control_block.h"
+#include "string.h"
 extern TCB *current_thread;
 int sys_readline(int len, char *buf)
 {
@@ -9,7 +10,7 @@ int sys_readline(int len, char *buf)
 	{
 		return -1;
 	}
-
+ int count = 0;
 	int c;
     while (1) {
         while ((c = readchar()) == -1);
@@ -29,7 +30,7 @@ int sys_readline(int len, char *buf)
             break;
         }
     }
-    return 0;
+    return count;
 }
 
 int sys_print(int len, char *buf)
@@ -38,20 +39,21 @@ int sys_print(int len, char *buf)
 	{
 		return -1;
 	}
-	current_thread = THREAD_NONSCHEDULABLE;
-    putbytes(len, size);
-    current->state = THREAD_RUNNING;
+
+    putbytes(buf, len);
+
     return 0;
 }
 
-int sys_set_term_color(int color)
-{
-    return set_term_color(color);
-}
+// int sys_set_term_color(int color)
+// {
+//     return set_term_color(color);
+// }
 
 int sys_get_cursor_pos(int *row, int *col)
 {
-    return get_cursor(row, col);
+    get_cursor(row, col);
+    return 0;
 }
 
 int sys_set_cursor_pos(int row, int col)

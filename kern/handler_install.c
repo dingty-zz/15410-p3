@@ -17,9 +17,9 @@
 #include <keyhelp.h>
 #include <simics.h>
 #include "hardware/hardware_handler_wrappers.h"
-#include "timer.h"
-#include "keyboard.h"
-#include "exception/exception_handler_wrappers.h"
+#include "hardware/timer.h"
+#include "hardware/keyboard.h"
+// #include "exception/exception_handler_wrappers.h"
 /* Configure the timer to generate interrupts every 10 milliseconds. */
 #define FREQ 100
 
@@ -47,9 +47,6 @@ int handler_install(void (*tickback)(unsigned int))
     // _handler_install(0x17, AC);
     // _handler_install(0x18, MC);
     // _handler_install(0x19, XF);
-
-
-
 
 
 

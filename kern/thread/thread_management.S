@@ -1,28 +1,4 @@
-#define 	PUSHREGS	\
-			pushl	%ebp	\
-			pushl	%edi	\
-			pushl	%esi	\
-			pushl 	%edx	\
-			pushl 	%ecx	\ 
-			pushl 	%ebx	\
-
-			pushl 	%ds		\
-			pushl 	%es		\
-			pushl 	%fs		\
-			pushl 	%gs		\
-
-#define 	POPREGS		\
-			popl	%gs 	\
-			popl	%fs		\
-			popl	%es		\
-			popl	%ds		\
-			
-			popl 	%ebx	\
-			popl 	%ecx 	\
-			popl 	%edx	\
-			popl	%esi	\
-			popl	%edi	\
-			popl	%ebp	\
+#include "push_pop_helper.h"
 
 .global gettid
 .global	deschedule
@@ -78,16 +54,6 @@ make_runnable:
 	POPREGS
 
 	iret	
-
-gettid:
-
-	PUSHREGS
-
-	call sys_gettid
-
-	POPREGS
-
-	iret
 
 sleep:
 

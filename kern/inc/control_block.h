@@ -13,11 +13,9 @@
 #define _CONTROL_B_H
 
 #include "ureg.h"
-#include "linked_list.h"
-#include "vm_type.h"
+#include "datastructure/linked_list.h"
 #include <elf/elf_410.h>
-#include "mutex_type.h"
-
+#include "locks/mutex_type.h"
 
 #define THREAD_EXIT -2
 #define THREAD_BLOCKED -1
@@ -42,11 +40,11 @@ typedef struct PCB_t
     int pid;
     int state; //running, ready, block
     int return_state;   // This is the return state for this process, set by set_status
-    PCB_t* parent;      // who creates me
+    struct PCB_t* parent;      // who creates me
 
     list *threads;      // All threads that this process has, including self thread  
 
-    list *children // saves all forked child
+    list *children; // saves all forked child
     node all_processes_node;
     uint32_t* PD;
 

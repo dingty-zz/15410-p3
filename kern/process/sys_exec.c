@@ -1,6 +1,6 @@
 #include <syscall.h>
 #include "control_block.h"
-#include "linked_list.h"
+#include "datastructure/linked_list.h"
 #include "seg.h"
 #include "cr.h"
 #include "simics.h"
@@ -9,11 +9,11 @@
 #include "common_kern.h"
 #include "string.h"
 #include "eflags.h"
-#include "mutex_type.h"
+#include "locks/mutex_type.h"
 #include "enter_user_mode.h"
 #include "process.h"
-#include "vm_routines.h"
-#include "thread.h"
+#include "memory/vm_routines.h"
+#include "thread/thread_basic.h"
 
 
 extern list process_queue;
@@ -28,7 +28,7 @@ extern TCB *current_thread;
 int sys_exec(char *execname, char *argvec[])
 {
     simple_elf_t se_hdr;
-    int result = elf_load_helper(&se_hdr, filename);
+    int result = elf_load_helper(&se_hdr, execname);
 
     if (result == NOT_PRESENT || result == ELF_NOTELF)
     {
@@ -64,6 +64,7 @@ int sys_exec(char *execname, char *argvec[])
 
     lprintf("The argc==%d", argc);
 
+    PCB *process = current_thread -> pcb;
     // set up process for this program
     process -> special = 0;
     process -> state = PROCESS_RUNNABLE;   // currently unused
@@ -81,8 +82,8 @@ int sys_exec(char *execname, char *argvec[])
     unsigned int eip = program_loader(se_hdr, process);
 
     // Create a single thread for this process
-    TCB *thread = thr_create(eip, run); // please see thread.c
-    list_insert_last(&process -> thread, &thread -> peer_threads_node);
+    TCB *thread = thr_create(eip, 1); // please see thread.c
+    list_insert_last(process -> threads, &thread -> peer_threads_node);
 
     thread -> pcb = process;  // cycle reference :)
 

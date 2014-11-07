@@ -1,7 +1,7 @@
 #include <stddef.h>
 #include <malloc.h>
 #include <malloc_internal.h>
-#include "mutex_type.h"
+#include "locks/mutex_type.h"
 
 
 /* @brief Global mutex to allow only one thread to allocate the element

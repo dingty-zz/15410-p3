@@ -7,7 +7,7 @@
  *  @bug No known bugs
  */
 #include "control_block.h"
-#include "linked_list.h"
+#include "datastructure/linked_list.h"
 #include "seg.h"
 #include "cr.h"
 #include "simics.h"
@@ -16,11 +16,11 @@
 #include "common_kern.h"
 #include "string.h"
 #include "eflags.h"
-#include "mutex_type.h"
+#include "locks/mutex_type.h"
 #include "enter_user_mode.h"
-#include "thread.h"
-#include "vm_routines.h"
-
+#include "thread/thread_basic.h"
+#include "memory/vm_routines.h"
+#include "process.h"
 extern TCB *current_thread;
 
 /** @brief Release a frame frame and mark it as freed only when refcount = 0.
@@ -35,7 +35,7 @@ void process_init()
 {
     // create a list of run queues based on threads
     list_init(&process_queue);
-    mutex_init(&process_queue_lock)
+    mutex_init(&process_queue_lock);
     next_pid = 1;
 }
 
@@ -84,7 +84,7 @@ int process_create(const char *filename, int run)
 
     // Create a single thread for this process
     TCB *thread = thr_create(eip, run); // please see thread.c
-    list_insert_last(&process -> thread, &thread -> peer_threads_node);
+    list_insert_last(process -> threads, &thread -> peer_threads_node);
 
 
     thread -> pcb = process;  // cycle reference :)
@@ -194,6 +194,7 @@ unsigned int program_loader(simple_elf_t se_hdr, PCB *process) {
     getbytes(se_hdr.e_fname, se_hdr.e_rodatoff, se_hdr.e_rodatlen,
              (char *)se_hdr.e_rodatstart);
     memset((char *)se_hdr.e_bssstart, 0,  se_hdr.e_bsslen);
+    return se_hdr.e_entry;
 }
 
 

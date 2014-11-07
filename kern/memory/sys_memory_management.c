@@ -8,6 +8,7 @@
  */
 #include "vm_routines.h"
 #include "control_block.h"
+#include <stddef.h>
 
 extern TCB *current_thread;
 
@@ -29,7 +30,7 @@ int sys_new_pages(void *addr, int len)
             len < 0 ||                           // len is negative
             (len & 0xfff) != 0) // len is not integral multiple of sys page size
         return -1;
-    allocate_pages(current_thread -> pcb -> PD, addr, len);
+    allocate_pages(current_thread -> pcb -> PD, (uint32_t)addr, len);
     return 0;
 }
 
@@ -48,7 +49,11 @@ int sys_remove_pages(void *addr)
             (uint32_t)addr < 0x01000000 ||      // addr is in kernel memory
             ((uint32_t)addr & 0xfff) != 0)    // addr is not aligned
         return -1;
-    free_pages(current_thread -> pcb -> PD, addr, len);
+
+    // This is not that easy, remeber every calling newpages instance in a
+    // possibly linked list????
+    // free_pages(current_thread -> pcb -> PD, (uint32_t)addr, len);
+
     return 0;
 
 }

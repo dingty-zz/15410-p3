@@ -1,3 +1,6 @@
+#ifndef _PUSH_POP_HELPER_H
+#define _PUSH_POP_HELPER_H
+
 #define 	PUSHREGS	;\
 			pushl	%ebp	;\
 			pushl	%edi	;\
@@ -9,7 +12,6 @@
 			pushl 	%es		;\
 			pushl 	%fs		;\
 			pushl 	%gs		
-			
 #define 	POPREGS		;\
 			popl	%gs 	;\
 			popl	%fs		;\
@@ -22,33 +24,4 @@
 			popl	%edi	;\
 			popl	%ebp	
 
-.global new_pages
-.global remove_pages
-
-.extern sys_new_pages
-.extern sys_remove_pages
-
-new_pages:
-
-	PUSHREGS
-
-	pushl 	4(%esi)
-	pushl 	(%esi)
-	call 	sys_new_pages
-
-	POPREGS
-
-	iret	
-
-
-
-remove_pages:
-
-	PUSHREGS
-
-	pushl 	%esi
-	call 	sys_remove_pages
-
-	POPREGS
-
-	iret	
+#endif /* _PUSH_POP_HELPER_H */

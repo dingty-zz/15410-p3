@@ -100,7 +100,7 @@ THREAD_OBJS = malloc.o panic.o
 ###########################################################################
 # Object files for your syscall wrappers
 ###########################################################################
-SYSCALL_OBJS = set_status.o vanish.o print.o fork.o new_pages.o readline.o gettid.o yield.o sleep.o exec.o wait.o task_vanish.o misbehave.o readfile.o set_term_color.o set_cursor_pos.o deschedule.o make_runnable.o misbehave.o get_ticks.o getchar.o remove_pages.o swexn.o halt.o
+SYSCALL_OBJS = set_status.o vanish.o print.o fork.o new_pages.o readline.o gettid.o yield.o sleep.o exec.o wait.o task_vanish.o misbehave.o readfile.o set_term_color.o set_cursor_pos.o deschedule.o make_runnable.o misbehave.o get_ticks.o getchar.o remove_pages.o swexn.o halt.o get_cursor_pos.o
 
 
 ###########################################################################
@@ -118,29 +118,19 @@ AUTOSTACK_OBJS = autostack.o
 #
 # Kernel object files you provide in from kern/
 #
-KERNEL_OBJS = 
-
-console.o kernel.o loader.o malloc_wrappers.o handler_install.o \
-
+KERNEL_OBJS = \
+kernel.o loader.o malloc_wrappers.o handler_install.o \
 datastructure/linked_list.o \
-
 exception/exception_handlers.o exception/exception_handler_wrappers.o \
-
 hardware/hardware_handler_wrappers.o hardware/keyboard.o hardware/timer.o \
-
+hardware/console.o \
 locks/atomic_xchange.o locks/mutex.o \
-
 memory/vm_routines.o memory/memory_management.o memory/sys_memory_management.o \
-
 process/process.o process/scheduler.o process/sys_exec.o process/sys_fork.o \
-
 process/sys_life_cycle.o process/do_switch.o process/enter_user_mode.o \
-
 process/life_cycle.o \
-
-syscall/consoleIO.o  syscall/sys_consoleIO.o syscall/misc.o syscall/sys_misc.o \
-
-thread/thread.o thread/sys_thread_management.o thread/thread_management.o \
+syscall/consoleIO.o syscall/sys_consoleIO.o syscall/misc.o syscall/sys_misc.o \
+thread/thread_basic.o thread/sys_thread_management.o thread/thread_management.o \
 
 ###########################################################################
 # WARNING: Do not put **test** programs into the REQPROGS variables.  Your

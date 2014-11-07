@@ -7,7 +7,7 @@
  *  @bug No known bugs
  */
 #include "control_block.h"
-#include "linked_list.h"
+#include "datastructure/linked_list.h"
 #include "seg.h"
 #include "cr.h"
 #include "simics.h"
@@ -16,8 +16,8 @@
 #include "common_kern.h"
 #include "string.h"
 #include "eflags.h"
-#include "mutex_type.h"
-
+#include "locks/mutex_type.h"
+#include "thread_basic.h"
 
 /** @brief Release a frame frame and mark it as freed only when refcount = 0.
  *         If so, let free_frame point to it.
@@ -85,7 +85,7 @@ TCB *thr_create(unsigned int eip, int run)
     {
         // if not run, we put it in the run queue and set 
         // the state to be THREAD_INIT
-        list_insert_last(&runnable_queue, &tcb -> thread_list);
+        list_insert_last(&runnable_queue, &tcb -> thread_list_node);
         tcb -> state = THREAD_INIT;
     }
     return tcb;

@@ -48,7 +48,8 @@ int putbyte(char ch)
             *(char *)(CONSOLE_MEM_BASE + 2 * 
                 (CONSOLE_WIDTH * l_row + l_col - 1)) = ' ';
             *(char *)(CONSOLE_MEM_BASE + 2 * 
-                (CONSOLE_WIDTH * l_row + l_col - 1 ) + 1) = BGND_BLACK | FGND_WHITE;
+                (CONSOLE_WIDTH * l_row + l_col - 1 ) + 1) 
+            = BGND_BLACK | FGND_WHITE;
             l_col--;
             if (visible) c_col--;
         } // Note I did nothing when a backspace is at the beginning of a line.
@@ -73,7 +74,7 @@ void putbytes(const char *s, int len)
         putbyte(s[i]);
 }
 
-int set_term_color(int color)
+int sys_set_term_color(int color)
 {
     if (color < 0) return -1;
     c_color = color;
@@ -200,7 +201,8 @@ static void scroll_up()
     char ch;
     int color;
     for (row = 1; row < CONSOLE_HEIGHT; ++row) {
-        for (col = 0; col < CONSOLE_WIDTH; ++col) { // Copy the contents up a row
+        // Copy the contents up a row
+        for (col = 0; col < CONSOLE_WIDTH; ++col) { 
             ch = *(char *)(CONSOLE_MEM_BASE + 2 * (CONSOLE_WIDTH * row + col));
             color = *(char *)(CONSOLE_MEM_BASE + 2 * (CONSOLE_WIDTH * row + col) + 1);
             *(char *)(CONSOLE_MEM_BASE + 2 * (CONSOLE_WIDTH * (row - 1) + col)) = ch;

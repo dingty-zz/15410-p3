@@ -15,6 +15,10 @@
 #ifndef _LINKED_LIST_H
 #define _LINKED_LIST_H
 
+#define offsetoff(TYPE, MEMBER) ((size_t) &((TYPE *) 0)->MEMBER)
+#define list_entry(LIST_ELEM, STRUCT, MEMBER)    \
+    ((STRUCT *) ((uint8_t *) LIST_ELEM    \
+                 - offsetoff (STRUCT, MEMBER)))
 // struct list_elem
 // {
 //     struct list_elem *prev;     /* Previous list element. */

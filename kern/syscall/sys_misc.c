@@ -1,6 +1,8 @@
 #include <syscall.h>
 #include "simics.h"
 #include "loader.h"
+#include "control_block.h"
+#include "console.h"
 
 extern TCB *current_thread;
 
@@ -22,9 +24,8 @@ int sys_readfile(char *filename, char *buf, int count, int offset)
 	return -1;
 	}
 	int size = 0;
-	current_thread -> state = THREAD_NONSCHEDULABLE;
 	size = getbytes(filename, offset, count, buf);
-	current_thread -> state = THREAD_RUNNING;
+
 	return size;
 
 }

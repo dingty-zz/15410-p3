@@ -9,13 +9,15 @@
  *  @author Tianyuan Ding (tding)
  *  @bug No known bugs
  */
+#include <stddef.h>
 #include <syscall.h>
 #include "control_block.h"
-#include "mutex_type.h"
-
-extern TCB *current_thread;
-extern list runnable_queue;
-extern list blocked_queue;
+#include "locks/mutex_type.h"
+#include "process/scheduler.h"
+#include "hardware/timer.h"
+// extern TCB *current_thread;
+// extern list runnable_queue;
+// extern list blocked_queue;
 
 int sys_yield(int tid)
 {
@@ -31,17 +33,19 @@ int sys_yield(int tid)
     else
     {
         // If the target thread is blocked
-        mutex_lock(&blocked_queue);
+        mutex_lock(&blocked_queue_lock);
         node *n;
-        for (n = list_begin(&blocked_queue); n != list_end(&blocked_queue); n = n -> next)
+        for (n = list_begin(&blocked_queue); 
+             n != list_end(&blocked_queue); 
+             n = n -> next)
         {
-            TCB *tcb = list_entry(n, TCB, blocked_queue);
+            TCB *tcb = list_entry(n, TCB, thread_list_node);
             if (tcb -> tid == tid)
             {
                 return -1;
             }
         }
-        mutex_unlock(&blocked_queue);
+        mutex_unlock(&blocked_queue_lock);
 
         // If try to yield to itself
         mutex_lock(&current_thread -> tcb_mutex);
@@ -56,9 +60,11 @@ int sys_yield(int tid)
         // If the target thread does not exit
         int exist = 0;
         mutex_lock(&runnable_queue_lock);
-        for (n = list_begin (&runnable_queue); n != list_end(&runnable_queue); n = n -> next)
+        for (n = list_begin (&runnable_queue); 
+             n != list_end(&runnable_queue); 
+             n = n -> next)
         {
-            TCB *tcb = list_entry(n, TCB, runnable_queue);
+            TCB *tcb = list_entry(n, TCB, thread_list_node);
             if (tcb -> tid == tid)
             {
                 exist = 1;
@@ -87,10 +93,10 @@ int sys_deschedule(int *reject)
         return 0;
     }
     // atomicity??
-    mutex_lock(&current_thread -> lock);
+    mutex_lock(&current_thread -> tcb_mutex);
     // Set status to blocked
     current_thread -> state = THREAD_BLOCKED;
-    mutex_unlock(&current_thread -> lock);
+    mutex_unlock(&current_thread -> tcb_mutex);
 
     // Call the scheduler
     schedule(-1);
@@ -110,7 +116,7 @@ int sys_make_runnable(int tid)
     mutex_lock(&runnable_queue_lock);
     for (n = list_begin (&runnable_queue); n != list_end(&runnable_queue); n = n -> next)
     {
-        TCB *tcb = list_entry(n, TCB, runnable_queue);
+        TCB *tcb = list_entry(n, TCB, thread_list_node);
         if (tcb -> tid == tid)
         {
             if (tcb -> state == THREAD_RUNNABLE)
@@ -125,16 +131,16 @@ int sys_make_runnable(int tid)
     // If the target thread is blocked and exist
     int exist = 0;
     TCB *target = NULL;
-    mutex_lock(&blocked_queue);
+    mutex_lock(&blocked_queue_lock);
     for (n = list_begin(&blocked_queue); n != list_end(&blocked_queue); n = n -> next)
     {
-        target = list_entry(n, TCB, runnable_queue);
+        target = list_entry(n, TCB, thread_list_node);
         if (target -> tid == tid && target -> state == THREAD_BLOCKED)
         {
             exist = 1;
         }
     }
-    mutex_unlock(&blocked_queue);
+    mutex_unlock(&blocked_queue_lock);
 
     if (!exist)
     {
@@ -153,10 +159,10 @@ int sys_gettid()
 {
     // return the tid from the currenspoding entry in tid
 
-    mutex_lock(&current_thread -> tcb_mutex)
+    mutex_lock(&current_thread -> tcb_mutex);
     int tid =  current_thread -> tid;
     mutex_unlock(&current_thread -> tcb_mutex);
-    return;
+    return tid;
 
 }
 

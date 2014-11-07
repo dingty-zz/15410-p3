@@ -8,16 +8,10 @@
  *
  */
 
-KF *mm_init();
-
-
-void init_free_frame();
-
-
-uint32_t acquire_free_frame();
-
-
-void release_free_frame(uint32_t address);
+#include <stdint.h>
+#include <types.h>
+ 
+void mm_init();
 
 
 int virtual_map_physical(uint32_t *PD, uint32_t pd_index, uint32_t pt_index);
