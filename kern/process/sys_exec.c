@@ -28,7 +28,7 @@ extern TCB *current_thread;
 int sys_exec(char *execname, char *argvec[])
 {
     char *name = (char *)malloc(strlen(execname));
-    memcpy(name, execname, strlen(execname));
+    strcpy(name, execname);
     lprintf("The execname is %s", name);
     lprintf("char %s, argvec: %p", execname, argvec);
     simple_elf_t se_hdr;

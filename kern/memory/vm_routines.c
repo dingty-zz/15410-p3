@@ -235,6 +235,7 @@ uint32_t *init_pd()
         lprintf("The directory is %x",(unsigned int)pd[i]);
     }
     //memcpy((void *)pd, old_cr3, 4 * 4); // Copy kernel pt mapping
+    sfree((void *)get_cr3(), 4096);
     set_cr3((uint32_t) pd);    
     lprintf("after calling initpd, the pd is %x", (unsigned int)get_cr3());
     //MAGIC_BREAK;

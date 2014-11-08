@@ -165,9 +165,7 @@ int sys_fork(void)
             lprintf("parent entry virtual addr: %x",(int)parent_entry_v_addr);
             lprintf("old physical addr:%x",(unsigned int) phys_addr);
             lprintf("new physical addr:%x",(unsigned int) DEFLAG_ADDR(new_phys_addr));
-            MAGIC_BREAK;
             memcpy((void*)entry.free_virtual_addr, (void*)parent_entry_v_addr, 4096);
-            MAGIC_BREAK;
             //demap this new frame from parent pd
             ((uint32_t*)child_de) [j] = ADDFLAG(DEFLAG_ADDR(new_phys_addr), GET_FLAG(phys_addr_raw)) ;
             bzero( &(((uint32_t*)found_table) [entry.pt_index])  , 4);
@@ -178,7 +176,6 @@ int sys_fork(void)
             lprintf("child_de pte:%x",(unsigned int) ((uint32_t*)child_de) [j]);
             lprintf("hahah: %x", (int)(((uint32_t*)found_table) [entry.pt_index]));
             set_cr3((uint32_t)parent_directory);
-            MAGIC_BREAK;
         }
     }
 
@@ -189,7 +186,6 @@ int sys_fork(void)
     list_insert_last(&runnable_queue, &child_tcb->thread_list_node);
     // list_insert_last(&thread_queue, &parent_tcb->all_threads);
     // lprintf("ready to return! child pid:%d", child_pcb -> pid);
-    MAGIC_BREAK;
     // lprintf("%u",child_tcb->registers.eax);
 
     return child_pcb -> pid;

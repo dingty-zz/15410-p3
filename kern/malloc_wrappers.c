@@ -31,7 +31,7 @@ void *memalign(size_t alignment, size_t size)
 {
     mutex_lock(&malloc_mutex);
     void *result = _memalign(alignment, size);
-    mutex_lock(&malloc_mutex);
+    mutex_unlock(&malloc_mutex);
 
     return result;
 }
