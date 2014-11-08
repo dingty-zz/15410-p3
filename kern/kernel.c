@@ -47,10 +47,11 @@ int kernel_main(mbinfo_t *mbinfo, int argc, char **argv, char **envp)
     malloc_init();
     handler_install(tick);
     clear_console();
+    sys_set_term_color(FGND_GREEN | BGND_BLACK);
     mm_init();
     process_init();
     thr_init();
-    // enable_interrupts();
+    enable_interrupts();
 
     lprintf("Hello from a brand new kernel!");    
     // process_create("ck1", 1);   // we hang this thread
@@ -59,8 +60,11 @@ int kernel_main(mbinfo_t *mbinfo, int argc, char **argv, char **envp)
     // process_create("peon", 1);
 
 
-    // process_create("idle", 0);   // we run this thread
-    process_create("cat", 1);   // we run this thread
+    process_create("idle", 0);   // we run this thread
+    // process_create("getpid_test1", 1);   // we run this thread
+    // process_create("coolness", 1);   // we run this thread
+    process_create("shell", 1);   // we run this thread
+    // process_create("deschedule_hang", 1);   // we run this thread
 
 
     // process_create("init");

@@ -77,6 +77,11 @@ int handler_install(void (*tickback)(unsigned int))
     _handler_install(VANISH_INT, (void *)vanish);
     _handler_install(PRINT_INT, (void *)print);
     _handler_install(READFILE_INT, (void *)readfile);
+    _handler_install(SLEEP_INT, (void *)sleep);
+    _handler_install(DESCHEDULE_INT, (void *)deschedule);
+    _handler_install(HALT_INT, (void *)halt);
+    _handler_install(READLINE_INT, (void *)readline);
+
 
 
     return 0;
