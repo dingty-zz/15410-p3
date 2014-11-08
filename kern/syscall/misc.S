@@ -25,6 +25,10 @@ readfile:
 	pushl 	4(%esi)		# buf
 	pushl 	(%esi)		# filename
 	call 	sys_readfile
+	popl 	%esi		
+	popl 	%esi		
+	popl 	%esi		
+	popl 	%esi		
 
 	POPREGS
 

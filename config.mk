@@ -57,8 +57,9 @@ UPDATE_METHOD = afs
 # A list of the test programs you want compiled in from the 410user/progs
 # directory.
 #
-410TESTS = exec_basic ck1 exec_basic_helper peon merchant fork_test1 \
-fork_bomb
+410TESTS = \
+exec_basic ck1 exec_basic_helper peon merchant fork_test1 \
+fork_bomb cat \
 
 ###########################################################################
 # Test programs you have written which you wish to run

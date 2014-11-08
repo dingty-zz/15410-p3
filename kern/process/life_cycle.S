@@ -29,7 +29,9 @@ exec:
 	pushl 	4(%esi)
 	pushl 	(%esi)
 	call 	sys_exec
-
+	popl 	%esi
+	popl 	%esi
+	
 	POPREGS
 
 	iret	

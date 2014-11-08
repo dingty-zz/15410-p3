@@ -50,7 +50,7 @@ int kernel_main(mbinfo_t *mbinfo, int argc, char **argv, char **envp)
     mm_init();
     process_init();
     thr_init();
-    enable_interrupts();
+    // enable_interrupts();
 
     lprintf("Hello from a brand new kernel!");    
     // process_create("ck1", 1);   // we hang this thread
@@ -59,7 +59,8 @@ int kernel_main(mbinfo_t *mbinfo, int argc, char **argv, char **envp)
     // process_create("peon", 1);
 
 
-    process_create("exec_basic", 1);   // we run this thread
+    // process_create("idle", 0);   // we run this thread
+    process_create("cat", 1);   // we run this thread
 
 
     // process_create("init");

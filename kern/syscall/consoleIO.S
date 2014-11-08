@@ -19,6 +19,9 @@ readline:
 	pushl 	4(%esi)
 	pushl 	(%esi)
 	call 	sys_readline
+	popl 	%esi
+	popl 	%esi
+
 
 	POPREGS
 
@@ -31,6 +34,9 @@ print:
 	pushl 	4(%esi)
 	pushl 	(%esi)
 	call 	sys_print
+	popl 	%esi
+	popl 	%esi
+
 
 	POPREGS
 
@@ -45,6 +51,9 @@ get_cursor_pos:
 	pushl 	4(%esi)
 	pushl 	(%esi)
 	call 	sys_get_cursor_pos
+	popl 	%esi
+	popl 	%esi
+
 
 	POPREGS
 
@@ -60,6 +69,8 @@ set_cursor_pos:
 	pushl 	4(%esi)
 	pushl 	(%esi)
 	call 	sys_set_cursor_pos
+	popl 	%esi
+	popl 	%esi
 
 	POPREGS
 
@@ -75,6 +86,8 @@ set_term_color:
 	pushl 	4(%esi)
 	pushl 	(%esi)
 	call 	sys_set_term_color
+	popl 	%esi
+	popl 	%esi
 
 	POPREGS
 

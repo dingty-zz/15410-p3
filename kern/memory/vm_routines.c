@@ -114,7 +114,7 @@ int virtual_map_physical(uint32_t *PD, uint32_t pd_index, uint32_t pt_index)
     lprintf("The freed address is %x", 
         (unsigned int)(pd_index << 22 | pt_index << 12));
     /* ZFOD the virtual address but not the physical address */
-    memset((void *)(pd_index << 22 | pt_index << 12), 0, 4096);
+    // memset((void *)(pd_index << 22 | pt_index << 12), 0, 4096);
     lprintf("Return virtual2physical");
     return 0;
 }
