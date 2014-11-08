@@ -36,7 +36,7 @@ int sys_yield(int tid)
         mutex_lock(&blocked_queue_lock);
         node *n;
         for (n = list_begin(&blocked_queue); 
-             n != list_end(&blocked_queue); 
+             n != NULL; 
              n = n -> next)
         {
             TCB *tcb = list_entry(n, TCB, thread_list_node);
@@ -61,7 +61,7 @@ int sys_yield(int tid)
         int exist = 0;
         mutex_lock(&runnable_queue_lock);
         for (n = list_begin (&runnable_queue); 
-             n != list_end(&runnable_queue); 
+             n != NULL; 
              n = n -> next)
         {
             TCB *tcb = list_entry(n, TCB, thread_list_node);
@@ -114,7 +114,7 @@ int sys_make_runnable(int tid)
     node *n;
     // Find if the target is runnable, if so, return -1
     mutex_lock(&runnable_queue_lock);
-    for (n = list_begin (&runnable_queue); n != list_end(&runnable_queue); n = n -> next)
+    for (n = list_begin (&runnable_queue); n != NULL; n = n -> next)
     {
         TCB *tcb = list_entry(n, TCB, thread_list_node);
         if (tcb -> tid == tid)
@@ -132,7 +132,7 @@ int sys_make_runnable(int tid)
     int exist = 0;
     TCB *target = NULL;
     mutex_lock(&blocked_queue_lock);
-    for (n = list_begin(&blocked_queue); n != list_end(&blocked_queue); n = n -> next)
+    for (n = list_begin(&blocked_queue); n != NULL; n = n -> next)
     {
         target = list_entry(n, TCB, thread_list_node);
         if (target -> tid == tid && target -> state == THREAD_BLOCKED)

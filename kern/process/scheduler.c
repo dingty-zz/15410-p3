@@ -51,7 +51,7 @@ void schedule(int tid)
     // Before actual context switching, we make sleeping thread to be
     // runnable if it's the time to wake up
     node *n;
-    for (n = list_begin(&blocked_queue); n != list_end(&blocked_queue); n = n -> next)
+    for (n = list_begin(&blocked_queue); n != NULL; n = n -> next)
     {
         TCB *tcb = list_entry(n, TCB, thread_list_node);
         if (tcb -> state == THREAD_SLEEPING)
@@ -72,7 +72,11 @@ void schedule(int tid)
 
 
     // TODO, schedule halt for spinning
-
+    if (current_thread -> tid == 1 && process_queue.length == 1)
+    {
+       lprintf("reach here");
+       return;
+    }
 
     TCB *next_thread = NULL;
     if (tid == -1)

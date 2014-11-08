@@ -79,17 +79,15 @@ void sys_vanish(void)
     PCB *current_pcb = current_thread -> pcb;
 
     // display to the console by print()....
-    // Set the current state to be exit
-    current_thread -> state = THREAD_EXIT;
-
 
     list threads = current_pcb -> threads;
     lprintf("%p", &threads);
     node *n;
     // Count how many peers haven't already exited
     int live_count = 0;
-    for (n = list_begin (&threads); n != list_end (&threads); n = n -> next)
+    for (n = list_begin (&threads); n != NULL; n = n -> next)
     {
+        
         TCB *tcb = list_entry(n, TCB, peer_threads_node);
         if (tcb -> state != THREAD_EXIT)
         {
@@ -100,7 +98,7 @@ void sys_vanish(void)
 
     if (live_count == 1) // if this is the last thread
     {
-        for (n = list_begin(&threads); n != list_end(&threads); n = n -> next)
+        for (n = list_begin(&threads); n != NULL; n = n -> next)
         {
             TCB *tcb = list_entry(n, TCB, peer_threads_node);
             // We only reap threads that is not the current thread
@@ -115,7 +113,9 @@ void sys_vanish(void)
         }
 
         current_pcb -> state = PROCESS_EXIT;
-
+        mutex_lock(&process_queue_lock);
+        list_delete(&process_queue, &current_pcb -> all_processes_node);
+        mutex_unlock(&process_queue_lock);
         PCB *parent = current_pcb -> parent;
 
         // If the parent has already exited, wake up init
@@ -123,7 +123,7 @@ void sys_vanish(void)
         {
 
             lprintf(" todo report the state to init");
-            MAGIC_BREAK;
+            // MAGIC_BREAK;
         }
         else
         {
@@ -134,7 +134,7 @@ void sys_vanish(void)
             list parent_threads = parent -> threads;
             TCB *waiting_thread = NULL;
             for (n = list_begin(&parent_threads); 
-                 n != list_end(&parent_threads); 
+                 n != NULL; 
                  n = n -> next)
             {
                 waiting_thread = list_entry(n, TCB, peer_threads_node);
@@ -159,6 +159,9 @@ void sys_vanish(void)
         }
 
     }
+    // Set the current state to be exit
+    current_thread -> state = THREAD_EXIT;
+
     mutex_unlock(&current_thread -> tcb_mutex);
     // context switch it back
     schedule(-1);
@@ -173,7 +176,7 @@ int sys_wait(int *status_ptr)
     list child_pros = current_pcb -> children;
     node *n;
 
-    for (n = list_begin (&child_pros); n != list_end (&child_pros); n = n -> next)
+    for (n = list_begin (&child_pros); n != NULL; n = n -> next)
     {
         PCB *pcb = list_entry(n, PCB, children);
         // Found one already exited child
@@ -201,7 +204,7 @@ int sys_wait(int *status_ptr)
 
     schedule(-1);
     // Do the thing again once one exited child wake me up
-    for (n = list_begin (&child_pros); n != list_end (&child_pros); n = n -> next)
+    for (n = list_begin (&child_pros); n != NULL; n = n -> next)
     {
         PCB *pcb = list_entry(n, PCB, children);
         // Found one already exited child
