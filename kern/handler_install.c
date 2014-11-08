@@ -81,6 +81,8 @@ int handler_install(void (*tickback)(unsigned int))
     _handler_install(DESCHEDULE_INT, (void *)deschedule);
     _handler_install(HALT_INT, (void *)halt);
     _handler_install(READLINE_INT, (void *)readline);
+    _handler_install(NEW_PAGES_INT, (void *)new_pages);
+    _handler_install(REMOVE_PAGES_INT, (void *)remove_pages);
 
 
 

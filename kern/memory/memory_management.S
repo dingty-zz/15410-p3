@@ -35,6 +35,8 @@ new_pages:
 	pushl 	4(%esi)
 	pushl 	(%esi)
 	call 	sys_new_pages
+	popl 	%esi
+	popl 	%esi
 
 	POPREGS
 
@@ -48,6 +50,7 @@ remove_pages:
 
 	pushl 	%esi
 	call 	sys_remove_pages
+	popl 	%esi
 
 	POPREGS
 

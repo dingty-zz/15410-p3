@@ -30,6 +30,7 @@ extern TCB *current_thread;  // indicates the current runnign thread
 
 void tick(unsigned int numTicks)
 {
+
     if (numTicks % 5 == 0)
     {
         ++seconds;
