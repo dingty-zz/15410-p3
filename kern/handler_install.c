@@ -16,14 +16,13 @@
 #include <timer_defines.h>
 #include <keyhelp.h>
 #include <simics.h>
+#include "handler_install.h"
 #include "hardware/hardware_handler_wrappers.h"
 #include "hardware/timer.h"
 #include "hardware/keyboard.h"
 // #include "exception/exception_handler_wrappers.h"
 /* Configure the timer to generate interrupts every 10 milliseconds. */
 #define FREQ 100
-
-static void _handler_install(int idt_entry, void (*handler)());
 
 int handler_install(void (*tickback)(unsigned int))
 {
@@ -98,7 +97,7 @@ int handler_install(void (*tickback)(unsigned int))
  *
  *  @return void
  **/
-static void _handler_install(int idt_entry, void (*handler)())
+void _handler_install(int idt_entry, void (*handler)())
 {
 
     /* Build the trap gate */

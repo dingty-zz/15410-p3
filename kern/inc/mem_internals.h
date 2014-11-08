@@ -1,6 +1,7 @@
 #ifndef _MEM_INTERNALS_H
 #define _MEM_INTERNALS_H
 #include <stdint.h>
+#include "datastructure/linked_list.h"
 
 #define PT_SIZE 1024
 #define PD_SIZE 1024
@@ -32,5 +33,16 @@ typedef struct kernel_frame
 // 	uint32_t
 
 // }virtual_addr;
+
+typedef struct addr_info
+{
+	uint32_t virtual_addr;
+	//multiple of page size, specifying the length 
+	//of allocated area from the virtual address as base
+	uint32_t len;
+	node va_node; 
+} VA_INFO;
+
+
 
 #endif /* _MEM_INTERNALS_H */

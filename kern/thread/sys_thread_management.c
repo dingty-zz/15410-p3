@@ -15,9 +15,13 @@
 #include "locks/mutex_type.h"
 #include "process/scheduler.h"
 #include "hardware/timer.h"
+#include "handler_install.h"
 // extern TCB *current_thread;
 // extern list runnable_queue;
 // extern list blocked_queue;
+
+#define PF_INT 0xE
+
 
 int sys_yield(int tid)
 {
@@ -189,8 +193,20 @@ int sys_sleep(int ticks)
     }
     return 0;
 }
+// int swexn_handler_wrapper()
+// {
+//     setesp(current_thread -> swexninfo.esp);
+
+// }
 
 // int sys_swexn(void *esp3, swexn_handler_t eip, void *arg, ureg_t *newureg)
 // {
-//     return 0; /* FALSE, but placates assert() in crt0.c */
+//     current_thread -> swexn_info.esp3 = esp3;
+//     current_thread -> swexn_info.eip = eip;
+//     current_thread -> swexn_info.arg = arg;
+//     current_thread -> swexn_info.newureg = newureg;
+//     _handler_install(PF_INT,handler_wrapper);
+//     return 0;
 // }
+
+

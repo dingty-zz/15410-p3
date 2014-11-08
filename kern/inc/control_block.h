@@ -16,6 +16,7 @@
 #include "datastructure/linked_list.h"
 #include <elf/elf_410.h>
 #include "locks/mutex_type.h"
+#include "mem_internals.h"
 
 #define THREAD_EXIT -2
 #define THREAD_BLOCKED -1
@@ -47,9 +48,17 @@ typedef struct PCB_t
     list children; // saves all forked child
     node all_processes_node;
     uint32_t* PD;
-
+    list va; //A list of va_info
 }PCB;
 
+
+typedef struct s_info
+{
+    void* esp;
+    void* eip;
+    void* arg;
+    ureg_t* newureg;
+} swexninfo;
 
 typedef struct TCB_t
 {
@@ -71,8 +80,9 @@ typedef struct TCB_t
     node peer_threads_node;
     node thread_list_node;
     mutex_t tcb_mutex;
-
+    swexninfo swexn_info;
 }TCB;
+
 
 // This points the current running thread
 TCB *current_thread;

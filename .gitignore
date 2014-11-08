@@ -1,5 +1,6 @@
 410user/
 410kern/
+kernel
 temp/
 *.a
 *.o
