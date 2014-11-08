@@ -12,6 +12,43 @@
 #include "locks/mutex_type.h"
 #include "memory/vm_routines.h"
 #include "mem_internals.h"
+
+#define DEFLAG_ADDR(x)           (x & 0xfffff000)
+#define ADDFLAG(x,flag)          (x | flag)
+#define GET_FLAG(x)              (x & 0xfff)
+
+typedef struct entry_info
+{
+    int pd_index;
+    int pt_index;
+    uint32_t free_virtual_addr;
+} entry_struct;
+
+static entry_struct entry;
+
+int find_free_entry(uint32_t* parent_directory)
+{
+    int i,j;
+    for (i = 4; i < PD_SIZE; ++i)
+    {
+        uint32_t current_pde = DEFLAG_ADDR(parent_directory[i]);
+        if (current_pde == 0) continue;
+        for (j = 0; j < PT_SIZE; ++j)
+        {
+            uint32_t current = DEFLAG_ADDR(((uint32_t*)current_pde)[j]);
+            if (current == 0)
+            {
+                entry.pd_index = i;
+                entry.pt_index = j;
+                entry.free_virtual_addr = (i<<22) | (j<<12);  
+                return 1;
+                return 1;
+            }
+        }
+    }
+    return 0;
+}
+
 /** @brief Determine if the given queue is empty
  *
  *  If top == bottom, we know there are nothing in the queue.
@@ -22,7 +59,13 @@
 /* two more things to do: 1. copy page table 2. iret*/
 int sys_fork(void)
 {
-    //update current threads' registers
+
+    /* step 0 : check if multi threaded; if so, then no permission to fork */
+
+    // if (current_thread -> pcb -> threads -> length != 1)
+    //      return -1;
+
+    /* Step 1: update current threads' registers */
     unsigned int *kernel_stack = 
     (unsigned int *)(current_thread -> stack_base + 
                      current_thread->stack_size - 52);
@@ -40,18 +83,21 @@ int sys_fork(void)
     current_thread -> registers.esi = kernel_stack[1];
     current_thread -> registers.edi = kernel_stack[0];
 
-    //start forking
+    /* Step 2: create new task control block */
     PCB *child_pcb = (PCB *)malloc(sizeof(PCB));
     TCB *child_tcb = (TCB *)malloc(sizeof(TCB));
     PCB *parent_pcb = current_thread -> pcb;
     TCB *parent_tcb = current_thread;
-    //step 1: check if multi threaded; then no permission to fork;
-    //to be done.
-    //.........
-    // if (current_thread -> pcb -> threads -> length != 1)
-    //      return -1;
+    uint32_t* parent_directory = parent_pcb -> PD;
+    //Find a temprorary entry in parent pd for temporary mapping
+    //with the new physical frame
+    if (!find_free_entry(parent_directory)) 
+    {
+        //didn't successfully find a free entry in current pcb;
+        return -1;
+    }
 
-    //step 2: set up the thread control block;
+    /* Step 3: set up the thread control block */
     child_tcb -> pcb = child_pcb;
     child_tcb -> tid = next_tid;
     next_tid++;
@@ -60,74 +106,91 @@ int sys_fork(void)
     child_tcb -> stack_base = smemalign(4, child_tcb -> stack_size);
     child_tcb -> esp = (uint32_t)child_tcb -> stack_base + 
                        (uint32_t)child_tcb -> stack_size;
-    /*copy the general user space registers*/
-    // push_registers(current_thread -> registers,child_tcb->base);
-
     child_tcb -> registers = parent_tcb -> registers;
-    lprintf("%u",child_tcb->registers.eip);
+    /* return twice and values are different */
+    child_tcb -> registers.eax = 0;
+    parent_tcb -> registers.eax = child_pcb -> pid;
+    list_insert_last(&child_pcb -> threads, &child_tcb->thread_list_node);
 
-    //step 3: set up the process control block;
+    /* step 4: set up the process control block */
     child_pcb -> special = 0;
     child_pcb -> pid = next_pid;
     next_pid++;
     child_pcb -> state = PROCESS_RUNNING;
     child_pcb -> parent = parent_pcb;
-    list_insert_last(&child_pcb -> threads, &child_tcb->thread_list_node);
-    list_insert_last(&parent_pcb -> children, &child_pcb -> all_processes_node);
+    list_insert_last(&parent_pcb -> children, &child_pcb->all_processes_node);
 
-    //return values are different;
-    child_tcb -> registers.eax = 0;
-    parent_tcb -> registers.eax = child_pcb -> pid;
 
-    //create a new page directory for the child, which points to the same page tables;
-    uint32_t* parent_directory = parent_pcb -> PD;
+    /* step 5: create a new page directory for the child */
     child_pcb -> PD = (uint32_t *) smemalign(PD_SIZE * 4, PT_SIZE * 4);
     int i,j;
     // copy kernel mappings first
-    for (i = 0; i < 4; i++)
+    for (i = 0; i < 4; ++i)
     {
         (child_pcb->PD)[i] = parent_directory[i];
     }
     // copy user mappings by allocating new frames for each mapping
-    for (i = 4; i < PD_SIZE; i++)
+    for (i = 4; i < PD_SIZE; ++i)
     {
         //parent directory entry info
         uint32_t parent_de_raw = parent_directory[i];
-        uint32_t parent_de = parent_de_raw & 0xfffff000;
-        if (parent_de == 0)  continue;
+        uint32_t pt_addr = DEFLAG_ADDR(parent_de_raw);
+        if (pt_addr == 0)  continue;
         //child direcotory entry info
         uint32_t child_de = (uint32_t)smemalign(PT_SIZE * 4, PT_SIZE * 4);
-        uint32_t child_de_raw = child_de | ((uint32_t)parent_de_raw & 0xfff);
-        child_pcb->PD[i] = child_de_raw;
-        //copy page table
-        for (j = 0; j < PT_SIZE; j++)
+        uint32_t child_de_raw = ADDFLAG(child_de, (GET_FLAG(parent_de_raw)));
+        (child_pcb->PD)[i] = child_de_raw;
+        //copy page table enties, and copy frame data
+        for (j = 0; j < PT_SIZE; ++j)
         {
             //page table entry info
-            uint32_t parent_pte_raw = ((uint32_t*)parent_de) [j];
-            uint32_t parent_pte = parent_pte_raw & 0xfffff000;
-            if (parent_pte == 0)  continue;
-            lprintf("page table entry: %d",j);
-            virtual_map_physical(child_pcb -> PD,i,j);
-            lprintf("new physical addr: %u", (unsigned int)((uint32_t*)child_de) [j]);
-            uint32_t child_pte = ((uint32_t*)child_de) [j] & 0xfffff000;
-            ((uint32_t*)child_de)[j] = child_pte | 
-                                      (parent_pte_raw & 0xfff);    
-            //turn off paging;
+            uint32_t phys_addr_raw = ((uint32_t*)pt_addr) [j];
+            uint32_t phys_addr = DEFLAG_ADDR(phys_addr_raw);
+            if (phys_addr == 0)  continue;
+            uint32_t parent_entry_v_addr = (i<<22) | (j<<12);
+            //lprintf("page table entry: %d",j);
+            virtual_map_physical(parent_directory,entry.pd_index,
+                                                  entry.pt_index);
+            uint32_t found_table = DEFLAG_ADDR(parent_directory[entry.pd_index]);
+            //new allocated frame address with flags;
+            uint32_t new_phys_addr = ((uint32_t*)found_table)[entry.pt_index];
+            //copy the physical frame using virtual address
+            //so that we don't need to turn off paging
             lprintf("start copying physical addr!");
-            set_cr0(get_cr0() & (~CR0_PG));
-            //copy all the data;
-            memcpy((void*)child_pte, (void*)parent_pte, PAGE_SIZE*4);
-            //turn on paging;
-            set_cr0(get_cr0() | CR0_PG);
+            lprintf("free_virtual_addr: %x",(int)entry.free_virtual_addr);
+            lprintf("i:%d",i);
+            lprintf("j:%d",j);
+            lprintf("pd_index: %d",entry.pd_index);
+            lprintf("pt_index: %d",entry.pt_index);
+            lprintf("parent entry virtual addr: %x",(int)parent_entry_v_addr);
+            lprintf("old physical addr:%x",(unsigned int) phys_addr);
+            lprintf("new physical addr:%x",(unsigned int) DEFLAG_ADDR(new_phys_addr));
+            MAGIC_BREAK;
+            memcpy((void*)entry.free_virtual_addr, (void*)parent_entry_v_addr, 4096);
+            MAGIC_BREAK;
+            //demap this new frame from parent pd
+            ((uint32_t*)child_de) [j] = ADDFLAG(DEFLAG_ADDR(new_phys_addr), GET_FLAG(phys_addr_raw)) ;
+            bzero( &(((uint32_t*)found_table) [entry.pt_index])  , 4);
+            // ((uint32_t*)found_table) [entry.pt_index] = 0;
+
+            //and map this new frame to child pd;
+            
+            lprintf("child_de pte:%x",(unsigned int) ((uint32_t*)child_de) [j]);
+            lprintf("hahah: %x", (int)(((uint32_t*)found_table) [entry.pt_index]));
+            set_cr3((uint32_t)parent_directory);
+            MAGIC_BREAK;
         }
     }
-    lprintf("finished!");
+
+    // lprintf("finished!");
 
     // insert child to the list of threads and processes
     list_insert_last(&process_queue, &child_pcb->all_processes_node);
     list_insert_last(&runnable_queue, &child_tcb->thread_list_node);
     // list_insert_last(&thread_queue, &parent_tcb->all_threads);
-    lprintf("ready to return! child pid:%d", child_pcb -> pid);
-    MAGIC_BREAK;   
+    // lprintf("ready to return! child pid:%d", child_pcb -> pid);
+    MAGIC_BREAK;
+    // lprintf("%u",child_tcb->registers.eax);
+
     return child_pcb -> pid;
 }

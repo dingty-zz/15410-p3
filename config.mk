@@ -60,7 +60,8 @@ UPDATE_METHOD = afs
 410TESTS = \
 exec_basic ck1 exec_basic_helper peon merchant fork_test1 \
 fork_bomb cat cho coolness deschedule_hang getpid_test1 halt_test knife \
-loader_test2 print_basic readline_basic remove_pages_test1 \
+loader_test2 print_basic readline_basic remove_pages_test1 actual_wait \
+sleep_test1 new_pages \
 
 ###########################################################################
 # Test programs you have written which you wish to run

@@ -72,9 +72,11 @@ void schedule(int tid)
 
 
     // TODO, schedule halt for spinning
-    if (current_thread -> tid == 1 && process_queue.length == 1)
+    if (runnable_queue.length == 1|| 
+            (current_thread -> tid == 1 && process_queue.length == 1))
     {
        lprintf("reach here");
+       MAGIC_BREAK;
        return;
     }
 
