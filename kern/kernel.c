@@ -51,7 +51,7 @@ int kernel_main(mbinfo_t *mbinfo, int argc, char **argv, char **envp)
     mm_init();
     process_init();
     thr_init();
-    enable_interrupts();
+    // enable_interrupts();
 
     lprintf("Hello from a brand new kernel!");    
     // process_create("ck1", 1);   // we hang this thread
@@ -60,12 +60,12 @@ int kernel_main(mbinfo_t *mbinfo, int argc, char **argv, char **envp)
     // process_create("peon", 1);
 
 
-   process_create("idle", 0);   // we hang idle
+   // process_create("idle", 0);   // we hang idle
     // process_create("getpid_test1", 1);   // we run this thread
     // process_create("coolness", 1);   // we run this thread
-    process_create("new_pages", 1);   // we run this thread
+    process_create("remove_pages_test1", 1);   // we run this thread
     // process_create("deschedule_hang", 1);   // we run this thread
-
+    // process_create("remove_pages_test1",1);
 
     // process_create("init");
     // process_create("ck1");

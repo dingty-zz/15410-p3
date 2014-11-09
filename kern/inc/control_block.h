@@ -104,5 +104,7 @@ list runnable_queue;
 mutex_t process_queue_lock;
 list process_queue;
 
+int free_frame_num;
+
 
 #endif /* _CONTROL_B_H */

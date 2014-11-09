@@ -1,4 +1,5 @@
 #include <syscall_int.h>
+//user level new_pages wrapper
 
 .global new_pages
 
