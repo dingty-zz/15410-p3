@@ -44,7 +44,7 @@ int sys_new_pages(void *addr, int len)
     int requested_page_num = len/4096;
     lprintf("requested:%d", requested_page_num);
     lprintf("now, I have this free: %d", free_frame_num);
-    MAGIC_BREAK;
+    // MAGIC_BREAK;
     if (requested_page_num > free_frame_num) return -1;
     // if any portion already in task's address space;
     int i;
@@ -64,7 +64,7 @@ int sys_new_pages(void *addr, int len)
 
     /* step 2: allocate*/
     lprintf("FINISHED CHECKING, all passed");
-    MAGIC_BREAK;
+    // MAGIC_BREAK;
 
     allocate_pages(PD, (uint32_t)addr, len);
     //Lastly, insert the va node into the list
@@ -76,7 +76,7 @@ int sys_new_pages(void *addr, int len)
     if ((uint32_t)addr == 0x40000000)
     {
         lprintf("HEREHEREHERE4");
-        MAGIC_BREAK;
+        // MAGIC_BREAK;
     }
     return 0;
 }
@@ -104,31 +104,41 @@ int sys_remove_pages(void *addr)
         return -1;
 
     /* step 2: check if removable by inspecting the mapped address's flags*/
-    uint32_t* PD = current_thread -> pcb -> PD;
+    uint32_t* PD, *PT;
+    PD = current_thread -> pcb -> PD;
     uint32_t pd_index = ((uint32_t)addr) >> 22;
     uint32_t pt_index = ((uint32_t)addr & 0x3ff000) >> 12;
-    uint32_t phys_addr_raw = ((uint32_t*)(PD[pd_index]))[pt_index];
-    if ((phys_addr_raw & 0x7) != 0x7) return 0;
+    PT = (uint32_t*) DEFLAG_ADDR(PD[pd_index]);
+    uint32_t phys_addr_raw = PT[pt_index];
+       
+    lprintf("physical address is:%x",(unsigned int)phys_addr_raw);
+    if ((phys_addr_raw & 0x7) != 0x7) return -1;
 
     /* step 3: search for the allocation info */
     node* current_node = list_begin(&current_thread->pcb->va);
     int current_len;
-    uint32_t curent_virtual_addr;
+    uint32_t current_virtual_addr;
     /* try to find the address allocation info in the list*/
+    lprintf("now ready to remove, %x",(unsigned int)addr);
     while (current_node!=NULL)
     {
+        lprintf("in the loop");
         VA_INFO* current_struct = list_entry(current_node,VA_INFO,va_node);
-        curent_virtual_addr = current_struct -> virtual_addr;
+        current_virtual_addr = current_struct -> virtual_addr;
         current_len = current_struct->len;
-        if (curent_virtual_addr == (uint32_t) addr)
+        lprintf("wanna remove addr: %x this number: %d,", 
+                    (unsigned int)current_virtual_addr,current_len);
+        if (current_virtual_addr == (uint32_t) addr)
         {
+            lprintf("found");
             free_pages(current_thread -> pcb -> PD, (uint32_t)addr, current_len);
-            return 1;
+            list_delete(&current_thread->pcb->va,current_node);
+            return 0;
         }
         current_node = current_node->next;
     }
 
     /* failed to search for the allocation info. 
     i.e address not allocated by new_pages */
-    return 0;
+    return -1;
 }

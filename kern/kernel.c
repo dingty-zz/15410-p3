@@ -63,7 +63,7 @@ int kernel_main(mbinfo_t *mbinfo, int argc, char **argv, char **envp)
    // process_create("idle", 0);   // we hang idle
     // process_create("getpid_test1", 1);   // we run this thread
     // process_create("coolness", 1);   // we run this thread
-    process_create("remove_pages_test1", 1);   // we run this thread
+    process_create("remove_pages_test2", 1);   // we run this thread
     // process_create("deschedule_hang", 1);   // we run this thread
     // process_create("remove_pages_test1",1);
 
