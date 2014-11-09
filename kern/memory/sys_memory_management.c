@@ -12,6 +12,7 @@
 #include <malloc.h>
 #include <simics.h>  
 #include <page.h>
+#include <cr.h>
 
 #define DEFLAG_ADDR(x)           (x & 0xfffff000)
 #define ADDFLAG(x,flag)          (x | flag)
@@ -133,6 +134,7 @@ int sys_remove_pages(void *addr)
             lprintf("found");
             free_pages(current_thread -> pcb -> PD, (uint32_t)addr, current_len);
             list_delete(&current_thread->pcb->va,current_node);
+            set_cr3((uint32_t)PD);
             return 0;
         }
         current_node = current_node->next;
