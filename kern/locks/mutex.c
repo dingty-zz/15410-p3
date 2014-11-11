@@ -16,7 +16,7 @@
 #include "control_block.h"
 #include "atomic_xchange.h"
 #include "process/scheduler.h"
-
+#include "simics.h"
 extern TCB *current_thread;
 /** @brief The function to initialize a mutex, which is unlocked initially
  *
@@ -53,9 +53,13 @@ void mutex_lock(mutex_t *mp)
 {
     mp -> count++;
     int is_locked = 0;
-    while ((is_locked = atomic_xchange(&(mp->status)))) 
+    while ((is_locked = atomic_xchange(&(mp->status))))  {
+        lprintf("The current thread that holds the lock is %d", mp -> tid);
         schedule(mp -> tid);     // yield to the thread who holds the lock
+    }
     mp -> tid = current_thread -> tid;
+    lprintf("Lock the mutex %p",mp);
+
 }
 
 /** @brief The function to initialize the doubly linked list
@@ -65,6 +69,8 @@ void mutex_lock(mutex_t *mp)
  */
 void mutex_unlock(mutex_t *mp)
 {
+    lprintf("unlock the mutex %p",mp);
+
     mp -> count--;
     mp -> tid = -1;
     mp -> status = MUTEX_UNLOCKED;

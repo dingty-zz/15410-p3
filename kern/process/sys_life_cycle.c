@@ -74,6 +74,7 @@ void sys_set_status(int status)
 
 void sys_vanish(void)
 {
+    lprintf("(x_x)_now sys_vanishs");
     // Get pcb for current process
     mutex_lock(&current_thread -> tcb_mutex);
     PCB *current_pcb = current_thread -> pcb;
@@ -98,6 +99,7 @@ void sys_vanish(void)
 
     if (live_count == 1) // if this is the last thread
     {
+        lprintf("(x_x)_in vanish: I am the last one");
         for (n = list_begin(&threads); n != NULL; n = n -> next)
         {
             TCB *tcb = list_entry(n, TCB, peer_threads_node);
@@ -107,8 +109,8 @@ void sys_vanish(void)
                 list_delete(&threads, n);
                 list_delete(&blocked_queue, n);
                 list_delete(&runnable_queue, n);
-                sfree(tcb -> stack_base, tcb -> stack_size);
-                free(tcb);
+                // sfree(tcb -> stack_base, tcb -> stack_size);
+                // free(tcb);
             }
         }
 
@@ -163,6 +165,7 @@ void sys_vanish(void)
     current_thread -> state = THREAD_EXIT;
 
     mutex_unlock(&current_thread -> tcb_mutex);
+    lprintf("(x_x)_vanish called schedule");
     // context switch it back
     schedule(-1);
 

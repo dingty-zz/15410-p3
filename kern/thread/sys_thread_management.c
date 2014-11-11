@@ -33,7 +33,7 @@ int sys_yield(int tid)
     }
     else
     {
-    lprintf("(^_^)_inside yeild");
+    lprintf("(x_x)_inside yeild");
 
         // If the target thread is blocked
         mutex_lock(&blocked_queue_lock);
@@ -45,6 +45,9 @@ int sys_yield(int tid)
             TCB *tcb = list_entry(n, TCB, thread_list_node);
             if (tcb -> tid == tid)
             {
+    lprintf("(x_x)_yield to a blocked thread");
+        mutex_unlock(&blocked_queue_lock);
+
                 return -1;
             }
         }
@@ -54,6 +57,8 @@ int sys_yield(int tid)
         mutex_lock(&current_thread -> tcb_mutex);
         if (current_thread -> tid == tid)
         {
+    lprintf("(x_x)_yield to itself");
+
             mutex_unlock(&current_thread -> tcb_mutex);
             return -1;
         }
@@ -77,9 +82,11 @@ int sys_yield(int tid)
         mutex_unlock(&runnable_queue_lock);
         if (!exist)
         {
+    lprintf("(x_x)_doesn't exist");
+
             return -1;
         }
-        lprintf("(^_^)_schedule in yield");
+        lprintf("(x_x)_schedule in yield");
         // Finally, tid is valid, we schedule to this thread
         schedule(tid);
     }
@@ -102,7 +109,7 @@ int sys_deschedule(int *reject)
     mutex_unlock(&current_thread -> tcb_mutex);
 
     // Call the scheduler
-        lprintf("(^_^)_deschedule call schedule");
+        lprintf("(x_x)_deschedule call schedule");
 
     schedule(-1);
 
@@ -111,7 +118,7 @@ int sys_deschedule(int *reject)
 
 int sys_make_runnable(int tid)
 {
-    lprintf("(^_^)_before make runnable, tid: %d", tid);
+    lprintf("(x_x)_before make runnable, tid: %d", tid);
     if (tid <= 0)
     {
         return -1;
@@ -127,14 +134,15 @@ int sys_make_runnable(int tid)
         {
             if (tcb -> state == THREAD_RUNNABLE)
             {
-                mutex_unlock(&blocked_queue_lock);
+                mutex_unlock(&runnable_queue_lock);
                 lprintf("sys_make_runnable:[ohoh, it's runnable]");
                 return -1;
             }
         }
     }
-    mutex_unlock(&blocked_queue_lock);
-
+    mutex_unlock(&runnable_queue_lock);
+    lprintf("143");
+MAGIC_BREAK;
     // If the target thread is blocked and exist
     int exist = 0;
     TCB *target = NULL;
@@ -149,6 +157,7 @@ int sys_make_runnable(int tid)
         }
     }
     mutex_unlock(&blocked_queue_lock);
+    lprintf("159");
 
     if (!exist)
     {
@@ -156,13 +165,24 @@ int sys_make_runnable(int tid)
 
         return -1;
     }
-
+    lprintf("167");
     // Make the target thread runnable
     mutex_lock(&target -> tcb_mutex);
     target -> state = THREAD_RUNNABLE;
     mutex_unlock(&target -> tcb_mutex);
-        lprintf("(^_^)_now make runnable");
 
+    // Remove the target out of the blocked queue
+    mutex_lock(&blocked_queue_lock);
+    list_delete(&blocked_queue, &target->thread_list_node);
+    mutex_unlock(&blocked_queue_lock);
+    
+
+    // Insert the target into the runnable queue
+    mutex_lock(&runnable_queue_lock);
+    list_insert_last(&runnable_queue, &target->thread_list_node);
+    mutex_unlock(&runnable_queue_lock);
+
+      lprintf("(x_x)_now make runnable");
     return 0;
 }
 
