@@ -181,7 +181,7 @@ int sys_wait(int *status_ptr)
 
     for (n = list_begin (&child_pros); n != NULL; n = n -> next)
     {
-        PCB *pcb = list_entry(n, PCB, children);
+        PCB *pcb = list_entry(n, PCB, peer_processes_node);
         // Found one already exited child
         if (pcb -> state == PROCESS_EXIT)
         {
@@ -209,7 +209,7 @@ int sys_wait(int *status_ptr)
     // Do the thing again once one exited child wake me up
     for (n = list_begin (&child_pros); n != NULL; n = n -> next)
     {
-        PCB *pcb = list_entry(n, PCB, children);
+        PCB *pcb = list_entry(n, PCB, peer_processes_node);
         // Found one already exited child
         if (pcb -> state == PROCESS_EXIT)
         {

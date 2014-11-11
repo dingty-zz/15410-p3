@@ -46,6 +46,7 @@ typedef struct PCB_t
 
     list children; // saves all forked child
     node all_processes_node;
+    node peer_processes_node;
     uint32_t* PD;
 
 }PCB;

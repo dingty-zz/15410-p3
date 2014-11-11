@@ -47,7 +47,7 @@ void tick(unsigned int numTicks)
 // have the priority to schedule the blocked thread?  i think so
 void schedule(int tid)
 {
-    MAGIC_BREAK;
+    // MAGIC_BREAK;
     disable_interrupts();
     // Before actual context switching, we make sleeping thread to be
     // runnable if it's the time to wake up
@@ -148,7 +148,7 @@ void prepare_init_thread(TCB *next)
     next -> state = THREAD_RUNNING;
     current_thread = next;
     enable_interrupts();
-    MAGIC_BREAK;
+    // MAGIC_BREAK;
     enter_user_mode(next -> registers.edi,
                     next -> registers.esi,
                     next -> registers.ebp,

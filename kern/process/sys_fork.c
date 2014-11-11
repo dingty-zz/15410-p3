@@ -121,7 +121,7 @@ int sys_fork(void)
     next_pid++;
     child_pcb -> state = PROCESS_RUNNING;
     child_pcb -> parent = parent_pcb;
-    list_insert_last(&parent_pcb -> children, &child_pcb->all_processes_node);
+    list_insert_last(&parent_pcb -> children, &child_pcb->peer_processes_node);
 
 
     /* step 5: create a new page directory for the child */
