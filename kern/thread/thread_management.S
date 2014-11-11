@@ -5,12 +5,14 @@
 .global yield
 .global make_runnable
 .global sleep
+.global get_ticks
 
 .extern sys_gettid
 .extern sys_deschedule
 .extern sys_yield
 .extern sys_make_runnable
 .extern sys_sleep
+.extern sys_get_ticks
 
 yield:
 
@@ -28,6 +30,16 @@ gettid:
 	PUSHREGS
 
 	call 	sys_gettid
+
+	POPREGS
+
+	iret
+		
+get_ticks:
+
+	PUSHREGS
+
+	call 	sys_get_ticks
 
 	POPREGS
 

@@ -19,6 +19,7 @@
 #include "hardware/hardware_handler_wrappers.h"
 #include "hardware/timer.h"
 #include "hardware/keyboard.h"
+ 
 // #include "exception/exception_handler_wrappers.h"
 /* Configure the timer to generate interrupts every 10 milliseconds. */
 #define FREQ 100
@@ -83,6 +84,7 @@ int handler_install(void (*tickback)(unsigned int))
     _handler_install(READLINE_INT, (void *)readline);
     _handler_install(NEW_PAGES_INT, (void *)new_pages);
     _handler_install(REMOVE_PAGES_INT, (void *)remove_pages);
+    _handler_install(GET_TICKS_INT, (void *)get_ticks);
 
 
 

@@ -70,10 +70,9 @@ void schedule(int tid)
     // result in a context switch, finding a schedulable thread as much
     // as possible
 
-
+    lprintf("return or not");
     // TODO, schedule halt for spinning
-    if (runnable_queue.length == 1|| 
-            (current_thread -> tid == 1 && process_queue.length == 1))
+     if(current_thread -> tid == 1 && runnable_queue.length==0)
     {
        lprintf("reach here");
        MAGIC_BREAK;

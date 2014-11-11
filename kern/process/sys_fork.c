@@ -69,7 +69,7 @@ int sys_fork(void)
     unsigned int *kernel_stack = 
     (unsigned int *)(current_thread -> stack_base + 
                      current_thread->stack_size - 52);
-    lprintf("the kernel_stack is : %p", kernel_stack);
+    //lprintf("the kernel_stack is : %p", kernel_stack);
     current_thread -> registers.ss = kernel_stack[12];
     current_thread -> registers.esp = kernel_stack[11];
     current_thread -> registers.eflags = kernel_stack[10];
@@ -148,7 +148,7 @@ int sys_fork(void)
             uint32_t phys_addr = DEFLAG_ADDR(phys_addr_raw);
             if (phys_addr == 0)  continue;
             uint32_t parent_entry_v_addr = (i<<22) | (j<<12);
-            //lprintf("page table entry: %d",j);
+            ////lprintf("page table entry: %d",j);
             virtual_map_physical(parent_directory,entry.pd_index,
                                                   entry.pt_index);
             uint32_t found_table = DEFLAG_ADDR(parent_directory[entry.pd_index]);
@@ -156,15 +156,15 @@ int sys_fork(void)
             uint32_t new_phys_addr = ((uint32_t*)found_table)[entry.pt_index];
             //copy the physical frame using virtual address
             //so that we don't need to turn off paging
-            lprintf("start copying physical addr!");
-            lprintf("free_virtual_addr: %x",(int)entry.free_virtual_addr);
-            lprintf("i:%d",i);
-            lprintf("j:%d",j);
-            lprintf("pd_index: %d",entry.pd_index);
-            lprintf("pt_index: %d",entry.pt_index);
-            lprintf("parent entry virtual addr: %x",(int)parent_entry_v_addr);
-            lprintf("old physical addr:%x",(unsigned int) phys_addr);
-            lprintf("new physical addr:%x",(unsigned int) DEFLAG_ADDR(new_phys_addr));
+            //lprintf("start copying physical addr!");
+            //lprintf("free_virtual_addr: %x",(int)entry.free_virtual_addr);
+            //lprintf("i:%d",i);
+            //lprintf("j:%d",j);
+            //lprintf("pd_index: %d",entry.pd_index);
+            //lprintf("pt_index: %d",entry.pt_index);
+            //lprintf("parent entry virtual addr: %x",(int)parent_entry_v_addr);
+            //lprintf("old physical addr:%x",(unsigned int) phys_addr);
+            //lprintf("new physical addr:%x",(unsigned int) DEFLAG_ADDR(new_phys_addr));
             memcpy((void*)entry.free_virtual_addr, (void*)parent_entry_v_addr, 4096);
             //demap this new frame from parent pd
             ((uint32_t*)child_de) [j] = ADDFLAG(DEFLAG_ADDR(new_phys_addr), GET_FLAG(phys_addr_raw)) ;
@@ -173,20 +173,20 @@ int sys_fork(void)
 
             //and map this new frame to child pd;
             
-            lprintf("child_de pte:%x",(unsigned int) ((uint32_t*)child_de) [j]);
-            lprintf("hahah: %x", (int)(((uint32_t*)found_table) [entry.pt_index]));
+            //lprintf("child_de pte:%x",(unsigned int) ((uint32_t*)child_de) [j]);
+            //lprintf("hahah: %x", (int)(((uint32_t*)found_table) [entry.pt_index]));
             set_cr3((uint32_t)parent_directory);
         }
     }
 
-    // lprintf("finished!");
+    // //lprintf("finished!");
 
     // insert child to the list of threads and processes
     list_insert_last(&process_queue, &child_pcb->all_processes_node);
     list_insert_last(&runnable_queue, &child_tcb->thread_list_node);
     // list_insert_last(&thread_queue, &parent_tcb->all_threads);
-    // lprintf("ready to return! child pid:%d", child_pcb -> pid);
-    // lprintf("%u",child_tcb->registers.eax);
+    // //lprintf("ready to return! child pid:%d", child_pcb -> pid);
+    // //lprintf("%u",child_tcb->registers.eax);
 
     return child_pcb -> pid;
 }
