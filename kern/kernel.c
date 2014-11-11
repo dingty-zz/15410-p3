@@ -62,7 +62,7 @@ int kernel_main(mbinfo_t *mbinfo, int argc, char **argv, char **envp)
 
    process_create("idle", 0);   // we hang idle
 
-    process_create("actual_wait", 1);
+    process_create("yield_desc_mkrun", 1);
 
     // process_create("getpid_test1", 1);   // we run this thread
     // process_create("coolness", 1);   // we run this thread

@@ -15,6 +15,7 @@
 #include "locks/mutex_type.h"
 #include "process/scheduler.h"
 #include "hardware/timer.h"
+#include "simics.h"
 // extern TCB *current_thread;
 // extern list runnable_queue;
 // extern list blocked_queue;
@@ -32,6 +33,8 @@ int sys_yield(int tid)
     }
     else
     {
+    lprintf("(^_^)_inside yeild");
+
         // If the target thread is blocked
         mutex_lock(&blocked_queue_lock);
         node *n;
@@ -76,7 +79,7 @@ int sys_yield(int tid)
         {
             return -1;
         }
-
+        lprintf("(^_^)_schedule in yield");
         // Finally, tid is valid, we schedule to this thread
         schedule(tid);
     }
@@ -99,6 +102,8 @@ int sys_deschedule(int *reject)
     mutex_unlock(&current_thread -> tcb_mutex);
 
     // Call the scheduler
+        lprintf("(^_^)_deschedule call schedule");
+
     schedule(-1);
 
     return 0;
@@ -106,6 +111,7 @@ int sys_deschedule(int *reject)
 
 int sys_make_runnable(int tid)
 {
+    lprintf("(^_^)_before make runnable, tid: %d", tid);
     if (tid <= 0)
     {
         return -1;
@@ -122,6 +128,7 @@ int sys_make_runnable(int tid)
             if (tcb -> state == THREAD_RUNNABLE)
             {
                 mutex_unlock(&blocked_queue_lock);
+                lprintf("sys_make_runnable:[ohoh, it's runnable]");
                 return -1;
             }
         }
@@ -137,6 +144,7 @@ int sys_make_runnable(int tid)
         target = list_entry(n, TCB, thread_list_node);
         if (target -> tid == tid && target -> state == THREAD_BLOCKED)
         {
+
             exist = 1;
         }
     }
@@ -144,6 +152,8 @@ int sys_make_runnable(int tid)
 
     if (!exist)
     {
+       lprintf("sys_make_runnable[ohoh, it doens't exist]");
+
         return -1;
     }
 
@@ -151,6 +161,7 @@ int sys_make_runnable(int tid)
     mutex_lock(&target -> tcb_mutex);
     target -> state = THREAD_RUNNABLE;
     mutex_unlock(&target -> tcb_mutex);
+        lprintf("(^_^)_now make runnable");
 
     return 0;
 }
@@ -162,6 +173,7 @@ int sys_gettid()
     mutex_lock(&current_thread -> tcb_mutex);
     int tid =  current_thread -> tid;
     mutex_unlock(&current_thread -> tcb_mutex);
+    lprintf("called gettid: [The tid is %d]", tid);
     return tid;
 
 }

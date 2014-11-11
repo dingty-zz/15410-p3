@@ -77,7 +77,7 @@ TCB *thr_create(unsigned int eip, int run)
 
 
     tcb -> registers.cs = SEGSEL_USER_CS;
-    tcb -> registers.eflags = (get_eflags() | EFL_RESV1) & ~EFL_AC;
+    tcb -> registers.eflags = ((get_eflags() | EFL_RESV1) & ~EFL_AC )| EFL_IF;
     tcb -> registers.esp = 0xffffff10;  // set up user stack pointer
     tcb -> registers.ss = SEGSEL_USER_DS;
     lprintf("The kernel stack is : %p", tcb -> stack_base + 4096);

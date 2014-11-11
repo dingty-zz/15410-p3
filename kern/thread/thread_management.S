@@ -20,7 +20,7 @@ yield:
 
 	pushl 	%esi
 	call 	sys_yield
-
+popl 	%esi
 	POPREGS
 
 	iret	
@@ -51,7 +51,7 @@ deschedule:
 
 	pushl 	%esi
 	call 	sys_deschedule
-
+popl 	%esi
 	POPREGS
 
 	iret	
@@ -62,7 +62,7 @@ make_runnable:
 
 	pushl 	%esi
 	call 	sys_make_runnable
-
+popl 	%esi
 	POPREGS
 
 	iret	

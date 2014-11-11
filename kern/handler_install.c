@@ -85,6 +85,8 @@ int handler_install(void (*tickback)(unsigned int))
     _handler_install(NEW_PAGES_INT, (void *)new_pages);
     _handler_install(REMOVE_PAGES_INT, (void *)remove_pages);
     _handler_install(GET_TICKS_INT, (void *)get_ticks);
+    _handler_install(YIELD_INT, (void *)yield);
+    _handler_install(MAKE_RUNNABLE_INT, (void *)make_runnable);
 
 
 
