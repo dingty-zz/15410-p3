@@ -1,4 +1,4 @@
-/** @file handler_wrappers.h
+/** @file exception_handler_wrappers.h
  *
  *  @brief This file includes timer handler and keyboard handler wrappers.
  *

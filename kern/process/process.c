@@ -60,6 +60,7 @@ int process_create(const char *filename, int run)
     
     simple_elf_t se_hdr;
     int result = elf_load_helper(&se_hdr, filename);
+        lprintf("result is %d", result);
 
     if (result == NOT_PRESENT || result == ELF_NOTELF)
     {
@@ -74,6 +75,9 @@ int process_create(const char *filename, int run)
     process -> return_state = 0;
     process -> parent = NULL;
 
+    // lprintf("shabi1");
+    // MAGIC_BREAK;
+
     list_init(&process -> threads);
     list_init(&process -> children);
 
@@ -82,6 +86,8 @@ int process_create(const char *filename, int run)
     // Load the program, copy the content to the memory and get the eip
     unsigned int eip = program_loader(se_hdr, process);
 
+        // lprintf("shabi2");
+        // MAGIC_BREAK;
     // Create a single thread for this process
     TCB *thread = thr_create(eip, run); // please see thread.c
     list_insert_last(&process -> threads, &thread -> peer_threads_node);

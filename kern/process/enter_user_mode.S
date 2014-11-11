@@ -13,11 +13,11 @@ enter_user_mode:
      popl      %eax
 
      pushl     %eax
-     movl $0x2b, %eax
-     movl %eax, %ds
-     movl %eax, %es 
-     movl %eax, %fs 
-     movl %eax, %gs
+     movl      $0x2b, %eax
+     movl      %eax, %ds
+     movl      %eax, %es 
+     movl      %eax, %fs 
+     movl      %eax, %gs
      popl      %eax
 
  

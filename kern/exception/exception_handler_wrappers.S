@@ -1,168 +1,32 @@
-/** @file exception_handler_wrappers.S
- *
- *  @brief This file includes timer handler and keyboard handler wrappers.
- *
- *  @author Xianqi Zeng (xianqiz)
- *  @author Tianyuan Ding (tding)
- *  @bug No known bugs
- */
- 
-.global DE
-.global DB
-# .global NMI_INTERRUPT
-.global BP
-.global OF
-.global BR
-.global UD
-.global NM
-.global DF
-.global TS
-.global NP
-.global SS
-.global GP
 .global PF
-# .global INTEL_RESERVED
-.global MF
-.global AC
-.global MC
-.global XF
 
-.extern _DE
-.extern _DB
-# .extern NMI_INTERRUPT
-.extern _BP
-.extern _OF
-.extern _BR
-.extern _UD
-.extern _NM
-.extern _DF
-.extern _TS
-.extern _NP
-.extern _SS
-.extern _GP
-.extern _PF
-# .extern INTEL_RESERVED
-.extern _MF
-.extern _AC
-.extern _MC
-.extern _XF
-
-
-DE:
-
-	pusha
-    call    _DE
-    popa
-    iret
-
-DB:
-
-	pusha
-    call    _DB
-    popa
-    iret
-
-BP:
-
-	pusha
-    call    _BP
-    popa
-    iret
-
-OF:
-
-	pusha
-    call    _OF
-    popa
-    iret
-
-BR:
-
-	pusha
-    call    _BR
-    popa
-    iret
-
-UD:
-
-	pusha
-    call    _UD
-    popa
-    iret
-    
-DF:
-
-	pusha
-    call    _DF
-    popa
-    iret
-    
-NP:
-
-	pusha
-    call    _NP
-    popa
-    iret
-    
-GP:
-
-	pusha
-    call    _GP
-    popa
-    iret
-    
 PF:
+	pushl	%ebp
+	movl 	%esp, %ebp
 
-	pusha
-    call    _PF
-    popa
-    iret
-    
-MF:
+	//start to build the ureg structure
+	//considering exceptinos that push error code
+	pushl	24(%ebp) //ss
+	pushl 	20(%ebp) //esp
+	pushl 	16(%ebp) //eflags
+	pushl 	12(%ebp) //cs
+	pushl 	8(%ebp)  //eip
+	pushl 	4(%ebp)  //error code
+	pushl	%eax	
+	pushl	%ecx
+	pushl	%edx
+	pushl	%ebx
+	pushl	$0
+	pushl	(%ebp)
+	pushl	%esi
+	pushl	%edi
+	pushl	%gs
+	pushl	%fs
+	pushl	%es
+	pushl	%ds
+	pushl	$0 		//cr2 location
+	pushl	$0x14
 
-	pusha
-    call    _MF
-    popa
-    iret
+	pushl	%esp	//ureg_t* cur_ureg
 
-TS:
-
-    pusha
-    call    _TS
-    popa
-    iret
-
-NM:
-
-    pusha
-    call    _NM
-    popa
-    iret
-
-SS:
-
-    pusha
-    call    _SS
-    popa
-    iret
-    
-AC:
-
-	pusha
-    call    _AC
-    popa
-    iret
-    
-MC:
-
-	pusha
-    call    _MC
-    popa
-    iret
-   
-XF:
-
-	pusha
-    call    _XF
-    popa
-    iret
+	call 	get_real_handler

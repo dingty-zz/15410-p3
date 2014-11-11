@@ -54,10 +54,11 @@ typedef struct PCB_t
 
 typedef struct s_info
 {
-    void* esp;
+    void* esp3;
     void* eip;
     void* arg;
     ureg_t* newureg;
+    int installed_flag; 
 } swexninfo;
 
 typedef struct TCB_t

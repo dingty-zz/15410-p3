@@ -1,5 +1,5 @@
 #include <syscall_int.h>
-
+//user mode
 .global swexn
 
 swexn:

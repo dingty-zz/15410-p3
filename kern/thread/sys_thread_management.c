@@ -1,4 +1,3 @@
-
 /** @file control_block.h
  *
  *  @brief This file includes paging handling routines
@@ -11,17 +10,18 @@
  */
 #include <stddef.h>
 #include <syscall.h>
+#include <string.h>
 #include "control_block.h"
 #include "locks/mutex_type.h"
 #include "process/scheduler.h"
 #include "hardware/timer.h"
 #include "handler_install.h"
+#include "seg.h"
+#include "simics.h"
 // extern TCB *current_thread;
 // extern list runnable_queue;
 // extern list blocked_queue;
-
-#define PF_INT 0xE
-
+ 
 
 int sys_yield(int tid)
 {
@@ -185,7 +185,7 @@ int sys_sleep(int ticks)
         mutex_lock(&current_thread -> tcb_mutex);
         current_thread -> duration = ticks;
         current_thread -> start_ticks = sys_get_ticks();
-        current_thread -> state = THREAD_SLEEPING;
+        current_thread -> state= THREAD_SLEEPING;
         mutex_unlock(&current_thread -> tcb_mutex);
 
         // Put this thread to sleep
@@ -193,20 +193,48 @@ int sys_sleep(int ticks)
     }
     return 0;
 }
-// int swexn_handler_wrapper()
-// {
-//     setesp(current_thread -> swexninfo.esp);
 
-// }
+//return 0 if invalid and 1 if valid;
+static int is_valid_newureg(ureg_t *newureg)
+{
+    if (newureg == NULL) return 1;
+    else
+    {
+        /*still needs to add stuff*/
+        // if (newureg -> cs != SEGSEL_USER_CS) return 0;
+        // if (newureg -> ds != SEGSEL_USER_DS) return 0;
+        uint32_t stack_high = (uint32_t) current_thread -> stack_base + 
+                              (uint32_t)  current_thread -> stack_size;
+        if (newureg -> eflags != *((uint32_t*)stack_high-8))
+            return 0;
+    }
+    return 1;
+}
 
-// int sys_swexn(void *esp3, swexn_handler_t eip, void *arg, ureg_t *newureg)
-// {
-//     current_thread -> swexn_info.esp3 = esp3;
-//     current_thread -> swexn_info.eip = eip;
-//     current_thread -> swexn_info.arg = arg;
-//     current_thread -> swexn_info.newureg = newureg;
-//     _handler_install(PF_INT,handler_wrapper);
-//     return 0;
-// }
-
-
+int sys_swexn(void *esp3, swexn_handler_t eip, void *arg, ureg_t *newureg)
+{
+    lprintf("starting swexn...");
+    MAGIC_BREAK;
+    //newureg not valid;
+    if (!is_valid_newureg(newureg)) return -1;
+    //deregister a handler if exists;
+    if (esp3 == NULL || eip == NULL) 
+    {
+        bzero(&current_thread->swexn_info, sizeof(swexninfo));
+        return 0;
+    }
+    //else register;
+    lprintf("installing...esp:%x, arg:%x,newureg:%x,eip:%x",
+                (unsigned int)esp3, (unsigned int)arg,(unsigned int)newureg,(unsigned int)eip);
+    current_thread -> swexn_info.esp3 = esp3;
+    current_thread -> swexn_info.eip = eip;
+    current_thread -> swexn_info.arg = arg;
+    current_thread -> swexn_info.newureg = newureg;
+    current_thread -> swexn_info.installed_flag = 1;
+    if (newureg!=NULL)
+        lprintf("I have this newureg! its ss is:%x",newureg->ss);
+    else
+        lprintf("there is no newureg");
+    MAGIC_BREAK;
+    return 0;
+}

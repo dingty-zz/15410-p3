@@ -24,4 +24,19 @@
 			popl	%edi	;\
 			popl	%ebp	
 
+
+//pop all the registers without needing them
+#define		POPREGS2	;\
+			popl	%ebp 	;\
+			popl	%ebp	;\
+			popl	%ebp	;\
+			popl	%ebp	;\
+			popl 	%ebp	;\
+			popl 	%ebp 	;\
+			popl 	%ebp	;\
+			popl	%ebp	;\
+			popl	%ebp	;\
+			popl	%ebp	
+
+
 #endif /* _PUSH_POP_HELPER_H */

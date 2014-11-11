@@ -20,7 +20,11 @@
 #include "hardware/hardware_handler_wrappers.h"
 #include "hardware/timer.h"
 #include "hardware/keyboard.h"
-// #include "exception/exception_handler_wrappers.h"
+#include "exception/exception_handler_wrappers.h"
+#include "syscall_handler.h"
+
+extern void PF();
+
 /* Configure the timer to generate interrupts every 10 milliseconds. */
 #define FREQ 100
 
@@ -29,23 +33,23 @@ int handler_install(void (*tickback)(unsigned int))
     /* Initialize the fault handlers */
 
     // for instance,
-    // _handler_install(0x0, DE);
-    // _handler_install(0x1, DB);
-    // _handler_install(0x3, BP);
-    // _handler_install(0x4, OF);
-    // _handler_install(0x5, BR);
-    // _handler_install(0x6, UD);
-    // _handler_install(0x7, NM);
-    // _handler_install(0x8, DF);
-    // _handler_install(0x10, TS);
-    // _handler_install(0x11, NP);
-    // _handler_install(0x12, SS);
-    // _handler_install(0X13, GP);
-    // _handler_install(0x14, PF);
-    // _handler_install(0x16, MF);
-    // _handler_install(0x17, AC);
-    // _handler_install(0x18, MC);
-    // _handler_install(0x19, XF);
+    // _handler_install(0x0, DE);   //no error code
+    // _handler_install(0x1, DB);   //no error code
+    // _handler_install(0x3, BP);   //no error code
+    // _handler_install(0x4, OF);   //no error code
+    // _handler_install(0x5, BR);   //no error code
+    // _handler_install(0x6, UD);   //no error code
+    // _handler_install(0x7, NM);   //no error code
+    // _handler_install(0x8, DF);   //error code: 0; pushed cs, eip undefined
+    // _handler_install(0x10, TS);  //error code: yes
+    // _handler_install(0x11, NP);  //error code: yes
+    // _handler_install(0x12, SS);  //error code: yes
+    // _handler_install(0X13, GP);  //error code: yes
+    _handler_install(PF_INT, PF);   //error code: yes
+    // _handler_install(0x16, MF);  //no error code
+    // _handler_install(0x17, AC);  //error code: yes, 0
+    // _handler_install(0x18, MC);  //no error code
+    // _handler_install(0x19, XF);  //no error code
 
 
 
@@ -82,8 +86,7 @@ int handler_install(void (*tickback)(unsigned int))
     _handler_install(READLINE_INT, (void *)readline);
     _handler_install(NEW_PAGES_INT, (void *)new_pages);
     _handler_install(REMOVE_PAGES_INT, (void *)remove_pages);
-
-
+    _handler_install(SWEXN_INT, (void *)sys_swexn_wrapper);    
 
     return 0;
 }

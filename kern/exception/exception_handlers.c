@@ -8,6 +8,15 @@
  */
  
 #include "simics.h"
+extern void sys_vanish(void);
+
+// void se_handler()
+// {
+//     return;
+// }
+
+
+
 /* Divide error exception handler */
 void _DE() {
     lprintf("De");
@@ -93,7 +102,8 @@ void _GP() {
 
 /* exception handler */
 void _PF() {
-    lprintf("Page fault!!");
+    lprintf("haha");
+    MAGIC_BREAK;
     return;
 }
 

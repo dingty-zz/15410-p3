@@ -23,10 +23,10 @@
 #include <syscall.h>
 #include "simics.h"
  
-int swexn(void *esp3, swexn_handler_t eip, void *arg, ureg_t *newureg)
-{
-  return 0; /* FALSE, but placates assert() in crt0.c */
-}
+// int swexn(void *esp3, swexn_handler_t eip, void *arg, ureg_t *newureg)
+// {
+//   return 0; /* FALSE, but placates assert() in crt0.c */
+// }
 
 char getchar(void)
 {

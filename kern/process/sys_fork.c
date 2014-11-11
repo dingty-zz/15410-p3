@@ -26,7 +26,7 @@ typedef struct entry_info
 
 static entry_struct entry;
 
-int find_free_entry(uint32_t* parent_directory)
+static int find_free_entry(uint32_t* parent_directory)
 {
     int i,j;
     for (i = 4; i < PD_SIZE; ++i)
