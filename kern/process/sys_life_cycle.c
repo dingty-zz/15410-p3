@@ -142,10 +142,12 @@ void sys_vanish(void)
                 waiting_thread = list_entry(n, TCB, peer_threads_node);
                 // If we find a thread that is waiting, we delete it from the waiting
                 // queue and make it runnable
+
                 if (waiting_thread -> state == THREAD_WAITING)
                 {
+                    lprintf("I have found a parent %dthat is waiting me",waiting_thread->tid);
                     mutex_lock(&blocked_queue_lock);
-                    list_delete(&blocked_queue, n);
+                    list_delete(&blocked_queue, &waiting_thread->thread_list_node);
                     mutex_unlock(&blocked_queue_lock);
                     
                     mutex_lock(&waiting_thread -> tcb_mutex);
@@ -176,10 +178,16 @@ int sys_wait(int *status_ptr)
     // checkout ptr is not in kernel space, writable or not
 
     PCB *current_pcb = current_thread -> pcb;
-    list child_pros = current_pcb -> children;
+    list *child_pros = &current_pcb -> children;
+    lprintf("Note that %d has %d children", current_thread->tid,current_pcb -> children_count);
+    if (current_pcb -> children_count == 0)
+    {
+        lprintf("%d, You can't wait", current_thread->tid);
+        return -1;
+    }
     node *n;
 
-    for (n = list_begin (&child_pros); n != NULL; n = n -> next)
+    for (n = list_begin (child_pros); n != NULL; n = n -> next)
     {
         PCB *pcb = list_entry(n, PCB, peer_processes_node);
         // Found one already exited child
@@ -192,7 +200,9 @@ int sys_wait(int *status_ptr)
                 *status_ptr = pcb -> return_state;
             }
             // Reap this child
-            list_delete(&child_pros, n);
+            lprintf("Reap this child");
+            // list_delete(child_pros, &pcb -> peer_processes_node);
+            current_pcb -> children_count--;
 
             // free(pcb -> PD);
 
@@ -204,10 +214,13 @@ int sys_wait(int *status_ptr)
     mutex_lock(&current_thread -> tcb_mutex);
     current_thread -> state = THREAD_WAITING;
     mutex_unlock(&current_thread -> tcb_mutex);
-
+    lprintf("Not available, i %d call schedule", current_thread->tid);
     schedule(-1);
+    lprintf("Someone wakes me %d up",current_thread->tid);
+
+
     // Do the thing again once one exited child wake me up
-    for (n = list_begin (&child_pros); n != NULL; n = n -> next)
+    for (n = list_begin (child_pros); n != NULL; n = n -> next)
     {
         PCB *pcb = list_entry(n, PCB, peer_processes_node);
         // Found one already exited child
@@ -220,11 +233,19 @@ int sys_wait(int *status_ptr)
                 *status_ptr = pcb -> return_state;
             }
             // Reap this child
-            list_delete(&child_pros, n);
+            lprintf("Reap the child after schedule");
+            // list_delete(child_pros, &pcb -> peer_processes_node);
+            current_pcb -> children_count--;
+             for (n = list_begin (&runnable_queue); 
+             n != NULL; 
+             n = n -> next)
+        {
+            TCB *tcb = list_entry(n, TCB, thread_list_node);
+            lprintf("The tid in the runnable_queue is %d",tcb->tid);
+        }
+            // free(pcb -> PD);
 
-            free(pcb -> PD);
-
-            free(pcb);
+            // free(pcb);
             return pid;
         }
     }

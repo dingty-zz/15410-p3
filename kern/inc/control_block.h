@@ -48,6 +48,7 @@ typedef struct PCB_t
     node all_processes_node;
     node peer_processes_node;
     uint32_t* PD;
+    int children_count;
 
 }PCB;
 

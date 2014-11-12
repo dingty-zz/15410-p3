@@ -69,7 +69,7 @@ int sys_fork(void)
     unsigned int *kernel_stack = 
     (unsigned int *)(current_thread -> stack_base + 
                      current_thread->stack_size - 60);
-    ////lprintf("the kernel_stack is : %p", kernel_stack);
+    //lprintf("the kernel_stack is : %p", kernel_stack);
     current_thread -> registers.ss = kernel_stack[14];
     current_thread -> registers.esp = kernel_stack[13];
     current_thread -> registers.eflags = kernel_stack[12];
@@ -81,10 +81,10 @@ int sys_fork(void)
     current_thread -> registers.ebp = kernel_stack[9];
     current_thread -> registers.esi = kernel_stack[7];
     current_thread -> registers.edi = kernel_stack[8];
-    lprintf("The ebp is %x", (unsigned int)current_thread -> registers.ebp);
-    lprintf("The eip is %x", (unsigned int)current_thread -> registers.eip);
-    lprintf("The cs is %x", (unsigned int)current_thread -> registers.cs);
-    lprintf("The ss is %x", (unsigned int)current_thread -> registers.ss);
+    //lprintf("The ebp is %x", (unsigned int)current_thread -> registers.ebp);
+    //lprintf("The eip is %x", (unsigned int)current_thread -> registers.eip);
+    //lprintf("The cs is %x", (unsigned int)current_thread -> registers.cs);
+    //lprintf("The ss is %x", (unsigned int)current_thread -> registers.ss);
 
     /* Step 2: create new task control block */
     PCB *child_pcb = (PCB *)malloc(sizeof(PCB));
@@ -106,7 +106,7 @@ int sys_fork(void)
     next_tid++;
     child_tcb -> state = THREAD_INIT;
     child_tcb -> stack_size = parent_tcb -> stack_size;
-    child_tcb -> stack_base = smemalign(4, child_tcb -> stack_size);
+    child_tcb -> stack_base = memalign(4, child_tcb -> stack_size);
     child_tcb -> esp = (uint32_t)child_tcb -> stack_base + 
                        (uint32_t)child_tcb -> stack_size;
     child_tcb -> registers = parent_tcb -> registers;
@@ -122,10 +122,11 @@ int sys_fork(void)
     child_pcb -> state = PROCESS_RUNNING;
     child_pcb -> parent = parent_pcb;
     list_insert_last(&parent_pcb -> children, &child_pcb->peer_processes_node);
-
+    parent_pcb -> children_count++;
 
     /* step 5: create a new page directory for the child */
-    child_pcb -> PD = (uint32_t *) smemalign(PD_SIZE * 4, PT_SIZE * 4);
+    child_pcb -> PD = (uint32_t *) memalign(PD_SIZE * 4, PT_SIZE * 4);
+    //lprintf("The child tid is %d, pd is %p", child_tcb->tid, child_tcb->pcb->PD);
     int i,j;
     // copy kernel mappings first
     for (i = 0; i < 4; ++i)
@@ -140,18 +141,24 @@ int sys_fork(void)
         uint32_t pt_addr = DEFLAG_ADDR(parent_de_raw);
         if (pt_addr == 0)  continue;
         //child direcotory entry info
-        uint32_t child_de = (uint32_t)smemalign(PT_SIZE * 4, PT_SIZE * 4);
+        uint32_t child_de = (uint32_t)memalign(PT_SIZE * 4, PT_SIZE * 4);
         uint32_t child_de_raw = ADDFLAG(child_de, (GET_FLAG(parent_de_raw)));
         (child_pcb->PD)[i] = child_de_raw;
         //copy page table enties, and copy frame data
         for (j = 0; j < PT_SIZE; ++j)
         {
+
             //page table entry info
             uint32_t phys_addr_raw = ((uint32_t*)pt_addr) [j];
             uint32_t phys_addr = DEFLAG_ADDR(phys_addr_raw);
             if (phys_addr == 0)  continue;
+                        if (j == 1 && i == 1023)
+            {
+                //lprintf("This is speicial case");
+                // MAGIC_BREAK;
+            }
             uint32_t parent_entry_v_addr = (i<<22) | (j<<12);
-            //////lprintf("page table entry: %d",j);
+            //lprintf("page table entry: %d",j);
             virtual_map_physical(parent_directory,entry.pd_index,
                                                   entry.pt_index);
             uint32_t found_table = DEFLAG_ADDR(parent_directory[entry.pd_index]);
@@ -159,15 +166,15 @@ int sys_fork(void)
             uint32_t new_phys_addr = ((uint32_t*)found_table)[entry.pt_index];
             //copy the physical frame using virtual address
             //so that we don't need to turn off paging
-            ////lprintf("start copying physical addr!");
-            ////lprintf("free_virtual_addr: %x",(int)entry.free_virtual_addr);
-            ////lprintf("i:%d",i);
-            ////lprintf("j:%d",j);
-            ////lprintf("pd_index: %d",entry.pd_index);
-            ////lprintf("pt_index: %d",entry.pt_index);
-            ////lprintf("parent entry virtual addr: %x",(int)parent_entry_v_addr);
-            ////lprintf("old physical addr:%x",(unsigned int) phys_addr);
-            ////lprintf("new physical addr:%x",(unsigned int) DEFLAG_ADDR(new_phys_addr));
+            //lprintf("start copying physical addr!");
+            //lprintf("free_virtual_addr: %x",(int)entry.free_virtual_addr);
+            //lprintf("i:%d",i);
+            //lprintf("j:%d",j);
+            //lprintf("pd_index: %d",entry.pd_index);
+            //lprintf("pt_index: %d",entry.pt_index);
+            //lprintf("parent entry virtual addr: %x",(int)parent_entry_v_addr);
+            //lprintf("old physical addr:%x",(unsigned int) phys_addr);
+            //lprintf("new physical addr:%x",(unsigned int) DEFLAG_ADDR(new_phys_addr));
             memcpy((void*)entry.free_virtual_addr, (void*)parent_entry_v_addr, 4096);
             //demap this new frame from parent pd
             ((uint32_t*)child_de) [j] = ADDFLAG(DEFLAG_ADDR(new_phys_addr), GET_FLAG(phys_addr_raw)) ;
@@ -176,20 +183,20 @@ int sys_fork(void)
 
             //and map this new frame to child pd;
             
-            ////lprintf("child_de pte:%x",(unsigned int) ((uint32_t*)child_de) [j]);
-            ////lprintf("hahah: %x", (int)(((uint32_t*)found_table) [entry.pt_index]));
+            //lprintf("child_de pte:%x",(unsigned int) ((uint32_t*)child_de) [j]);
+            //lprintf("hahah: %x", (int)(((uint32_t*)found_table) [entry.pt_index]));
             set_cr3((uint32_t)parent_directory);
         }
     }
 
-    // ////lprintf("finished!");
+    // //lprintf("finished!");
 
     // insert child to the list of threads and processes
     list_insert_last(&process_queue, &child_pcb->all_processes_node);
     list_insert_last(&runnable_queue, &child_tcb->thread_list_node);
     // list_insert_last(&thread_queue, &parent_tcb->all_threads);
-    // ////lprintf("ready to return! child pid:%d", child_pcb -> pid);
-    lprintf("%u",child_tcb->registers.eax);
+    // //lprintf("ready to return! child pid:%d", child_pcb -> pid);
+    //lprintf("%u",child_tcb->registers.eax);
 
     return child_pcb -> pid;
 }

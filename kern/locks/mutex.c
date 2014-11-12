@@ -54,11 +54,11 @@ void mutex_lock(mutex_t *mp)
     mp -> count++;
     int is_locked = 0;
     while ((is_locked = atomic_xchange(&(mp->status))))  {
-        lprintf("The current thread that holds the lock is %d", mp -> tid);
+        // lprintf("The current thread that holds the lock is %d", mp -> tid);
         schedule(mp -> tid);     // yield to the thread who holds the lock
     }
     mp -> tid = current_thread -> tid;
-    lprintf("Lock the mutex %p",mp);
+    // lprintf("Lock the mutex %p",mp);
 
 }
 
@@ -69,7 +69,7 @@ void mutex_lock(mutex_t *mp)
  */
 void mutex_unlock(mutex_t *mp)
 {
-    lprintf("unlock the mutex %p",mp);
+    // lprintf("unlock the mutex %p",mp);
 
     mp -> count--;
     mp -> tid = -1;
