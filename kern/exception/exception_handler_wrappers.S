@@ -25,7 +25,7 @@ PF:
 	pushl	%es
 	pushl	%ds
 	pushl	$0 		//cr2 location
-	pushl	$0x14
+	pushl	$0x0E
 
 	pushl	%esp	//ureg_t* cur_ureg
 

@@ -204,13 +204,13 @@ int sys_sleep(int ticks)
 static int is_valid_newureg(ureg_t *newureg)
 {
     unsigned int kern_stack_high, changedbit, mask;
-    uint32_t current_eflags;
+    uint32_t original_eflags;
     if (newureg == NULL) return 1;
     else
     {
         /*still needs to add stuff*/
         kern_stack_high = get_esp0();
-        current_eflags = get_eflags();
+        original_eflags = current_thread -> swexn_info.eflags;
         if (newureg -> cause != SWEXN_CAUSE_DIVIDE      &&
             newureg -> cause != SWEXN_CAUSE_DEBUG       &&
             newureg -> cause != SWEXN_CAUSE_BREAKPOINT  &&
@@ -224,17 +224,46 @@ static int is_valid_newureg(ureg_t *newureg)
             newureg -> cause != SWEXN_CAUSE_FPUFAULT    &&
             newureg -> cause != SWEXN_CAUSE_ALIGNFAULT  &&
             newureg -> cause != SWEXN_CAUSE_SIMDFAULT) 
+            {
+                lprintf("newureg failed becuase of cause");
+                return 0;
+            }
+        if (newureg -> cs != SEGSEL_USER_CS) 
+        {
+            lprintf("newureg failed becuase of cs");
             return 0;
-        if (newureg -> cs != SEGSEL_USER_CS) return 0;
-        if (newureg -> ds != SEGSEL_USER_DS) return 0;
-        if (newureg -> ebp <= kern_stack_high) return 0;
-        if (newureg -> esp <= kern_stack_high) return 0;
-        if (newureg -> eip <= kern_stack_high) return 0;
+        }
+        if (newureg -> ds != SEGSEL_USER_DS) 
+        {
+            lprintf("newureg failed becuase of ds");
+            return 0;
+        }
+        if (newureg -> ebp <= kern_stack_high) 
+        {
+            lprintf("newureg failed becuase of ebp");
+            return 0;
+        }
+        if (newureg -> esp <= kern_stack_high)
+        {
+            lprintf("newureg failed becuase of esp");
+            return 0;
+        }
+        if (newureg -> eip <= kern_stack_high) 
+        {
+            lprintf("newureg failed becuase of ebp");
+            return 0;
+        }
         //check changed bits of eflags are only those allowed 
-        changedbit = newureg -> eflags ^ current_eflags;
+        changedbit = newureg -> eflags ^ original_eflags;
         mask = changedbit ^ ALLOWED_BITS;
         //There is(are) unallowed bit(s) that's been changed;
-        if ( (changedbit | mask) != ALLOWED_BITS ) return 0;
+        if ( (changedbit | mask) != ALLOWED_BITS ) 
+        {
+            lprintf("eflags from the struct:%x",(unsigned int)newureg->eflags);
+            lprintf("eflags from the current eflags: %x",(unsigned int)original_eflags);
+            lprintf("newureg failed becuase of eflags bits");
+            return 0;
+        }
     }
     return 1;
 }

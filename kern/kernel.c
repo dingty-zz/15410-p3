@@ -50,6 +50,8 @@ int kernel_main(mbinfo_t *mbinfo, int argc, char **argv, char **envp)
     clear_console();
     sys_set_term_color(FGND_GREEN | BGND_BLACK);
     mm_init();
+    lprintf("right after mem init");
+    MAGIC_BREAK;
     process_init();
     thr_init();
     // enable_interrupts();
@@ -65,8 +67,12 @@ int kernel_main(mbinfo_t *mbinfo, int argc, char **argv, char **envp)
     // process_create("getpid_test1", 1);   // we run this thread
     // process_create("coolness", 1);   // we run this thread
     // process_create("remove_pages_test2", 1);   // we run this thread
-    
-    process_create("swexn_uninstall_test",1);
+
+    // process_create("swexn_basic_test",1);   
+    process_create("swexn_dispatch",1); 
+    // process_create("swexn_dispatch",1);   
+    // process_create("swexn_regs",1);     
+    // process_create("swexn_uninstall_test",1);
 
     // process_create("deschedule_hang", 1);   // we run this thread
     // process_create("remove_pages_test1",1);

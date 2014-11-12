@@ -59,6 +59,7 @@ typedef struct s_info
     void* arg;
     ureg_t* newureg;
     int installed_flag; 
+    unsigned int eflags; //eflags when page fault happens;
 } swexninfo;
 
 typedef struct TCB_t

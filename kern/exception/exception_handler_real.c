@@ -45,6 +45,7 @@ void get_real_handler(ureg_t* cur_ureg)
     current_thread -> swexn_info.arg = NULL;
     current_thread -> swexn_info.newureg = (ureg_t*)NULL;
     current_thread -> swexn_info.installed_flag = 0;
+    current_thread -> swexn_info.eflags = cur_ureg -> eflags;
     
     //copy the ureg;
     new_esp = new_esp - (sizeof(ureg_t));

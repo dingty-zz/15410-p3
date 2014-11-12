@@ -34,7 +34,7 @@ void mm_init()
     init_free_frame();
 
     // allocate 4k memory for kernel page directory
-    uint32_t *kern_pd = (uint32_t *)smemalign(4096, 4 * 4); 
+    uint32_t *kern_pd = (uint32_t *)memalign(4096, 4 * 4); 
     set_cr3((uint32_t)kern_pd);
     ////lprintf("the pd uint32_t is %u", (unsigned int)kern_pd);
     ////lprintf("the pd  is %p", kern_pd);
@@ -49,7 +49,7 @@ void mm_init()
     int i, j;
     for (i = 0; i < 4; ++i)
     {
-        uint32_t current_pt = (uint32_t)smemalign(4096, 1024 * 4);
+        uint32_t current_pt = (uint32_t)memalign(4096, 1024 * 4);
         for (j = 0; j < 1024; ++j)
         {
             uint32_t k = acquire_free_frame();
@@ -114,7 +114,7 @@ int virtual_map_physical(uint32_t *PD, uint32_t pd_index, uint32_t pt_index)
         //lprintf("acquiring finished with freeframe %x", (unsigned int)free_frame_addr);
 
 
-        uint32_t *PT = (uint32_t *)smemalign(4096, 1024 * 4);
+        uint32_t *PT = (uint32_t *)memalign(4096, 1024 * 4);
         memset((void *)PT, 0, 4096);
         ////lprintf("page table addr: %x", (unsigned int)PT);
 
@@ -251,7 +251,7 @@ void free_pages(uint32_t *pd, uint32_t virtual_addr, size_t size)
 uint32_t *init_pd()
 {
     // void *old_cr3 = (void *)get_cr3();
-    uint32_t *pd = (uint32_t *)smemalign(4096, 1024 * 4); // Allocate pd for process
+    uint32_t *pd = (uint32_t *)memalign(4096, 1024 * 4); // Allocate pd for process
     memset(pd, 0, 1024 * 4);  // clean
     int i = 0;
     for (i = 0; i < 4; ++i)
@@ -260,7 +260,7 @@ uint32_t *init_pd()
         ////lprintf("The directory is %x",(unsigned int)pd[i]);
     }
     //memcpy((void *)pd, old_cr3, 4 * 4); // Copy kernel pt mapping
-    sfree((void *)get_cr3(), 4096);
+    // sfree((void *)get_cr3(), 4096);
     set_cr3((uint32_t) pd);    
     ////lprintf("after calling initpd, the pd is %x", (unsigned int)get_cr3());
     //MAGIC_BREAK;
@@ -332,7 +332,7 @@ void init_free_frame()
     free_frame_num = machine_phys_frames();
     //initizlie the free frame array
     // bunch of pointers that points to pages
-    frame_base = (KF *)smemalign(4096, 8 * 65536);
+    frame_base = (KF *)memalign(4096, 8 * 65536);
     for (i = 0; i < 65536; ++i)
     {
         frame_base[i].refcount = 0;
