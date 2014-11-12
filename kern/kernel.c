@@ -69,9 +69,9 @@ int kernel_main(mbinfo_t *mbinfo, int argc, char **argv, char **envp)
     // process_create("remove_pages_test2", 1);   // we run this thread
 
     // process_create("swexn_basic_test",1);   
-    process_create("swexn_dispatch",1); 
+    // process_create("swexn_cookie_monster",1); 
     // process_create("swexn_dispatch",1);   
-    // process_create("swexn_regs",1);     
+    process_create("swexn_regs",1);     
     // process_create("swexn_uninstall_test",1);
 
     // process_create("deschedule_hang", 1);   // we run this thread

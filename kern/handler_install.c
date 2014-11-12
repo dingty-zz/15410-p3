@@ -48,12 +48,13 @@ int handler_install(void (*tickback)(unsigned int))
     _handler_install(SWEXN_CAUSE_PAGEFAULT, PF);   //error code: yes
     // _handler_install(0x16, MF);  //no error code
     // _handler_install(0x17, AC);  //error code: yes, 0
-    // _handler_install(0x18, MC);  //no error code
     // _handler_install(0x19, XF);  //no error code
 
 
+    /* no need to write swexn handler */
     // _handler_install(0x8, DF);               //error code: 0; pushed cs, eip undefined
     // _handler_install(0x10, TS);              //error code: yes
+    // _handler_install(0x18, MC);  //no error code
 
 
 
