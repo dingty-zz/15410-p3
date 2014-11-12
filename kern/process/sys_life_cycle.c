@@ -26,40 +26,44 @@ extern TCB *current_thread;
 int sys_thread_fork(void)
 {
     unsigned int *kernel_stack = 
-    (unsigned int *)(current_thread -> stack_base + current_thread->stack_size - 52);
-    lprintf("the kernel_stack is : %p", kernel_stack);
-    current_thread -> registers.ss = kernel_stack[12];
-    current_thread -> registers.esp = kernel_stack[11];
-    current_thread -> registers.eflags = kernel_stack[10];
-    current_thread -> registers.cs = kernel_stack[9];
-    current_thread -> registers.eip = kernel_stack[8];
-    current_thread -> registers.eax = kernel_stack[7];
-    current_thread -> registers.ecx = kernel_stack[6];
-    current_thread -> registers.edx = kernel_stack[5];
+    (unsigned int *)(current_thread -> stack_base + 
+                     current_thread->stack_size - 60);
+    //lprintf("the kernel_stack is : %p", kernel_stack);
+    current_thread -> registers.ss = kernel_stack[14];
+    current_thread -> registers.esp = kernel_stack[13];
+    current_thread -> registers.eflags = kernel_stack[12];
+    current_thread -> registers.cs = kernel_stack[11];
+    current_thread -> registers.eip = kernel_stack[10];
+    current_thread -> registers.ecx = kernel_stack[5];
+    current_thread -> registers.edx = kernel_stack[6];
     current_thread -> registers.ebx = kernel_stack[4];
-    current_thread -> registers.ebp = kernel_stack[2];
-    current_thread -> registers.esi = kernel_stack[1];
-    current_thread -> registers.edi = kernel_stack[0];
+    current_thread -> registers.ebp = kernel_stack[9];
+    current_thread -> registers.esi = kernel_stack[7];
+    current_thread -> registers.edi = kernel_stack[8];
 
-    PCB* common_pcb = current_thread -> pcb;
-    list threads = common_pcb -> threads;
+    PCB* parent_pcb = current_thread -> pcb;
+    list threads = parent_pcb -> threads;
 
     TCB *child_tcb = (TCB *)malloc(sizeof(TCB));
-    list_insert_last(&threads, &child_tcb->peer_threads_node);
-    list_insert_last(&runnable_queue, &child_tcb->thread_list_node);
-    child_tcb -> pcb = common_pcb;
+    
+    child_tcb -> pcb = parent_pcb;
     child_tcb -> tid = next_tid;
     next_tid++;
 
     child_tcb -> state = THREAD_INIT;
+    /*each thread has its own stack*/
     child_tcb -> stack_size = current_thread -> stack_size;
-    child_tcb -> stack_base = smemalign(4, child_tcb -> stack_size);
+    child_tcb -> stack_base = memalign(4, child_tcb -> stack_size);
     child_tcb -> esp = 
     (uint32_t)child_tcb->stack_base+(uint32_t)child_tcb->stack_size;
     child_tcb -> registers = current_thread -> registers;
 
     child_tcb -> registers.eax = 0;
+    current_thread -> registers.eax = child_tcb -> tid;
 
+    list_insert_last(&threads, &child_tcb->peer_threads_node);
+    list_insert_last(&runnable_queue, &child_tcb->thread_list_node);
+    
     return child_tcb -> tid;
 }
 

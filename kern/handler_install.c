@@ -92,6 +92,7 @@ int handler_install(void (*tickback)(unsigned int))
     _handler_install(NEW_PAGES_INT, (void *)new_pages);
     _handler_install(REMOVE_PAGES_INT, (void *)remove_pages);
     _handler_install(SWEXN_INT, (void *)sys_swexn_wrapper);    
+    _handler_install(THREAD_FORK_INT, (void *)thread_fork_wrapper);
 
     return 0;
 }

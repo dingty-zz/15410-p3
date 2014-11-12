@@ -11,5 +11,6 @@
 
 
 void sys_swexn_wrapper();
+void thread_fork_wrapper();
 
 #endif

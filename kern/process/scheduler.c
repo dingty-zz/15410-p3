@@ -72,13 +72,13 @@ void schedule(int tid)
 
 
     // TODO, schedule halt for spinning
-    if (runnable_queue.length == 1|| 
-            (current_thread -> tid == 1 && process_queue.length == 1))
-    {
-       lprintf("reach here");
-       MAGIC_BREAK;
-       return;
-    }
+    // if (runnable_queue.length == 1|| 
+    //         (current_thread -> tid == 1 && process_queue.length == 1))
+    // {
+    //    lprintf("reach here");
+    //    MAGIC_BREAK;
+    //    return;
+    // }
 
     TCB *next_thread = NULL;
     if (tid == -1)

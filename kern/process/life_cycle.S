@@ -2,7 +2,7 @@
 
 .global fork
 .global exec
-.global thread_fork
+.global thread_fork_wrapper
 .global wait
 .global vanish
 .global set_status
@@ -36,7 +36,7 @@ exec:
 
 	iret	
 	
-thread_fork:
+thread_fork_wrapper:
 
 	PUSHREGS
 	
