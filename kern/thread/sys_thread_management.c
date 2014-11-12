@@ -217,6 +217,7 @@ int sys_sleep(int ticks)
         mutex_unlock(&current_thread -> tcb_mutex);
 
         // Put this thread to sleep
+        lprintf("let's sleep by schedule");
         schedule(-1);
     }
     return 0;

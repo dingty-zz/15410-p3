@@ -73,7 +73,7 @@ sleep:
 
 	pushl 	%esi
 	call 	sys_sleep
-
+	popl    %esi
 	POPREGS
 
 	iret

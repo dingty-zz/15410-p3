@@ -57,11 +57,12 @@ void schedule(int tid)
         TCB *tcb = list_entry(n, TCB, thread_list_node);
         if (tcb -> state == THREAD_SLEEPING)
         {
+            lprintf("find a sleeping thread");
             if (tcb -> start_ticks + tcb -> duration < sys_get_ticks())
             {
                 tcb -> state = THREAD_RUNNABLE;
-                list_delete(&blocked_queue, n);
-                list_insert_last(&runnable_queue, n);
+                list_delete(&blocked_queue, &tcb->thread_list_node);
+                list_insert_last(&runnable_queue, &tcb->thread_list_node);
             }
         }
     }
@@ -72,6 +73,14 @@ void schedule(int tid)
     // as possible
 
     lprintf("return or not, well, I am thread: %d", current_thread->tid);
+    lprintf("The length of runnable quueee is %d", runnable_queue.length);
+    TCB *target = NULL;
+
+for (n = list_begin(&runnable_queue); n != NULL; n = n -> next) {
+    target = list_entry(n, TCB, thread_list_node);
+    lprintf("target id : %d", target -> tid);
+}
+
     // TODO, schedule halt for spinning
      if(current_thread -> tid == 1 && runnable_queue.length==0)
     {
@@ -102,18 +111,25 @@ void schedule(int tid)
 
         case THREAD_BLOCKED:
         case THREAD_WAITING:
+        case THREAD_SLEEPING:
+            lprintf("gotcha!");
             list_insert_last(&blocked_queue, &current_thread->thread_list_node);
             break;
 
         default:
             list_insert_last(&runnable_queue, &current_thread->thread_list_node);
     }
-
+    target = NULL;
+for (n = list_begin(&runnable_queue); n != NULL; n = n -> next) {
+    target = list_entry(n, TCB, thread_list_node);
+    lprintf("target id again: %d", target -> tid);
+}
     // MAGIC_BREAK;
     // lprintf("Switch from current: %p, to next: %p\n", current_thread, next_thread);
     current_thread = context_switch(current_thread, next_thread);
 
     lprintf(" current running: %p\n", current_thread);
+    MAGIC_BREAK;
     enable_interrupts();
 }
 
