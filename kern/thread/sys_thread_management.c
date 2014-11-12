@@ -18,10 +18,16 @@
 #include "handler_install.h"
 #include "seg.h"
 #include "simics.h"
+#include <ureg.h>
+#include <eflags.h>
+#include <cr.h>
 // extern TCB *current_thread;
 // extern list runnable_queue;
 // extern list blocked_queue;
  
+#define ALLOWED_BITS    (EFL_CF | EFL_PF | EFL_AF | EFL_ZF | EFL_SF | \
+                        EFL_DF | EFL_OF | EFL_AC)
+
 
 int sys_yield(int tid)
 {
@@ -197,16 +203,38 @@ int sys_sleep(int ticks)
 //return 0 if invalid and 1 if valid;
 static int is_valid_newureg(ureg_t *newureg)
 {
+    unsigned int kern_stack_high, changedbit, mask;
+    uint32_t current_eflags;
     if (newureg == NULL) return 1;
     else
     {
         /*still needs to add stuff*/
-        // if (newureg -> cs != SEGSEL_USER_CS) return 0;
-        // if (newureg -> ds != SEGSEL_USER_DS) return 0;
-        uint32_t stack_high = (uint32_t) current_thread -> stack_base + 
-                              (uint32_t)  current_thread -> stack_size;
-        if (newureg -> eflags != *((uint32_t*)stack_high-8))
+        kern_stack_high = get_esp0();
+        current_eflags = get_eflags();
+        if (newureg -> cause != SWEXN_CAUSE_DIVIDE      &&
+            newureg -> cause != SWEXN_CAUSE_DEBUG       &&
+            newureg -> cause != SWEXN_CAUSE_BREAKPOINT  &&
+            newureg -> cause != SWEXN_CAUSE_OVERFLOW    &&
+            newureg -> cause != SWEXN_CAUSE_BOUNDCHECK  &&
+            newureg -> cause != SWEXN_CAUSE_OPCODE      &&
+            newureg -> cause != SWEXN_CAUSE_NOFPU       &&
+            newureg -> cause != SWEXN_CAUSE_SEGFAULT    &&
+            newureg -> cause != SWEXN_CAUSE_PROTFAULT   &&
+            newureg -> cause != SWEXN_CAUSE_PAGEFAULT   &&
+            newureg -> cause != SWEXN_CAUSE_FPUFAULT    &&
+            newureg -> cause != SWEXN_CAUSE_ALIGNFAULT  &&
+            newureg -> cause != SWEXN_CAUSE_SIMDFAULT) 
             return 0;
+        if (newureg -> cs != SEGSEL_USER_CS) return 0;
+        if (newureg -> ds != SEGSEL_USER_DS) return 0;
+        if (newureg -> ebp <= kern_stack_high) return 0;
+        if (newureg -> esp <= kern_stack_high) return 0;
+        if (newureg -> eip <= kern_stack_high) return 0;
+        //check changed bits of eflags are only those allowed 
+        changedbit = newureg -> eflags ^ current_eflags;
+        mask = changedbit ^ ALLOWED_BITS;
+        //There is(are) unallowed bit(s) that's been changed;
+        if ( (changedbit | mask) != ALLOWED_BITS ) return 0;
     }
     return 1;
 }

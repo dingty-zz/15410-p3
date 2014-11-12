@@ -12,8 +12,6 @@
 #ifndef _HANDLER_INSTALL_H
 #define _HANDLER_INSTALL_H
 
-#define PF_INT 0xE
-
 int handler_install(void (*tickback)(unsigned int));
 void _handler_install(int idt_entry, void (*handler)());
 

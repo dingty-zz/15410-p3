@@ -17,8 +17,7 @@ void OF();
 void BR();
 void UD();
 void NM();
-void DF();
-void TS();
+
 void NP();
 void SS();
 void GP();

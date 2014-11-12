@@ -30,7 +30,7 @@
 #define EFL_NT          0x00004000      /**< Nested Task */
 #define EFL_RESV4       0x00008000      /**< Reserved, Maintain 0 */
 #define EFL_RF          0x00010000      /**< Resume Flag */
-
+ 
     /** Virtual 8086 Mode
      *
      * @warning THIS IS NOT RELATED to Virtual Memory "VM".  Unless you

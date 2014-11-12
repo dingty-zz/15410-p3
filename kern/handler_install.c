@@ -22,6 +22,7 @@
 #include "hardware/keyboard.h"
 #include "exception/exception_handler_wrappers.h"
 #include "syscall_handler.h"
+#include <ureg.h>
 
 extern void PF();
 
@@ -33,23 +34,26 @@ int handler_install(void (*tickback)(unsigned int))
     /* Initialize the fault handlers */
 
     // for instance,
-    // _handler_install(0x0, DE);   //no error code
-    // _handler_install(0x1, DB);   //no error code
-    // _handler_install(0x3, BP);   //no error code
-    // _handler_install(0x4, OF);   //no error code
-    // _handler_install(0x5, BR);   //no error code
-    // _handler_install(0x6, UD);   //no error code
-    // _handler_install(0x7, NM);   //no error code
-    // _handler_install(0x8, DF);   //error code: 0; pushed cs, eip undefined
-    // _handler_install(0x10, TS);  //error code: yes
-    // _handler_install(0x11, NP);  //error code: yes
-    // _handler_install(0x12, SS);  //error code: yes
-    // _handler_install(0X13, GP);  //error code: yes
-    _handler_install(PF_INT, PF);   //error code: yes
+    // _handler_install(SWEXN_CAUSE_DIVIDE, DE);   //no error code
+    // _handler_install(SWEXN_CAUSE_DEBUG, DB);    //no error code
+    // _handler_install(SWEXN_CAUSE_BREAKPOINT, BP);          //no error code
+    // _handler_install(SWEXN_CAUSE_OVERFLOW, OF);            //no error code
+    // _handler_install(SWEXN_CAUSE_BOUNDCHECK, BR);          //no error code
+    // _handler_install(SWEXN_CAUSE_OPCODE, UD);              //no error code
+    // _handler_install(SWEXN_CAUSE_NOFPU, NM);               //no error code
+
+    // _handler_install(SWEXN_CAUSE_SEGFAULT, NP);            //error code: yes
+    // _handler_install(SWEXN_CAUSE_STACKFAULT, SS);          //error code: yes
+    // _handler_install(SWEXN_CAUSE_PROTFAULT, GP);           //error code: yes
+    _handler_install(SWEXN_CAUSE_PAGEFAULT, PF);   //error code: yes
     // _handler_install(0x16, MF);  //no error code
     // _handler_install(0x17, AC);  //error code: yes, 0
     // _handler_install(0x18, MC);  //no error code
     // _handler_install(0x19, XF);  //no error code
+
+
+    // _handler_install(0x8, DF);               //error code: 0; pushed cs, eip undefined
+    // _handler_install(0x10, TS);              //error code: yes
 
 
 
