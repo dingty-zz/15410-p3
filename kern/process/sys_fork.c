@@ -113,7 +113,7 @@ int sys_fork(void)
     /* return twice and values are different */
     child_tcb -> registers.eax = 0;
     parent_tcb -> registers.eax = child_pcb -> pid;
-    list_insert_last(&child_pcb -> threads, &child_tcb->thread_list_node);
+    list_insert_last(&child_pcb -> threads, &child_tcb->peer_threads_node);
 
     /* step 4: set up the process control block */
     child_pcb -> special = 0;
@@ -189,7 +189,7 @@ int sys_fork(void)
     list_insert_last(&runnable_queue, &child_tcb->thread_list_node);
     // list_insert_last(&thread_queue, &parent_tcb->all_threads);
     // ////lprintf("ready to return! child pid:%d", child_pcb -> pid);
-    // ////lprintf("%u",child_tcb->registers.eax);
+    lprintf("%u",child_tcb->registers.eax);
 
     return child_pcb -> pid;
 }

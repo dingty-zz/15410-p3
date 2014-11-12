@@ -82,7 +82,7 @@ void sys_vanish(void)
     // display to the console by print()....
 
     list threads = current_pcb -> threads;
-    lprintf("%p", &threads);
+    lprintf("%d", threads.length);
     node *n;
     // Count how many peers haven't already exited
     int live_count = 0;
@@ -194,9 +194,9 @@ int sys_wait(int *status_ptr)
             // Reap this child
             list_delete(&child_pros, n);
 
-            free(pcb -> PD);
+            // free(pcb -> PD);
 
-            free(pcb);
+            // free(pcb);
             return pid;
         }
     }
