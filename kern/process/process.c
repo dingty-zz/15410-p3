@@ -101,6 +101,11 @@ int process_create(const char *filename, int run)
     // set up kernel stack pointer possibly bugs here
     set_esp0((uint32_t)(thread -> stack_base + thread -> stack_size));
     
+    *((unsigned int *)(current_thread -> registers.esp)) = 0xffffc000;
+    current_thread -> registers.esp -= 4;
+
+    *(unsigned int *)current_thread -> registers.esp = 0xffffffff;
+    current_thread -> registers.esp -= 12;
 
     // MAGIC_BREAK;
     if (!run)  // if not run ,we return
@@ -186,7 +191,7 @@ unsigned int program_loader(simple_elf_t se_hdr, PCB *process) {
     // MAGIC_BREAK;
 
     allocate_pages(process -> PD,
-                   (uint32_t)0xfffff000, 4096); // possibly bugs here
+                   (uint32_t)0xffffe000, 8192); // possibly bugs here
 
     lprintf("allocate_pages done!");
     // *(int *)0xffffffff=3;
