@@ -51,6 +51,7 @@ typedef struct PCB_t
     uint32_t* PD;
     int children_count;
     list va; //A list of va_info
+
 }PCB;
 
 

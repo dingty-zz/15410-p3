@@ -51,12 +51,17 @@ int kernel_main(mbinfo_t *mbinfo, int argc, char **argv, char **envp)
     sys_set_term_color(FGND_GREEN | BGND_BLACK);
     mm_init();
     lprintf("right after mem init");
-    MAGIC_BREAK;
     process_init();
     thr_init();
     enable_interrupts();
 
-    lprintf("Hello from a brand new kernel!");    
+    lprintf("Hello from a brand new kernel!");
+    process_create("idle", 0);   // we hang idle
+
+
+
+
+
     // process_create("ck1", 1);   // we hang this thread
 
     // process_create("merchant", 0);   // we run this thread
@@ -68,12 +73,21 @@ int kernel_main(mbinfo_t *mbinfo, int argc, char **argv, char **envp)
     // process_create("coolness", 1);   // we run this thread
     // process_create("remove_pages_test2", 1);   // we run this thread
 
-    // process_create("swexn_basic_test",1);   
-    // process_create("swexn_cookie_monster",1); 
-    // process_create("swexn_dispatch",1);   
-    // process_create("swexn_regs",1);     
+    // process_create("swexn_basic_test",1);
+    // process_create("swexn_cookie_monster",1);
+    // process_create("swexn_dispatch",0);
+    // process_create("swexn_regs",0);
     // process_create("swexn_uninstall_test",1);
 
+
+    // process_create("yield_desc_mkrun", 1);
+    // process_create("slaughter", 1);
+    // process_create("actual_wait", 1);
+    // process_create("make_crash", 1);
+
+    // process_create("getpid_test1", 1);   // we run this thread
+    // process_create("sleep_test1", 1);   // we run this thread
+    // process_create("new_pages", 1);   // we run this thread
     // process_create("deschedule_hang", 1);   // we run this thread
     // process_create("remove_pages_test1",1);
 
@@ -86,7 +100,7 @@ int kernel_main(mbinfo_t *mbinfo, int argc, char **argv, char **envp)
 
 
     // For future use
- 
+
 
     // process_create("init", 1);   // we run this thread
 

@@ -93,6 +93,9 @@ int handler_install(void (*tickback)(unsigned int))
     _handler_install(REMOVE_PAGES_INT, (void *)remove_pages);
     _handler_install(SWEXN_INT, (void *)sys_swexn_wrapper);    
     _handler_install(THREAD_FORK_INT, (void *)thread_fork_wrapper);
+    _handler_install(GET_TICKS_INT, (void *)get_ticks);
+    _handler_install(YIELD_INT, (void *)yield);
+    _handler_install(MAKE_RUNNABLE_INT, (void *)make_runnable);
 
     return 0;
 }

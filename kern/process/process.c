@@ -73,6 +73,7 @@ int process_create(const char *filename, int run)
     process -> pid = next_pid;
     next_pid++;
     process -> return_state = 0;
+    process -> children_count = 0;
     process -> parent = NULL;
 
     // lprintf("shabi1");
@@ -194,7 +195,7 @@ unsigned int program_loader(simple_elf_t se_hdr, PCB *process) {
     // /* copy data from data field */
     getbytes(se_hdr.e_fname, se_hdr.e_datoff, se_hdr.e_datlen,
              (char *)se_hdr.e_datstart);
-    MAGIC_BREAK;
+    // MAGIC_BREAK;
     getbytes(se_hdr.e_fname, se_hdr.e_txtoff, se_hdr.e_txtlen,
              (char *)se_hdr.e_txtstart);
     getbytes(se_hdr.e_fname, se_hdr.e_rodatoff, se_hdr.e_rodatlen,

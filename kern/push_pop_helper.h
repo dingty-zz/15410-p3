@@ -1,5 +1,6 @@
 #ifndef _PUSH_POP_HELPER_H
 #define _PUSH_POP_HELPER_H
+#include <seg.h>
 
 #define 	PUSHREGS	;\
 			pushl	%ebp	;\
@@ -8,15 +9,21 @@
 			pushl 	%edx	;\
 			pushl 	%ecx	;\
 			pushl 	%ebx	;\
-			pushl 	%ds		;\
-			pushl 	%es		;\
-			pushl 	%fs		;\
-			pushl 	%gs		
+			pushl   %eax	;\
+     		movl $SEGSEL_KERNEL_DS, %eax ;\
+     		movl %eax, %ds	;\
+     		movl %eax, %es  ;\
+     		movl %eax, %fs	;\
+     		movl %eax, %gs	;\
+     		popl      %eax
 #define 	POPREGS		;\
-			popl	%gs 	;\
-			popl	%fs		;\
-			popl	%es		;\
-			popl	%ds		;\
+     		pushl   %eax	;\
+     		movl $SEGSEL_USER_DS, %eax ;\
+     		movl %eax, %ds	;\
+     		movl %eax, %es  ;\
+     		movl %eax, %fs	;\
+     		movl %eax, %gs	;\
+     		popl      %eax	;\
 			popl 	%ebx	;\
 			popl 	%ecx 	;\
 			popl 	%edx	;\
@@ -27,9 +34,6 @@
 
 //pop all the registers without needing them
 #define		POPREGS2	;\
-			popl	%ebp 	;\
-			popl	%ebp	;\
-			popl	%ebp	;\
 			popl	%ebp	;\
 			popl 	%ebp	;\
 			popl 	%ebp 	;\

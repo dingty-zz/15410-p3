@@ -57,14 +57,16 @@ UPDATE_METHOD = afs
 # A list of the test programs you want compiled in from the 410user/progs
 # directory.
 #
-410TESTS = \
+410TESTS = slaughter register_test fork_wait  cho2 \
 exec_basic ck1 exec_basic_helper peon merchant fork_test1 \
 fork_bomb cat cho coolness deschedule_hang getpid_test1 halt_test knife \
 loader_test2 print_basic readline_basic remove_pages_test2 actual_wait \
 sleep_test1 new_pages \
 swexn_basic_test swexn_cookie_monster swexn_dispatch swexn_regs \
 swexn_stands_for_swextensible swexn_uninstall_test \
-minclone_mem
+minclone_mem \
+wait_getpid work mem_permissions make_crash \
+make_crash_helper chow yield_desc_mkrun loader_test1
 
 ###########################################################################
 # Test programs you have written which you wish to run
@@ -72,7 +74,7 @@ minclone_mem
 # A list of the test programs you want compiled in from the user/progs
 # directory.
 #
-STUDENTTESTS =
+STUDENTTESTS = a
 
 ###########################################################################
 # Data files provided by course staff to build into the RAM disk

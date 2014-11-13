@@ -27,7 +27,7 @@ extern TCB *current_thread;
 */
 int sys_exec(char *execname, char *argvec[])
 {
-    char *name = (char *)malloc(strlen(execname));
+    char *name = (char *)malloc(strlen(execname) + 1);
     strcpy(name, execname);
     lprintf("The execname is %s", name);
     lprintf("char %s, argvec: %p", execname, argvec);
@@ -69,7 +69,7 @@ int sys_exec(char *execname, char *argvec[])
 
     // Unmap current page directory and free all its address space
     process -> PD = init_pd();
-  
+
     current_thread -> registers.eip = program_loader(se_hdr, process);
     // set up kernel stack pointer possibly bugs here
     set_esp0((uint32_t)(current_thread -> stack_base + current_thread -> stack_size));
