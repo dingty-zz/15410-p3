@@ -65,7 +65,7 @@ int kernel_main(mbinfo_t *mbinfo, int argc, char **argv, char **envp)
     // process_create("yield_desc_mkrun", 1);
 
     // process_create("getpid_test1", 1);   // we run this thread
-    process_create("make_crash", 1);   // we run this thread
+    process_create("slaughter", 1);   // we run this thread
     // process_create("new_pages", 1);   // we run this thread
     // process_create("deschedule_hang", 1);   // we run this thread
 

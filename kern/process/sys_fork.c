@@ -195,7 +195,8 @@ int sys_fork(void)
     list_insert_last(&process_queue, &child_pcb->all_processes_node);
     list_insert_last(&runnable_queue, &child_tcb->thread_list_node);
     // list_insert_last(&thread_queue, &parent_tcb->all_threads);
-    // //lprintf("ready to return! child pid:%d", child_pcb -> pid);
+    lprintf("ready to return! parent pid:%d", parent_pcb -> pid);
+    lprintf("ready to return! child pid:%d", child_pcb -> pid);
     //lprintf("%u",child_tcb->registers.eax);
 
     return child_pcb -> pid;

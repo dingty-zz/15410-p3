@@ -167,7 +167,7 @@ void sys_vanish(void)
     current_thread -> state = THREAD_EXIT;
 
     mutex_unlock(&current_thread -> tcb_mutex);
-    lprintf("(x_x)_vanish called schedule");
+    lprintf("(x_x)_vanish called schedule %d", current_thread -> tid);
     // context switch it back
     schedule(-1);
 
@@ -200,8 +200,8 @@ int sys_wait(int *status_ptr)
                 *status_ptr = pcb -> return_state;
             }
             // Reap this child
-            lprintf("Reap this child");
-            // list_delete(child_pros, &pcb -> peer_processes_node);
+            lprintf("Reap this child %d", pid);
+            list_delete(child_pros, &pcb -> peer_processes_node);
             current_pcb -> children_count--;
 
             // free(pcb -> PD);
@@ -234,7 +234,7 @@ int sys_wait(int *status_ptr)
             }
             // Reap this child
             lprintf("Reap the child after schedule");
-            // list_delete(child_pros, &pcb -> peer_processes_node);
+            list_delete(child_pros, &pcb -> peer_processes_node);
             current_pcb -> children_count--;
              for (n = list_begin (&runnable_queue); 
              n != NULL; 
