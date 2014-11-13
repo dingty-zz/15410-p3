@@ -14,5 +14,7 @@
 
 int handler_install(void (*tickback)(unsigned int));
 void _handler_install(int idt_entry, void (*handler)());
+void _interrupt_install(int idt_entry, void (*handler)());
 
 #endif /* _HANDLER_INSTALL_H */
+

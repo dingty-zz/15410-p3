@@ -73,8 +73,8 @@ int handler_install(void (*tickback)(unsigned int))
     setup_keyboard();
 
     /* Install timer handlers */
-    _handler_install(TIMER_IDT_ENTRY, timer_wrapper);
-    _handler_install(KEY_IDT_ENTRY, keyboard_wrapper);
+    _interrupt_install(TIMER_IDT_ENTRY, timer_wrapper);
+    _interrupt_install(KEY_IDT_ENTRY, keyboard_wrapper);
     /* initialize system call handlers */
 
     _handler_install(EXEC_INT, (void *)exec);
@@ -97,9 +97,9 @@ int handler_install(void (*tickback)(unsigned int))
     return 0;
 }
 
-/** @brief Install the hander to the respective idt entry.
+/** @brief Install the handler to the respective idt entry.
  *
- *  It first builds the trap gate and then inserts it into IDT.
+ *  It first builds the TRAP GATE and then inserts it into IDT.
  *
  *  @params idt_entry The index into the IDT for the interrupt handler.
  *  @params handler The wrapped handler.
@@ -108,12 +108,11 @@ int handler_install(void (*tickback)(unsigned int))
  **/
 void _handler_install(int idt_entry, void (*handler)())
 {
-
     /* Build the trap gate */
     unsigned int *idtbase = (unsigned int *)idt_base();
 
     unsigned int offset = (unsigned int)handler;
-    unsigned int reserved = 0xef00;  // DPL = 0, P = 1, D = 1, reserved = 0
+    unsigned int reserved = 0xef00;   // P = 1, DPL = 1 1 , reserved = 0;
     unsigned int offset3116 = offset & 0xFFFF0000;
     unsigned int offset150 = offset & 0x0000FFFF;
 
@@ -122,6 +121,31 @@ void _handler_install(int idt_entry, void (*handler)())
      * position */
     idtbase[idt_entry * 2] = (SEGSEL_KERNEL_CS << 16) | offset150;
     idtbase[idt_entry * 2 + 1] = offset3116 | reserved;
+}
 
 
+/** @brief Install the interrupt handler to the respective idt entry.
+ *
+ *  It first builds the INTERRUPT GATE and then inserts it into IDT.
+ *
+ *  @params idt_entry The index into the IDT for the interrupt handler.
+ *  @params handler The wrapped handler.
+ *
+ *  @return void
+ **/
+void _interrupt_install(int idt_entry, void (*handler)())
+{
+    /* Build the trap gate */
+    unsigned int *idtbase = (unsigned int *)idt_base();
+
+    unsigned int offset = (unsigned int)handler;
+    unsigned int reserved = 0x8e00;  // P = 1, DPL = 0 0, reserved = 0;
+    unsigned int offset3116 = offset & 0xFFFF0000;
+    unsigned int offset150 = offset & 0x0000FFFF;
+
+    /* Fill in the idt entry. The idt_base is the unsigned int pointer but
+     * each gate is 8 bytes long, so we have to time 2 to get the correct
+     * position */
+    idtbase[idt_entry * 2] = (SEGSEL_KERNEL_CS << 16) | offset150;
+    idtbase[idt_entry * 2 + 1] = offset3116 | reserved;
 }
