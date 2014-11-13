@@ -23,6 +23,7 @@
 #include "interrupt_defines.h"
 #include <assert.h>
 #include "keyboard.h"
+#include "console.h"
 
 #define BUF_LEN 100   // Default buffer length, to hold 100 scan codes in a queue
 
@@ -56,12 +57,24 @@ int readchar(void)
 
 void keyboard_handler()
 {
-    disable_interrupts();   // Defer other interrupts
+    // disable_interrupts();   // Defer other interrupts
     lprintf("keyboard is called ");
     uint8_t scancode = inb(KEYBOARD_PORT);
+
+    kh_type aug_char = process_scancode(scancode);
+
+    /* When aug_char has data, go and extract it's char value */
+    if (KH_HASDATA(aug_char))
+    {
+        /* When key released, we know a key press event is done, so we
+           will return the respective character */
+        if (!KH_ISMAKE(aug_char))
+            putbyte(aug_char);
+    }
+
     enqueue(s_queue, scancode);
     outb(INT_CTL_PORT, INT_ACK_CURRENT);
-    enable_interrupts();   // After we enqueued the scancode, we enable interrupts
+    // enable_interrupts();   // After we enqueued the scancode, we enable interrupts
 }
 
 void setup_keyboard()

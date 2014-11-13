@@ -36,11 +36,12 @@ int sys_exec(char *execname, char *argvec[])
 
     if (result == NOT_PRESENT || result == ELF_NOTELF)
     {
+        lprintf("program not present in exec");
         // error, the file doesn't exist
         return -1;
     }
 
-
+    lprintf("in exec, program found, start to load");
     // Count the number of arguments
     int argc = 0;
     while (argvec[argc] != 0)
