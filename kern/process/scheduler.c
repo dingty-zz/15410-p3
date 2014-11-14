@@ -101,6 +101,7 @@ void schedule(int tid)
     else      // Search for a specific thread
     {
         next_thread = list_search_tid(&runnable_queue, tid);
+        list_delete(&runnable_queue, &next_thread->thread_list_node);
     }
     if (next_thread == NULL)
     {
