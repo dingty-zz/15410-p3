@@ -28,12 +28,13 @@ extern TCB *current_thread;
 int sys_exec(char *execname, char *argvec[])
 {
     char *name = (char *)malloc(strlen(execname) + 1);
-    strcpy(name, execname);
+    strncpy(name, execname,strlen(execname)+1);
+    // name = "swexn_uninstall_test";
     lprintf("The execname is %s", name);
     lprintf("char %s, argvec: %p", execname, argvec);
     simple_elf_t se_hdr;
     int result = elf_load_helper(&se_hdr, name);
-
+    lprintf("after elf loader");
     if (result == NOT_PRESENT || result == ELF_NOTELF)
     {
         lprintf("program not present in exec");

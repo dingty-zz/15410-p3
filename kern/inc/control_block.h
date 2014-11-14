@@ -88,6 +88,7 @@ typedef struct TCB_t
     node mutex_waiting_queue_node;
     mutex_t tcb_mutex;
     swexninfo swexn_info;
+    node readline_node;
 }TCB;
 
 
@@ -106,6 +107,14 @@ list blocked_queue;
 // THREAD_RUNNABLE is put in this queue
 mutex_t runnable_queue_lock;
 list runnable_queue;
+
+mutex_t readline_queue_lock;
+list readline_queue;
+
+//-1 if no thread is reading line,else
+//the tid of the reading thread
+int current_read_thread;
+int next_read_thread;
 
 // Not sure if this is useful
 mutex_t process_queue_lock;

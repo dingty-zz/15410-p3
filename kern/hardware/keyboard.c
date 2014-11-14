@@ -40,40 +40,47 @@ int readchar(void)
 {
     if (queue_empty(s_queue)) return -1;
 
-    uint8_t k  = dequeue(s_queue);
-    kh_type aug_char = process_scancode(k);
+    char c  = dequeue(s_queue);
+    // kh_type aug_char = process_scancode(k);
 
-    /* When aug_char has data, go and extract it's char value */
-    if (KH_HASDATA(aug_char))
-    {
-        /* When key released, we know a key press event is done, so we
-           will return the respective character */
-        if (!KH_ISMAKE(aug_char))
-            return KH_GETCHAR(aug_char);
-    }
-    // Note that we don't have to worry about the state of the modifier keys
-    return -1;
+    // /* When aug_char has data, go and extract it's char value */
+    // if (KH_HASDATA(aug_char))
+    // {
+    //      When key released, we know a key press event is done, so we
+    //        will return the respective character 
+    //     if (!KH_ISMAKE(aug_char))
+    return c;
+    // }
+    // // Note that we don't have to worry about the state of the modifier keys
+    // return -1;
 }
 
 void keyboard_handler()
 {
     // disable_interrupts();   // Defer other interrupts
-    lprintf("keyboard is called ");
+
+    lprintf("keyboard is called");
     uint8_t scancode = inb(KEYBOARD_PORT);
-
     kh_type aug_char = process_scancode(scancode);
-
+    char real_char;
     /* When aug_char has data, go and extract it's char value */
-    if (KH_HASDATA(aug_char))
+    if (!KH_HASDATA(aug_char) || !KH_ISMAKE(aug_char))
     {
-        /* When key released, we know a key press event is done, so we
-           will return the respective character */
-        if (!KH_ISMAKE(aug_char))
-            putbyte(aug_char);
+        lprintf("keyboard done1");
+        outb(INT_CTL_PORT, INT_ACK_CURRENT);
+        return;
+    }
+    else
+    {
+        lprintf("I read %x", (unsigned int)aug_char);
+        real_char = KH_GETCHAR(aug_char);
+        enqueue(s_queue, real_char);
+        putbyte(real_char);
+        outb(INT_CTL_PORT, INT_ACK_CURRENT);
+        lprintf("keyboard done2");
+        return;
     }
 
-    enqueue(s_queue, scancode);
-    outb(INT_CTL_PORT, INT_ACK_CURRENT);
     // enable_interrupts();   // After we enqueued the scancode, we enable interrupts
 }
 
