@@ -15,21 +15,11 @@
 #ifndef _LINKED_LIST_H
 #define _LINKED_LIST_H
 
-#define offsetoff(TYPE, MEMBER) ((size_t) &((TYPE *) 0)->MEMBER)
+#define offsetof(TYPE, MEMBER) ((size_t) &((TYPE *) 0)->MEMBER)
 #define list_entry(LIST_ELEM, STRUCT, MEMBER)    \
     ((STRUCT *) ((uint8_t *) LIST_ELEM    \
-                 - offsetoff (STRUCT, MEMBER)))
-// struct list_elem
-// {
-//     struct list_elem *prev;     /* Previous list element. */
-//     struct list_elem *next;     /* Next list element. */
-// };
+                 - offsetof (STRUCT, MEMBER)))
 
-// struct list
-// {
-//     struct list_elem head;      /* List head, dummy node. */
-//     struct list_elem tail;      /* List tail, dummy node. */
-// };
 
 /* Generic list node */
 typedef struct node_t
@@ -39,7 +29,7 @@ typedef struct node_t
 } node;
 
 
-// very very generic doubly linked list
+// Generic doubly linked list structure
 typedef struct list_t
 {
     int     length;     // Length of the list
@@ -54,11 +44,9 @@ node *list_end(list *l);
 
 void list_init(list *l);
 node *list_delete(list *l, node *n);  // generic delete function
-node *list_delete_id(list *l, int tid);  // delete this node with corresponding tid
 node *list_delete_first(list *l);
 node *list_delete_last(list *l);
 void list_insert_first(list *l, node *j);
 void list_insert_last(list *l, node *j);
-node *list_search(list *l, int tid); // generic search function
 
 #endif /* _LINKED_LIST_H */

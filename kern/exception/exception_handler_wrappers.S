@@ -1,3 +1,12 @@
+/** @file exception_handler_wrappers.c
+ *
+ *  @brief This file includes timer handler and keyboard handler wrappers.
+ *
+ *  @author Xianqi Zeng (xianqiz)
+ *  @author Tianyuan Ding (tding)
+ *  @bug No known bugs
+ */
+ 
 .global DE
 .global DB
 .global BP

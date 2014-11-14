@@ -1,11 +1,13 @@
-/* The 15-410 kernel project
+/** @file loader.h
  *
- *     loader.h
+ *  @brief This file includes paging handling routines
+*          1. General design, PD, PT descrptions
+           2. How free list works
  *
- * Structure definitions, #defines, and function prototypes
- * for the user process loader.
+ *  @author Xianqi Zeng (xianqiz)
+ *  @author Tianyuan Ding (tding)
+ *  @bug No known bugs
  */
-
 #ifndef _LOADER_H
 #define _LOADER_H
      

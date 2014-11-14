@@ -24,5 +24,9 @@ int timer_handler();
  **/
 void setup_timer(void (*tickback)(unsigned int));
 
+/** @brief Save the address of the provided callback funtion
+ *  @param tickback The address of the callback function
+ *  @return void
+ **/
 unsigned int sys_get_ticks();
 #endif

@@ -1,9 +1,11 @@
-/* The 15-410 kernel.
- * syscall_handler.h
+/** @file control_block.h
  *
- * sys land sys call handler, 
+ *  @brief sys land sys call handler, 
  * installed with interrupt number
  *
+ *  @author Xianqi Zeng (xianqiz)
+ *  @author Tianyuan Ding (tding)
+ *  @bug No known bugs
  */
 
 #ifndef _SYSCALL_HANDLER_H

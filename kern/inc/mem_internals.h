@@ -1,3 +1,14 @@
+/** @file mem_internals.h
+ *
+ *  @brief This file includes paging handling routines
+*          1. General design, PD, PT descrptions
+           2. How free list works
+ *
+ *  @author Xianqi Zeng (xianqiz)
+ *  @author Tianyuan Ding (tding)
+ *  @bug No known bugs
+ */
+
 #ifndef _MEM_INTERNALS_H
 #define _MEM_INTERNALS_H
 #include <stdint.h>
@@ -6,33 +17,14 @@
 #define PT_SIZE 1024
 #define PD_SIZE 1024
 
-// //Page table is essentially an array of physical addresses;
-// typedef struct PT
-// {
-// 	void* pt[PT_SIZE];
-// } PT;
-
-// //Page directory is an array of page tables;
-// typedef struct PD
-// {
-// 	PT* pd[PD_SIZE];
-// } PD;
-
 
 // a node that keeps track of allocated physical frames
 typedef struct kernel_frame
 {
-	unsigned int refcount;	 // copy on write usage, will be explained later
+	unsigned int refcount;	
 	struct kernel_frame *next;
 } KF;
 
-// typedef struct virtual_addr_t
-// {
-// 	uint32_t PDO;
-// 	uint32_t PTO;
-// 	uint32_t
-
-// }virtual_addr;
 
 typedef struct addr_info
 {
