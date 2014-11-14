@@ -58,6 +58,7 @@ int readchar(void)
 void keyboard_handler()
 {
     // disable_interrupts();   // Defer other interrupts
+
     lprintf("keyboard is called");
     uint8_t scancode = inb(KEYBOARD_PORT);
     kh_type aug_char = process_scancode(scancode);
@@ -79,6 +80,7 @@ void keyboard_handler()
         lprintf("keyboard done2");
         return;
     }
+
     // enable_interrupts();   // After we enqueued the scancode, we enable interrupts
 }
 
