@@ -17,6 +17,7 @@
 #include "atomic_xchange.h"
 #include "process/scheduler.h"
 #include "simics.h"
+#include <stddef.h>
 extern TCB *current_thread;
 /** @brief The function to initialize a mutex, which is unlocked initially
  *
@@ -26,8 +27,8 @@ extern TCB *current_thread;
 int mutex_init(mutex_t *mp)
 {
     mp -> status = MUTEX_UNLOCKED;
-    mp -> count = 0;
     mp -> tid = -1;
+    list_init(&mp -> waiting_queue);
     return 0;
 }
 
@@ -39,7 +40,7 @@ int mutex_init(mutex_t *mp)
 void mutex_destroy(mutex_t *mp)
 {
     // Vanish when trying to destroy a locking mutex
-    if (mp -> status == MUTEX_LOCKED || mp -> count > 0) 
+    if (mp -> status == MUTEX_LOCKED || mp -> waiting_queue.length) 
         return;    
     mp -> status = MUTEX_UNAVAILABLE;
 }
@@ -51,11 +52,12 @@ void mutex_destroy(mutex_t *mp)
  */
 void mutex_lock(mutex_t *mp)
 {
-    mp -> count++;
     int is_locked = 0;
     while ((is_locked = atomic_xchange(&(mp->status))))  {
         // lprintf("The current thread that holds the lock is %d", mp -> tid);
+        list_insert_last(&mp -> waiting_queue, &current_thread -> mutex_waiting_queue_node);
         schedule(mp -> tid);     // yield to the thread who holds the lock
+        list_delete(&mp -> waiting_queue, &current_thread -> mutex_waiting_queue_node);
     }
     mp -> tid = current_thread -> tid;
     // lprintf("Lock the mutex %p",mp);
@@ -70,9 +72,18 @@ void mutex_lock(mutex_t *mp)
 void mutex_unlock(mutex_t *mp)
 {
     // lprintf("unlock the mutex %p",mp);
+    if (mp -> waiting_queue.length != 0)
+    {
+        TCB *target = NULL;
+        node *n = list_delete_first(&mp -> waiting_queue);
+        target = list_entry(n, TCB, mutex_waiting_queue_node);
+        mp -> tid = -1;
+        mp -> status = MUTEX_UNLOCKED;
+        yield(target -> tid);
+    } else {
+        mp -> tid = -1;
+        mp -> status = MUTEX_UNLOCKED;
+    }
 
-    mp -> count--;
-    mp -> tid = -1;
-    mp -> status = MUTEX_UNLOCKED;
 }
 

@@ -130,6 +130,35 @@ void sys_vanish(void)
 
             lprintf(" todo report the state to init");
             // MAGIC_BREAK;
+            TCB *init = NULL;
+            for (n = list_begin(&blocked_queue);
+                    n != NULL;
+                    n = n -> next)
+            {
+                init = list_entry(n, TCB, thread_list_node);
+                if (init -> tid == 2)
+                {
+                    lprintf("Find init");
+
+                    mutex_lock(&blocked_queue_lock);
+                    list_delete(&blocked_queue, &init->thread_list_node);
+                    mutex_unlock(&blocked_queue_lock);
+
+                    mutex_lock(&init -> tcb_mutex);
+                    init -> state = THREAD_RUNNABLE;
+                    mutex_unlock(&init -> tcb_mutex);
+
+                    mutex_lock(&runnable_queue_lock);
+                    list_insert_last(&runnable_queue, &init->thread_list_node);
+                    mutex_unlock(&runnable_queue_lock);
+                    break;
+                }
+
+
+
+
+            }
+
         }
         else
         {

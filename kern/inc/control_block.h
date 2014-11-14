@@ -84,6 +84,8 @@ typedef struct TCB_t
 
     node peer_threads_node;
     node thread_list_node;
+
+    node mutex_waiting_queue_node;
     mutex_t tcb_mutex;
     swexninfo swexn_info;
 }TCB;
