@@ -3,6 +3,9 @@
 #include "hardware/keyboard.h"
 #include "control_block.h"
 #include "string.h"
+#include "simics.h"
+
+
 extern TCB *current_thread;
 int sys_readline(int len, char *buf)
 {
@@ -10,12 +13,13 @@ int sys_readline(int len, char *buf)
 	{
 		return -1;
 	}
- int count = 0;
+    int count = 0;
 	int c;
     while (1) {
         while ((c = readchar()) == -1);
         buf[count] = c;
         count ++;
+        
         if (c == '\b') {
             count --;
             if (count > 0) count--;
@@ -30,6 +34,7 @@ int sys_readline(int len, char *buf)
             break;
         }
     }
+    lprintf("readline done, the buf: %s",buf);
     return count;
 }
 
