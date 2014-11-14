@@ -165,6 +165,7 @@ int sys_make_runnable(int tid)
         {
 
             exist = 1;
+            break;
         }
     }
     mutex_unlock(&blocked_queue_lock);

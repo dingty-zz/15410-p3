@@ -96,7 +96,9 @@ int handler_install(void (*tickback)(unsigned int))
     _handler_install(GET_TICKS_INT, (void *)get_ticks);
     _handler_install(YIELD_INT, (void *)yield);
     _handler_install(MAKE_RUNNABLE_INT, (void *)make_runnable);
-
+    _handler_install(SET_TERM_COLOR_INT, (void *)set_term_color);
+    _handler_install(GET_CURSOR_POS_INT, (void *)get_cursor_pos);
+    _handler_install(SET_CURSOR_POS_INT, (void *)set_cursor_pos);
     return 0;
 }
 

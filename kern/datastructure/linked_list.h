@@ -15,10 +15,10 @@
 #ifndef _LINKED_LIST_H
 #define _LINKED_LIST_H
 
-#define offsetof(TYPE, MEMBER) ((size_t) &((TYPE *) 0)->MEMBER)
+#define offset(TYPE, MEMBER) ((size_t) &((TYPE *) 0)->MEMBER)
 #define list_entry(LIST_ELEM, STRUCT, MEMBER)    \
     ((STRUCT *) ((uint8_t *) LIST_ELEM    \
-                 - offsetof (STRUCT, MEMBER)))
+                 - offset (STRUCT, MEMBER)))
 
 
 /* Generic list node */
