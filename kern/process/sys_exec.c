@@ -50,14 +50,28 @@ int sys_exec(char *execname, char *argvec[])
         argc++;
     }
 
-    // Copy the content to the kernel stack
-    char *argv[argc];
-    int j = 0;
-    for (j = 0; j < argc; ++j)
+    // Count the length of total number of char to be copied
+    int total_len = 0;
+    int i = 0;
+    for (i = 0; i < argc; ++i)
     {
-        argv[j] = (char *)malloc(strlen(argvec[j]));
-        strcpy(argv[j], argvec[j]);
+        total_len += (strlen(argvec[i]) + 1);
     }
+
+    // Copy the content to the kernel stack
+    char string[total_len+1];
+    char *kernel_dest = (char *)string;
+    char *argv[argc + 1];
+
+    int k = 0;
+    for (k = 0; k < argc; k++)
+    {
+        argv[k] = kernel_dest;
+        strcpy(kernel_dest, argvec[k]);
+        kernel_dest += (strlen(argvec[k]) + 1);
+    }
+    argv[argc] = NULL;
+
     int l = 0;
     for (l = 0; l < argc; ++l)
     {
@@ -80,7 +94,6 @@ int sys_exec(char *execname, char *argvec[])
     char *dest = (char *)0xffffffff;
     char *vector[argc + 1];
 
-    int k = 0;
     for (k = 0; k < argc; k++)
     {
         dest -= (strlen(argv[k]) + 1);

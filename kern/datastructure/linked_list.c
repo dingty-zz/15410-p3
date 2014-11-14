@@ -26,9 +26,22 @@ void list_init(list *l)
     l -> length = 0;
 }
 
+/** @brief The generic function to delete a specific node from a list
+ *
+ *         Requires that j is stored in the list
+ *  @param a pointer to the list and a pointer to the node
+ *  @return the node that's deleted
+ */
 node *list_begin(list *l) {
     return l -> head;
 }
+
+/** @brief The generic function to delete a specific node from a list
+ *
+ *         Requires that j is stored in the list
+ *  @param a pointer to the list and a pointer to the node
+ *  @return the node that's deleted
+ */
 node *list_end(list *l) {
     return l -> tail;
 }

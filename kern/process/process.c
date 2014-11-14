@@ -21,6 +21,7 @@
 #include "thread/thread_basic.h"
 #include "memory/vm_routines.h"
 #include "process.h"
+#include "assert.h"
 extern TCB *current_thread;
 
 /** @brief Release a frame frame and mark it as freed only when refcount = 0.
@@ -196,15 +197,17 @@ unsigned int program_loader(simple_elf_t se_hdr, PCB *process) {
     lprintf("allocate_pages done!");
     // *(int *)0xffffffff=3;
 
+    int result = 0;
     // MAGIC_BREAK;
     // /* copy data from data field */
-    getbytes(se_hdr.e_fname, se_hdr.e_datoff, se_hdr.e_datlen,
+    result += getbytes(se_hdr.e_fname, se_hdr.e_datoff, se_hdr.e_datlen,
              (char *)se_hdr.e_datstart);
     // MAGIC_BREAK;
-    getbytes(se_hdr.e_fname, se_hdr.e_txtoff, se_hdr.e_txtlen,
+    result += getbytes(se_hdr.e_fname, se_hdr.e_txtoff, se_hdr.e_txtlen,
              (char *)se_hdr.e_txtstart);
-    getbytes(se_hdr.e_fname, se_hdr.e_rodatoff, se_hdr.e_rodatlen,
+    result += getbytes(se_hdr.e_fname, se_hdr.e_rodatoff, se_hdr.e_rodatlen,
              (char *)se_hdr.e_rodatstart);
+    assert(result > 0);
     memset((char *)se_hdr.e_bssstart, 0,  se_hdr.e_bsslen);
     return se_hdr.e_entry;
 }

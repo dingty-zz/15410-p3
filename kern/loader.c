@@ -40,15 +40,15 @@ int getbytes( const char *filename, int offset, int size, char *buf )
 
     int i = 0;
     for (i = 0; i < exec2obj_userapp_count; i++)
-    {
+    {   
+        // If we find this filename
         if (!strcmp(exec2obj_userapp_TOC[i].execname , filename))
         {
-            break;
+            memcpy(buf, (void *)exec2obj_userapp_TOC[i].execbytes + offset, size);
+            return size;
         }
     }
-    memcpy(buf, (void *)exec2obj_userapp_TOC[i].execbytes + offset, size);
-    //lprintf("The address for execbytes is: %p, %p", exec2obj_userapp_TOC[i].execbytes, &exec2obj_userapp_TOC[i]);
-    return size;
+    return -1;
 }
 
 
