@@ -213,7 +213,8 @@ void allocate_pages(uint32_t *pd, uint32_t virtual_addr, size_t size)
             //lprintf("The pd_index+i/1024 is %lu", pd_index+i/1024);
             //lprintf("The pt_index + i1024 is %lu", pt_index + i%1024);
         }
-        virtual_map_physical(pd, pd_index + i / 1024, pt_index + i % 1024);
+        int actual_offset = pt_index + i;
+        virtual_map_physical(pd, pd_index + actual_offset / 1024, actual_offset % 1024);
     }
 
     //lprintf("Finished allocation pages.\n");
@@ -253,7 +254,8 @@ void free_pages(uint32_t *pd, uint32_t virtual_addr, size_t size)
 
     for (i = 0; i < times; ++i)
     {
-        virtual_unmap_physical(pd, pd_index + i / 1024, pt_index + i % 1024);
+        int actual_offset = pt_index + i;
+        virtual_unmap_physical(pd, pd_index + actual_offset / 1024, actual_offset % 1024);
     }
     return ;
 }
