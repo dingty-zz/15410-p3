@@ -6,9 +6,7 @@ readfile:
 pushl	%ebp
 movl	%esp, %ebp
 pushl	%esi
-add		$8,	%ebp
-movl	%ebp, %esi
-sub		$8, %ebp
+leal	8(%ebp), %esi
 INT 	$READFILE_INT
 popl	%esi
 popl	%ebp

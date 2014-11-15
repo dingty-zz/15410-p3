@@ -117,6 +117,7 @@ void schedule(int tid)
 
     case THREAD_BLOCKED:
     case THREAD_WAITING:
+    case THREAD_READLINE:
     case THREAD_SLEEPING:
         //lprintf("gotcha!");
         list_insert_last(&blocked_queue, &current_thread->thread_list_node);

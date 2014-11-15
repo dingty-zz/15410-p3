@@ -25,6 +25,7 @@
 #define THREAD_WAITING 2     // only set when deschedule() is called
 #define THREAD_SLEEPING 3
 #define THREAD_INIT 4
+#define THREAD_READLINE 5
 
 
 #define PROCESS_EXIT -2
@@ -106,13 +107,13 @@ list blocked_queue;
 mutex_t runnable_queue_lock;
 list runnable_queue;
 
-mutex_t readline_queue_lock;
-list readline_queue;
 
-//-1 if no thread is reading line,else
-//the tid of the reading thread
-int current_read_thread;
-int next_read_thread;
+// mutex_t readline_queue_lock;
+// mutex_t readline_work_lock;
+// list readline_queue;
+//-1 if no thread is reading
+// int next_read_thread = -1;
+
 
 // Not sure if this is useful
 mutex_t process_queue_lock;
