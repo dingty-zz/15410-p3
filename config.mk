@@ -75,7 +75,7 @@ fork_wait_bomb fork_exit_bomb
 # A list of the test programs you want compiled in from the user/progs
 # directory.
 #
-STUDENTTESTS = a
+STUDENTTESTS = mutex_destroy_test cyclone multitest switzerland juggle agility_drill cvar_test paraguay racer nibbles startle join_specific_test excellent thr_exit_join beady_test bistromath rwlock_downgrade_read_test misbehave_wrap largetest
 
 ###########################################################################
 # Data files provided by course staff to build into the RAM disk
