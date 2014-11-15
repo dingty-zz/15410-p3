@@ -44,13 +44,21 @@ extern int malloc_init();
 int kernel_main(mbinfo_t *mbinfo, int argc, char **argv, char **envp)
 {
 
-    // Init all subsystems
+    // Init malloc locks
     malloc_init();
+
+    // Install all exception/system call handlers
     handler_install(tick);
+
+    // Initializing console
     clear_console();
     sys_set_term_color(FGND_GREEN | BGND_BLACK);
+    show_cursor();
+
+    // Initial virtual memory system and enable paging
     mm_init();
-    lprintf("right after mem init");
+
+    //
     process_init();
     thr_init();
     enable_interrupts();
@@ -96,7 +104,7 @@ int kernel_main(mbinfo_t *mbinfo, int argc, char **argv, char **envp)
     // process_create("init",1);
     // process_create("ck1");
 
-    process_create("shell",1);
+    process_create("mem_permissions",1);
 
 
     // For future use
