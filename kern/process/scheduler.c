@@ -45,6 +45,13 @@ void tick(unsigned int numTicks)
 
 }
 // have the priority to schedule the blocked thread?  i think so
+/** @brief Determine if the given queue is empty
+ *
+ *  If top == bottom, we know there are nothing in the queue.
+ *
+ *  @param q The pointer to the queue
+ *  @return int 1 means not empty and 0 otherwise
+ **/
 void schedule(int tid)
 {
     // MAGIC_BREAK;
@@ -166,7 +173,13 @@ void schedule(int tid)
     enable_interrupts();
 }
 
-
+/** @brief Determine if the given queue is empty
+ *
+ *  If top == bottom, we know there are nothing in the queue.
+ *
+ *  @param q The pointer to the queue
+ *  @return int 1 means not empty and 0 otherwise
+ **/
 TCB *context_switch(TCB *current, TCB *next)
 {
     //lprintf("Switch from current: %d, to next: %d\n", current->tid, next->tid);
@@ -188,6 +201,13 @@ TCB *context_switch(TCB *current, TCB *next)
     return current;
 }
 
+/** @brief Determine if the given queue is empty
+ *
+ *  If top == bottom, we know there are nothing in the queue.
+ *
+ *  @param q The pointer to the queue
+ *  @return int 1 means not empty and 0 otherwise
+ **/
 void prepare_init_thread(TCB *next)
 {
     //lprintf("%p", next);

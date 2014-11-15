@@ -25,6 +25,13 @@ extern TCB *current_thread;
 1. add return -1, exec_non_exist
 2. don't increase tid
 */
+/** @brief Determine if the given queue is empty
+ *
+ *  If top == bottom, we know there are nothing in the queue.
+ *
+ *  @param q The pointer to the queue
+ *  @return int 1 means not empty and 0 otherwise
+ **/
 int sys_exec(char *execname, char *argvec[])
 {
     char *name = (char *)malloc(strlen(execname) + 1);

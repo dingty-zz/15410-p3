@@ -13,11 +13,11 @@
 #define MUTEX_LOCKED 1
 #define MUTEX_UNLOCKED 0
 #define MUTEX_UNAVAILABLE -1
-
+#include "datastructure/linked_list.h"
 typedef struct mutex {
     int status;			// The status for the mutex
     int tid;			// The thread who holds it
-    int count;			// Number of threads who holds the lock
+    list waiting_queue; // The queue of threads that holds the lock
 } mutex_t;
 
 int mutex_init(mutex_t *mp);

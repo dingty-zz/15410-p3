@@ -6,6 +6,13 @@
 
 extern TCB *current_thread;
 
+/** @brief Determine if the given queue is empty
+ *
+ *  If top == bottom, we know there are nothing in the queue.
+ *
+ *  @param q The pointer to the queue
+ *  @return int 1 means not empty and 0 otherwise
+ **/
 void sys_halt(void)
 {
 	clear_console();        

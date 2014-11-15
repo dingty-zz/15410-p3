@@ -12,9 +12,9 @@ mutex_t malloc_mutex;
  *
  *  @return 0 on success and -1 an error (unlikely)
  */
-int malloc_init()
+void malloc_init()
 {
-    return mutex_init(&malloc_mutex);
+    mutex_init(&malloc_mutex);
 }
 
 /* safe versions of malloc functions */
