@@ -65,6 +65,7 @@ void keyboard_handler()
     char real_char;
     TCB* next_readline_thread = NULL;
     node *n;
+    int found_flag = 0;
     /* When aug_char has data, go and extract it's char value */
     if (!KH_HASDATA(aug_char) || !KH_ISMAKE(aug_char))
     {
@@ -89,8 +90,15 @@ void keyboard_handler()
                     list_delete(&blocked_queue, &next_readline_thread->thread_list_node);
                     list_insert_last(&runnable_queue, &next_readline_thread->thread_list_node);
                     lprintf("there is one waiting readline");
+                    found_flag = 1;
                     break;
                 }
+            }
+            if (!found_flag) 
+            {
+                putbyte(real_char);
+                outb(INT_CTL_PORT, INT_ACK_CURRENT);
+                return;
             }
         }
         else if (real_char == '\b')
