@@ -1,9 +1,12 @@
 /**
 * @file linked_list.h
 *
-* @brief Defines the list node, list header data structure and provides some
-*        library functions on the list
-*        This is a doubly linked list where the header struct is stored on the stack
+* @brief This is a doubly linked list where the header struct is stored on 
+*	     the stack. This file defines the list node, list header data structure
+*	     and provides some library functions on the list. We are using generic 
+*		 linked list that in Linux's favor. The struct that want to use this
+*        kind of linked list needs to embed the node into it's structure.
+*        
 *        while nodes are allocated on heap. The application needs to encapsulate the
 *        data pointed using the make_node function provided below.
 *
@@ -15,6 +18,7 @@
 #ifndef _LINKED_LIST_H
 #define _LINKED_LIST_H
 
+/* list_entry is used to get outside struct that embed this node */
 #define offset(TYPE, MEMBER) ((size_t) &((TYPE *) 0)->MEMBER)
 #define list_entry(LIST_ELEM, STRUCT, MEMBER)    \
     ((STRUCT *) ((uint8_t *) LIST_ELEM    \
@@ -41,7 +45,6 @@ typedef struct list_t
 // Some generic list functions
 node *list_begin(list *l);
 node *list_end(list *l);
-
 void list_init(list *l);
 node *list_delete(list *l, node *n);  // generic delete function
 node *list_delete_first(list *l);

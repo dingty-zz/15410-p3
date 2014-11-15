@@ -10,7 +10,7 @@
 
 #include "linked_list.h"
 #include "assert.h"
-#define NULL 0
+#include <stddef.h>
 
 
 /** @brief The function to initialize the doubly linked list
