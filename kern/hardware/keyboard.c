@@ -50,6 +50,7 @@ int readchar(void)
     //      When key released, we know a key press event is done, so we
     //        will return the respective character 
     //     if (!KH_ISMAKE(aug_char))
+    total_num --;
     return c;
     // }
     // // Note that we don't have to worry about the state of the modifier keys
