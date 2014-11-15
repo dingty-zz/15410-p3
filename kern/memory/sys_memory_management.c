@@ -1,4 +1,4 @@
-/** @file _memory_management.c
+/** @file sys_memory_management.c
  *
  *  @brief This file defines process manipulation routines
  *

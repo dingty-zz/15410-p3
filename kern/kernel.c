@@ -55,12 +55,15 @@ int kernel_main(mbinfo_t *mbinfo, int argc, char **argv, char **envp)
     sys_set_term_color(FGND_GREEN | BGND_BLACK);
     show_cursor();
 
-    // Initial virtual memory system and enable paging
+    // Initialize virtual memory system and enable paging
     mm_init();
 
-    //
+    // Initialize process management system
     process_init();
+
+    // Initialize thread management system
     thr_init();
+
     enable_interrupts();
 
     lprintf("Hello from a brand new kernel!");
@@ -104,7 +107,7 @@ int kernel_main(mbinfo_t *mbinfo, int argc, char **argv, char **envp)
     // process_create("init",1);
     // process_create("ck1");
 
-    process_create("mem_permissions",1);
+    process_create("fork_exit_bomb",1);
 
 
     // For future use

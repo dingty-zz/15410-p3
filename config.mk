@@ -66,7 +66,8 @@ swexn_basic_test swexn_cookie_monster swexn_dispatch swexn_regs \
 swexn_stands_for_swextensible swexn_uninstall_test \
 minclone_mem \
 wait_getpid work mem_permissions make_crash \
-make_crash_helper chow yield_desc_mkrun loader_test1
+make_crash_helper chow yield_desc_mkrun loader_test1 \
+fork_wait_bomb fork_exit_bomb
 
 ###########################################################################
 # Test programs you have written which you wish to run

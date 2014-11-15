@@ -54,7 +54,7 @@ void mutex_lock(mutex_t *mp)
 {
     int is_locked = 0;
     while ((is_locked = atomic_xchange(&(mp->status))))  {
-        // lprintf("The current thread that holds the lock is %d", mp -> tid);
+        lprintf("The current thread that holds the lock is %d", mp -> tid);
         list_insert_last(&mp -> waiting_queue, &current_thread -> mutex_waiting_queue_node);
         schedule(mp -> tid);     // yield to the thread who holds the lock
         list_delete(&mp -> waiting_queue, &current_thread -> mutex_waiting_queue_node);
@@ -75,7 +75,10 @@ void mutex_unlock(mutex_t *mp)
     if (mp -> waiting_queue.length != 0)
     {
         TCB *target = NULL;
-        node *n = list_delete_first(&mp -> waiting_queue);
+
+        // Peek the first waiting thread and yield to it
+        node *n = list_begin(&mp -> waiting_queue);
+        n = n -> next;
         target = list_entry(n, TCB, mutex_waiting_queue_node);
         mp -> tid = -1;
         mp -> status = MUTEX_UNLOCKED;

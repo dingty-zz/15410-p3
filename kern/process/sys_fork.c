@@ -26,6 +26,13 @@ typedef struct entry_info
 
 static entry_struct entry;
 
+/** @brief Determine if the given queue is empty
+ *
+ *  If top == bottom, we know there are nothing in the queue.
+ *
+ *  @param q The pointer to the queue
+ *  @return int 1 means not empty and 0 otherwise
+ **/
 int find_free_entry(uint32_t *parent_directory)
 {
     int i, j;
@@ -88,7 +95,15 @@ int sys_fork(void)
 
     /* Step 2: create new task control block */
     PCB *child_pcb = (PCB *)malloc(sizeof(PCB));
+    if (child_pcb == NULL)
+    {
+        return -1;
+    }
     TCB *child_tcb = (TCB *)malloc(sizeof(TCB));
+    if (child_tcb == NULL)
+    {
+        return -1;
+    }
     PCB *parent_pcb = current_thread -> pcb;
     TCB *parent_tcb = current_thread;
     uint32_t *parent_directory = parent_pcb -> PD;
@@ -107,6 +122,10 @@ int sys_fork(void)
     child_tcb -> state = THREAD_INIT;
     child_tcb -> stack_size = parent_tcb -> stack_size;
     child_tcb -> stack_base = memalign(4, child_tcb -> stack_size);
+    if (child_tcb -> stack_base == NULL)
+    {
+        return -1;
+    }
     child_tcb -> esp = (uint32_t)child_tcb -> stack_base +
                        (uint32_t)child_tcb -> stack_size;
     child_tcb -> registers = parent_tcb -> registers;
@@ -126,6 +145,10 @@ int sys_fork(void)
 
     /* step 5: create a new page directory for the child */
     child_pcb -> PD = (uint32_t *) memalign(PD_SIZE * 4, PT_SIZE * 4);
+    if (child_pcb -> PD == NULL)
+    {
+        return -1;
+    }
     //lprintf("The child tid is %d, pd is %p", child_tcb->tid, child_tcb->pcb->PD);
     int i, j;
     // copy kernel mappings first
@@ -142,6 +165,10 @@ int sys_fork(void)
         if (pt_addr == 0)  continue;
         //child direcotory entry info
         uint32_t child_de = (uint32_t)memalign(PT_SIZE * 4, PT_SIZE * 4);
+        if (child_de ==0)
+        {
+            return -1;
+        }
         uint32_t child_de_raw = ADDFLAG(child_de, (GET_FLAG(parent_de_raw)));
         (child_pcb->PD)[i] = child_de_raw;
         //copy page table enties, and copy frame data
@@ -159,8 +186,12 @@ int sys_fork(void)
             }
             uint32_t parent_entry_v_addr = (i << 22) | (j << 12);
             //lprintf("page table entry: %d",j);
-            virtual_map_physical(parent_directory, entry.pd_index,
+            int result = virtual_map_physical(parent_directory, entry.pd_index,
                                  entry.pt_index);
+            if (result == -1)
+            {
+                return -1;
+            }
             uint32_t found_table = DEFLAG_ADDR(parent_directory[entry.pd_index]);
             //new allocated frame address with flags;
             uint32_t new_phys_addr = ((uint32_t *)found_table)[entry.pt_index];
@@ -196,8 +227,8 @@ int sys_fork(void)
     list_insert_last(&runnable_queue, &child_tcb->thread_list_node);
     // list_insert_last(&thread_queue, &parent_tcb->all_threads);
 
-    lprintf("ready to return! parent pid:%d", parent_pcb -> pid);
-    lprintf("ready to return! child pid:%d", child_pcb -> pid);
+    // lprintf("ready to return! parent pid:%d", parent_pcb -> pid);
+    // lprintf("ready to return! child pid:%d", child_pcb -> pid);
     //lprintf("%u",child_tcb->registers.eax);
 
     return child_pcb -> pid;

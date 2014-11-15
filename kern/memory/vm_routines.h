@@ -1,16 +1,16 @@
- /**
- * @file vm_routines.h
- *
- * @brief A atomic exchange function to achieve mutual exclusion.
- *
- * @author Xianqi Zeng (xianqiz)
- * @author Tianyuan Ding (tding)
- *
- */
+/**
+* @file vm_routines.h
+*
+* @brief A atomic exchange function to achieve mutual exclusion.
+*
+* @author Xianqi Zeng (xianqiz)
+* @author Tianyuan Ding (tding)
+*
+*/
 
 #include <stdint.h>
 #include <types.h>
- 
+
 void mm_init();
 
 
