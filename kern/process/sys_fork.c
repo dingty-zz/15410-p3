@@ -135,7 +135,6 @@ int sys_fork(void)
     list_insert_last(&child_pcb -> threads, &child_tcb->peer_threads_node);
 
     /* step 4: set up the process control block */
-    child_pcb -> special = 0;
     child_pcb -> pid = next_pid;
     next_pid++;
     child_pcb -> state = PROCESS_RUNNING;

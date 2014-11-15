@@ -104,10 +104,10 @@ int kernel_main(mbinfo_t *mbinfo, int argc, char **argv, char **envp)
 
     // process_create("minclone_mem",1);
 
-    // process_create("init",1);
+    process_create("init",1);
     // process_create("ck1");
 
-    process_create("fork_exit_bomb",1);
+    // process_create("cho2",1);
 
 
     // For future use

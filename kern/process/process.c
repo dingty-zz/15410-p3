@@ -69,7 +69,6 @@ int process_create(const char *filename, int run)
         MAGIC_BREAK;
     }
     // set up process for this program
-    process -> special = 0;
     process -> state = PROCESS_RUNNABLE;   // currently unused
     process -> pid = next_pid;
     next_pid++;
@@ -210,12 +209,12 @@ unsigned int program_loader(simple_elf_t se_hdr, PCB *process) {
     assert(result > 0);
     memset((char *)se_hdr.e_bssstart, 0,  se_hdr.e_bsslen);
 
-    map_readonly(process -> PD,
-                   (uint32_t)se_hdr.e_txtstart, se_hdr.e_txtlen);
-    map_readonly(process -> PD,
-                   (uint32_t)se_hdr.e_rodatstart, se_hdr.e_rodatlen);
-    map_readonly(process -> PD,
-                   (uint32_t)se_hdr.e_bssstart, se_hdr.e_bsslen);
+    // map_readonly(process -> PD,
+    //                (uint32_t)se_hdr.e_txtstart, se_hdr.e_txtlen);
+    // map_readonly(process -> PD,
+    //                (uint32_t)se_hdr.e_rodatstart, se_hdr.e_rodatlen);
+    // map_readonly(process -> PD,
+    //                (uint32_t)se_hdr.e_bssstart, se_hdr.e_bsslen);
 
 
     return se_hdr.e_entry;

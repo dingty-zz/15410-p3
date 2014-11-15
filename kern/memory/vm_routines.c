@@ -18,9 +18,7 @@
 #include "string.h"
 #include <common_kern.h>
 #include "control_block.h"
-#include "assert.h"
-
-static KF *frame_base;      // A pointer always points to the front of the free list
+static KF *frame_base;      // always fixed
 static KF *free_frame;      // points to the first free frame where refcount = 0
 
 /** @brief Initialize the whole memory system, immediately
@@ -37,10 +35,6 @@ void mm_init()
 
     // allocate 4k memory for kernel page directory
     uint32_t *kern_pd = (uint32_t *)memalign(4096, 4 * 4);
-    if (kern_pd == NULL)
-    {
-        assert("Can't allocate kernel memories!");
-    }
     set_cr3((uint32_t)kern_pd);
     ////lprintf("the pd uint32_t is %u", (unsigned int)kern_pd);
     ////lprintf("the pd  is %p", kern_pd);
@@ -57,16 +51,8 @@ void mm_init()
     for (i = 0; i < 4; ++i)
     {
         uint32_t current_pt = (uint32_t)memalign(4096, 1024 * 4);
-        if (current_pt == 0)
-        {
-            assert("Can't allocate kernel memories!");
-        }
         for (j = 0; j < 1024; ++j)
         {
-            /* Because at this point, we are acquiring kernel
-             direct mapping memories before any user threads
-             acquare their own memories, we can safely assume
-             that there are enough physical pages */
             uint32_t k = acquire_free_frame();
 
             // //lprintf("the page address is %x", (unsigned int)k);
@@ -86,14 +72,6 @@ void mm_init()
 }
 
 /* Map an unmapped virtual memory to physical memory */
-/** @brief Initialize the whole memory system, immediately
- *         called when the kernel enters to enable paging
- *
- *  If top == bottom, we know there are nothing in the queue.
- *
- *  @param q The pointer to the queue
- *  @return int 1 means not empty and 0 otherwise
- **/
 int virtual_map_physical(uint32_t *PD, uint32_t pd_index, uint32_t pt_index)
 {
     //lprintf("In virtual2physical, pd_index: %x, pt_index: %x:", (unsigned int)pd_index, (unsigned int) pt_index);
@@ -118,10 +96,6 @@ int virtual_map_physical(uint32_t *PD, uint32_t pd_index, uint32_t pt_index)
             //lprintf("acquiring...");
             //lprintf("Frame frame is %p", free_frame);
             free_frame_addr = acquire_free_frame();
-            if (free_frame_addr == 0)
-            {
-                return -1;
-            }
             //lprintf("2389457923875923845 frame is %p", free_frame);
 
             //lprintf("acquiring finished");
@@ -136,18 +110,10 @@ int virtual_map_physical(uint32_t *PD, uint32_t pd_index, uint32_t pt_index)
 
         //lprintf("acquiring...");
         free_frame_addr = acquire_free_frame();
-        if (free_frame_addr == 0)
-        {
-            return -1;
-        }
         //lprintf("Frame frame haahahahais %p", free_frame);
 
         //lprintf("acquiring finished with freeframe %x", (unsigned int)free_frame_addr);
         uint32_t *PT = (uint32_t *)memalign(4096, 1024 * 4);
-        if (PT == NULL)
-        {
-            return -1;
-        }
         memset((void *)PT, 0, 4096);
         //lprintf("page table addr: %x", (unsigned int)PT);
 
@@ -164,8 +130,6 @@ int virtual_map_physical(uint32_t *PD, uint32_t pd_index, uint32_t pt_index)
     /* ZFOD the virtual address but not the physical address */
     memset((void *)(pd_index << 22 | pt_index << 12), 0, 4096);
     //lprintf("Return virtual2physical");
-    // lprintf("acquiring finished with freeframe %x", (unsigned int)free_frame_addr);
-
     return 0;
 }
 
@@ -223,7 +187,7 @@ int virtual_unmap_physical(uint32_t *PD, uint32_t pd_index, uint32_t pt_index)
  *  @param q The pointer to the queue
  *  @return 0 on success, -1 error
  **/
-int allocate_pages(uint32_t *pd, uint32_t virtual_addr, size_t size)
+void allocate_pages(uint32_t *pd, uint32_t virtual_addr, size_t size)
 {
     //lprintf("now pd is:%x",(unsigned int)pd);
     int i = 0;
@@ -250,16 +214,11 @@ int allocate_pages(uint32_t *pd, uint32_t virtual_addr, size_t size)
             //lprintf("The pt_index + i1024 is %lu", pt_index + i%1024);
         }
         int actual_offset = pt_index + i;
-        int result = 0;
         virtual_map_physical(pd, pd_index + actual_offset / 1024, actual_offset % 1024);
-        if (result == -1)
-        {
-            return -1;
-        }
     }
 
     //lprintf("Finished allocation pages.\n");
-    return 0;
+
 
 }
 
@@ -274,7 +233,7 @@ memory system, for kernel use
  *  @param q The pointer to the queue
  *  @return 0 on success, -1 error
  **/
-int free_pages(uint32_t *pd, uint32_t virtual_addr, size_t size)
+void free_pages(uint32_t *pd, uint32_t virtual_addr, size_t size)
 {
 
     int i = 0;
@@ -296,24 +255,15 @@ int free_pages(uint32_t *pd, uint32_t virtual_addr, size_t size)
     for (i = 0; i < times; ++i)
     {
         int actual_offset = pt_index + i;
-        int result = 0;
         virtual_unmap_physical(pd, pd_index + actual_offset / 1024, actual_offset % 1024);
-        if (result == -1)
-        {
-            return -1;
-        }
     }
-    return 0;
+    return ;
 }
 
 uint32_t *init_pd()
 {
     // void *old_cr3 = (void *)get_cr3();
     uint32_t *pd = (uint32_t *)memalign(4096, 1024 * 4); // Allocate pd for process
-    if (pd == NULL)
-    {
-        return 0;
-    }
     memset(pd, 0, 1024 * 4);  // clean
     int i = 0;
     for (i = 0; i < 4; ++i)
@@ -397,10 +347,6 @@ void init_free_frame()
     //initizlie the free frame array
     // bunch of pointers that points to pages
     frame_base = (KF *)memalign(4096, 8 * 65536);
-    if (frame_base == NULL)
-    {
-        assert("Can't allocate kernel memories!");
-    }
     for (i = 0; i < 65536; ++i)
     {
         frame_base[i].refcount = 0;
@@ -426,10 +372,6 @@ set the next free list
  **/
 uint32_t acquire_free_frame()
 {
-    if (free_frame == NULL)
-    {
-        return 0;
-    }
     uint32_t offset = (uint32_t)free_frame - (uint32_t)frame_base;
     uint32_t index = offset / 8;
     uint32_t physical_frame_addr = index * 4096;
@@ -487,61 +429,6 @@ void release_free_frame(uint32_t address)
     return;
 }
 
-/** @brief Release a frame frame and mark it as freed only when refcount = 0.
- *         If so, let free_frame point to it.
- *
- *  If top == bottom, we know there are nothing in the queue.
- *
- *  @param address address must be both physical
-  address and 4KB aligned (really ?)
- **/
-void map_readonly(uint32_t *pd, uint32_t virtual_addr, size_t size)
-{
-    //lprintf("now pd is:%x",(unsigned int)pd);
-    int i = 0;
-    //lprintf("the address is %x", (unsigned int)virtual_addr);
-
-    uint32_t pd_index = virtual_addr >> 22;
-    //lprintf("the pd is %x", (unsigned int)pd_index);
-    uint32_t pt_index = (virtual_addr & 0x3ff000) >> 12;
-    //lprintf("the pt is %x", (unsigned int)pt_index);
-
-    uint32_t total_size = (virtual_addr & 0xfff) + (uint32_t)size;
-    //lprintf("the total_size is %x", (unsigned int)total_size);
-
-    uint32_t times = total_size % 4096 == 0 ?
-                     total_size / 4096 : total_size / 4096 + 1;
-    //lprintf("times to allocation a page: %u \n", (unsigned int)times);
-
-    for (i = 0; i < times; ++i)
-    {
-
-        int actual_offset = pt_index + i;
-        map_readonly_pages(pd, pd_index + actual_offset / 1024, actual_offset % 1024);
-    }
-}
-
-/** @brief Release a frame frame and mark it as freed only when refcount = 0.
- *         If so, let free_frame point to it.
- *
- *  If top == bottom, we know there are nothing in the queue.
- *
- *  @param address address must be both physical
-  address and 4KB aligned (really ?)
- **/
-void map_readonly_pages(uint32_t *PD, uint32_t pd_index, uint32_t pt_index)
-{
-
-    uint32_t pde = PD[pd_index];
-    uint32_t *PT = (uint32_t *)(pde & 0xfffff000);
-
-    // Turn off read bit for page table entry
-    PT[pt_index] &= 0xfffffffd;
-
-    // Turn off read bit for page directory entry
-    PD[pd_index] &= 0xfffffffd;
-
-}
 
 // parsing the virtual address
 // struct virtual_addr parse(uint32_t virtual_addr);

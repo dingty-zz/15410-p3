@@ -38,13 +38,17 @@
 
 typedef struct PCB_t
 {
-    int special;  // if this process is idle, then never delete out of queue
-    int pid;
-    int state; //running, ready, block
-    int return_state;   // This is the return state for this process, set by set_status
-    struct PCB_t* parent;      // who creates me
+    // Process id
+    int pid; 
+    // Can be the state listed above  
+    int state; 
+    // This is the return state for this process, set by set_status sys-call
+    int return_state;   
+    // The parent that creates this process via fork
+    struct PCB_t* parent;      
 
-    list threads;      // All threads that this process has, including self thread  
+// All threads that this process has, including self thread  
+    list threads;      
 
     list children; // saves all forked child
     node all_processes_node;
