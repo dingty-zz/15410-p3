@@ -32,6 +32,7 @@ static int c_color;
 
 /* Helper functions */
 static void scroll_up();
+static void scroll_up();
 static void wrap();
 
 int putbyte(char ch)
@@ -44,7 +45,7 @@ int putbyte(char ch)
     }
     /* If ch is backspace */
     else if (ch == '\b') {
-        if (l_col != 0) {  // Clear the previous char
+        if (l_col != 0 ) {  // Clear the previous char
             *(char *)(CONSOLE_MEM_BASE + 2 * 
                 (CONSOLE_WIDTH * l_row + l_col - 1)) = ' ';
             *(char *)(CONSOLE_MEM_BASE + 2 * 

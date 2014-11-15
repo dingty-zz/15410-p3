@@ -26,11 +26,12 @@
 #include "console.h"
 #include "control_block.h"
 
-#define BUF_LEN 10  // Default buffer length, to hold 512 scan codes in a queue
+#define BUF_LEN 512  // Default buffer length, to hold 512 scan codes in a queue
 
 static uint8_t* s_queue;   // Keyboard buffer with default length being 512
 static int start;
 static int tail;
+static int total_num;
 
 static int queue_empty(uint8_t *q);
 static void enqueue(uint8_t *q, uint8_t s);
@@ -75,10 +76,8 @@ void keyboard_handler()
     else
     {
         real_char = KH_GETCHAR(aug_char);
-        enqueue(s_queue, real_char);
-        putbyte(real_char);
-        outb(INT_CTL_PORT, INT_ACK_CURRENT);
-        lprintf("keyboard done2");
+
+        lprintf("keyboard 2");
         /*check if the key is \n*/
         if (real_char == '\n')
         {
@@ -95,9 +94,24 @@ void keyboard_handler()
                 }
             }
         }
+        else if (real_char == '\b')
+        {
+            if (total_num==0)
+            {
+                outb(INT_CTL_PORT, INT_ACK_CURRENT);
+                return;
+            }
+            else
+            {
+                 total_num = total_num-2;
+            }
+        }
+        total_num++;
+        enqueue(s_queue, real_char);
         lprintf("I read %x", (unsigned int)aug_char);
         /*signal to next_readline_node that it could read the line*/
-
+        putbyte(real_char);
+        outb(INT_CTL_PORT, INT_ACK_CURRENT);
         return;
     }
 
