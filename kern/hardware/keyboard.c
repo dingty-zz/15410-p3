@@ -31,7 +31,6 @@
 static uint8_t* s_queue;   // Keyboard buffer with default length being 512
 static int start;
 static int tail;
-static int total_num;
 
 static int queue_empty(uint8_t *q);
 static void enqueue(uint8_t *q, uint8_t s);
@@ -50,7 +49,6 @@ int readchar(void)
     //      When key released, we know a key press event is done, so we
     //        will return the respective character 
     //     if (!KH_ISMAKE(aug_char))
-    total_num --;
     return c;
     // }
     // // Note that we don't have to worry about the state of the modifier keys
@@ -108,6 +106,7 @@ void keyboard_handler()
             }
         }
         total_num++;
+        lprintf("the total num is %d", total_num);
         enqueue(s_queue, real_char);
         lprintf("I read %x", (unsigned int)aug_char);
         /*signal to next_readline_node that it could read the line*/

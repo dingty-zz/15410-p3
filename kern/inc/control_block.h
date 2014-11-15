@@ -164,5 +164,6 @@ list runnable_queue;
 // The number of free physical 
 int free_frame_num;
 
+int total_num; //total number of chars in a line (to prevent deleting 410 shell phrases)
 
 #endif /* _CONTROL_B_H */
