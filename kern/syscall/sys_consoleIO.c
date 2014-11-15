@@ -47,7 +47,8 @@ int sys_readline(int len, char *buf)
         }
     }
     lprintf("readline done, the buf: %s",buf);
-
+    total_num = total_num - count - 1;
+    lprintf("the total num is %d", total_num);
     enable_interrupts();
 
     return count;
