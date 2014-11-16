@@ -113,9 +113,6 @@ int kernel_main(mbinfo_t *mbinfo, int argc, char **argv, char **envp)
 
     // For future use
 
-
-    process_create("init", 1);   // we run this thread
-
     while (1) continue;
 
     return 0;
