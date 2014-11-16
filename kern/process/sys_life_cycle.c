@@ -264,6 +264,7 @@ int sys_wait(int *status_ptr)
             list_delete(child_pros, &pcb -> peer_processes_node);
             current_pcb -> children_count--;
 
+            destroy_page_directory(pcb -> PD);
             sfree(pcb -> PD, 4096);
 
             free(pcb);
@@ -303,6 +304,8 @@ int sys_wait(int *status_ptr)
                 // TCB *tcb = list_entry(n, TCB, thread_list_node);
                 // lprintf("The tid in the runnable_queue is %d", tcb->tid);
             }
+            destroy_page_directory(pcb -> PD);
+            
             sfree(pcb -> PD, 4096);
 
             free(pcb);

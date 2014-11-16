@@ -316,7 +316,11 @@ void destroy_page_directory(uint32_t *pd)
     int i;
     for (i = 4; i < 1024; ++i)
     {
-        destroy_page_table(pd[i] & 0xfffffff8);
+        if (pd[i]==0)
+        {
+            continue;
+        }
+        destroy_page_table(pd[i] & 0xfffff000);
         pd[i] = 0;
     }
 
@@ -328,9 +332,13 @@ void destroy_page_table(uint32_t pt)
     for (i = 0; i < 1024; ++i)
     {
         uint32_t pte = ((uint32_t *)pt)[i];
-        uint32_t physical_addr = pte & 0xfffffff8;
+        if (pte==0)
+        {
+            continue;
+        }
+        uint32_t physical_addr = pte & 0xfffff000;
         release_free_frame(physical_addr);
-        ((uint32_t *)pt)[pte] = 0;      // Unmap this page
+        ((uint32_t *)pt)[i] = 0;      // Unmap this page
     }
     sfree((uint32_t *)pt, 1024 * 4);
 }
