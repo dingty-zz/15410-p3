@@ -97,9 +97,6 @@ int sys_exec(char *execname, char *argvec[])
 
     // Get the current process pcb, we want to replace it as a new one
     PCB *process = current_thread -> pcb;
-    list_init(&process -> threads);
-    list_init(&process -> va);
-    list_init(&process -> children);
     
     // Unmap current page directory and free all its address space
     process -> PD = init_pd();
