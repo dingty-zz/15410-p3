@@ -299,16 +299,16 @@ uint32_t *init_pd()
     return pd;
 }
 
+/*For future copy on write use*/
 void copy_page_directory(uint32_t *pd)
 {
-
-
+    return;
 }
 
+/*For future copy on write use*/
 void copy_page_table(uint32_t *pt)
 {
-
-
+    return;
 }
 
 void destroy_page_directory(uint32_t *pd)
@@ -342,21 +342,6 @@ void destroy_page_table(uint32_t pt)
     }
     sfree((uint32_t *)pt, 1024 * 4);
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 /** @brief Initialize the free list, which keeps track the current free frames.
@@ -504,10 +489,29 @@ void map_readonly_pages(uint32_t *PD, uint32_t pd_index, uint32_t pt_index)
 // struct virtual_addr parse(uint32_t virtual_addr);
 
 
-// 0 fail 1 success
-// int verify_user_addr(void *addr) {
-//     int is_null = addr == NULL;
-//     int is_in_kernel = addr < (void *)0x01000000;
-//     int has_mapping = has_mapping();
-//     return !is_null && !is_in_kernel && has_mapping;
-// }
+//0 fail, a positive number on success
+int is_user_addr(void *addr) {
+    if (addr == NULL) return 0;
+    return ((unsigned int)addr >= 0x01000000);
+}
+
+//0 if no mapping 1 if mapping exists
+int addr_has_mapping(void *addr) {
+    if (addr == NULL) return 0;
+    
+    uint32_t *PD, *PT;
+    PD = current_thread -> pcb -> PD;
+    if (PD == NULL) return 0;
+
+    uint32_t pd_index = ((uint32_t)addr) >> 22;
+    uint32_t pt_index = ((uint32_t)addr & 0x3ff000) >> 12;
+    PT = (uint32_t *) DEFLAG_ADDR(PD[pd_index]);
+    /*No mapped page table*/
+    if (PT == NULL) return 0;
+    
+    uint32_t pt_entry = DEFLAG_ADDR(PT[pt_index]);
+    /*No mapped page table entry*/
+    if (pt_entry == 0) return 0;
+    /*passed all tests*/
+    return 1;
+}

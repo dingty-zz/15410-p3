@@ -17,6 +17,7 @@
 #include <string.h>
 #include <stdio.h>
 #include "process/enter_user_mode.h"
+#include <malloc.h>
 
 extern void sys_vanish(void);
 extern void sys_set_status();
@@ -32,6 +33,25 @@ void get_real_handler(ureg_t* cur_ureg)
         lprintf("not registered; fault!!");
         MAGIC_BREAK;
         sys_set_status(-2);
+
+        /* reap peer threads first before vanishing the thread itself*/
+        PCB *current_pcb = current_thread -> pcb;
+        // display to the console by print()....
+        list threads = current_pcb -> threads;
+        node *n;
+        for (n = list_begin(&threads); n != NULL; n = n -> next)
+        {
+            TCB *tcb = list_entry(n, TCB, peer_threads_node);
+            // We only reap threads that is not the current thread
+            if (tcb -> tid != current_thread -> tid)
+            {
+                list_delete(&threads, n);
+                list_delete(&blocked_queue, n);
+                list_delete(&runnable_queue, n);
+                sfree(tcb -> stack_base, tcb -> stack_size);
+                free(tcb);
+            }
+        }
         sys_vanish();
     }
     //if installed, try to call the real handler;

@@ -21,10 +21,6 @@
 #include "memory/vm_routines.h"
 #include "mem_internals.h"
 
-#define DEFLAG_ADDR(x)           (x & 0xfffff000)
-#define ADDFLAG(x,flag)          (x | flag)
-#define GET_FLAG(x)              (x & 0xfff)
-
 typedef struct entry_info
 {
     int pd_index;

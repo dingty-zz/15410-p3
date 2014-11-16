@@ -14,10 +14,6 @@
 #include <page.h>
 #include <cr.h>
 
-#define DEFLAG_ADDR(x)           (x & 0xfffff000)
-#define ADDFLAG(x,flag)          (x | flag)
-#define GET_FLAG(x)              (x & 0xfff)
-
 /** @brief Release a frame frame and mark it as freed only when refcount = 0.
  *         If so, let free_frame point to it.
  *
@@ -28,18 +24,13 @@
  **/
 int sys_new_pages(void *addr, int len)
 {
-
     /* step 1: check if valid to new_pages*/
-    if (addr == NULL)
-        return -1;
+    if (!is_user_addr(addr)) return -1;
     // addr is not page aligned;
     if (((uint32_t)addr & 0xfff) != 0)
         return -1;
     // len is not a positive multiple of the page size
     if (len < 0 || (len & 0xfff) != 0)
-        return -1;
-    // portion reserved by kernel;
-    if ((uint32_t)addr < 0x01000000)
         return -1;
     // lprintf("In sys");
     // If os has insufficient resources to satisfy the request

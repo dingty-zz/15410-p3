@@ -263,12 +263,12 @@ int _exec(char *execname, char *argvec[])
     thread -> registers.esp -= 4;
 
 
-    MAGIC_BREAK;
+    // MAGIC_BREAK;
 
 
     lprintf("before second break");
 
-    MAGIC_BREAK;
+    // MAGIC_BREAK;
 
     /* We need to do this everytime for a thread to run */
     current_thread = thread;
