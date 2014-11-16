@@ -21,6 +21,7 @@
 #include <ureg.h>
 #include <eflags.h>
 #include <cr.h>
+#include "memory/vm_routines.h"
 
 
 // extern TCB *current_thread;
@@ -108,6 +109,7 @@ int sys_yield(int tid)
 
 int sys_deschedule(int *reject)
 {
+    if (!is_user_addr(reject) || !addr_has_mapping(reject)) return -1;
     // Check pointer
     if (*reject != 0)
     {

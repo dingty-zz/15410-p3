@@ -7,10 +7,12 @@
 #include "stddef.h"
 #include <asm.h>
 #include "process/scheduler.h"
+#include "memory/vm_routines.h"
 
 extern TCB *current_thread;
 int sys_readline(int len, char *buf)
 {
+    if (!is_user_addr(buf) || !addr_has_mapping(buf)) return -1;
     disable_interrupts();
     current_thread -> state = THREAD_READLINE;
     enable_interrupts();
@@ -64,6 +66,7 @@ int sys_print(int len, char *buf)
 	// {
 	// 	return -1;
 	// }
+    if (!is_user_addr(buf) || !addr_has_mapping(buf)) return -1;
 
     putbytes(buf, len);
     // bzero(buf, len);
