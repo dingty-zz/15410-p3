@@ -31,7 +31,6 @@ void get_real_handler(ureg_t* cur_ureg)
     if (current_thread-> swexn_info.installed_flag==0)
     { 
         lprintf("not registered; fault!!");
-        MAGIC_BREAK;
         sys_set_status(-2);
 
         /* reap peer threads first before vanishing the thread itself*/
@@ -39,6 +38,8 @@ void get_real_handler(ureg_t* cur_ureg)
         // display to the console by print()....
         list threads = current_pcb -> threads;
         node *n;
+        // printf("Vanish! CPU registers info: cr2: %p, eip: %p, esp: %p, 
+        //         ebp: %p", get_cr2(),get_eip(),get_esp(),get_ebp());
         for (n = list_begin(&threads); n != NULL; n = n -> next)
         {
             TCB *tcb = list_entry(n, TCB, peer_threads_node);

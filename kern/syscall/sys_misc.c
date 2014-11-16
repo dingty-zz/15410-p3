@@ -9,7 +9,6 @@
 
 #define LEN_MIN(x,y) ((x) < (y) ? (x) : (y))
 
-
 /** @brief Determine if the given queue is empty
  *
  *  If top == bottom, we know there are nothing in the queue.
