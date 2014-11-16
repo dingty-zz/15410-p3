@@ -96,6 +96,7 @@ void keyboard_handler()
             }
             if (!found_flag) 
             {
+                lprintf("not found!");
                 putbyte(real_char);
                 outb(INT_CTL_PORT, INT_ACK_CURRENT);
                 return;
@@ -114,6 +115,7 @@ void keyboard_handler()
             }
         }
         total_num++;
+        lprintf("increase num");
         lprintf("the total num is %d", total_num);
         enqueue(s_queue, real_char);
         lprintf("I read %x", (unsigned int)aug_char);
