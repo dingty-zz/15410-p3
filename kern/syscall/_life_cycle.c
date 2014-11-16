@@ -169,7 +169,7 @@ int _exec(char *execname, char *argvec[])
 
         return 0 ;
     }
-    MAGIC_BREAK;
+    // MAGIC_BREAK;
     /* We need to do this everytime for a thread to run */
     current_thread = thread;
     // set up kernel stack pointer possibly bugs here

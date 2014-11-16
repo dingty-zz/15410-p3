@@ -299,17 +299,17 @@ uint32_t *init_pd()
     return pd;
 }
 
-/*For future copy on write use*/
-void copy_page_directory(uint32_t *pd)
-{
-    return;
-}
+// /*For future copy on write use*/
+// void copy_page_directory(uint32_t *pd)
+// {
+//     return;
+// }
 
-/*For future copy on write use*/
-void copy_page_table(uint32_t *pt)
-{
-    return;
-}
+// /*For future copy on write use*/
+// void copy_page_table(uint32_t *pt)
+// {
+//     return;
+// }
 
 void destroy_page_directory(uint32_t *pd)
 {

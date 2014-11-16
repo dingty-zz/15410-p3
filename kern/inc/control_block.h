@@ -166,6 +166,10 @@ list runnable_queue;
 
 mutex_t process_queue_lock;
 list process_queue;
+
+// print lock
+mutex_t print_lock;
+
 // The number of free physical 
 int free_frame_num;
 

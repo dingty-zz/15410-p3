@@ -37,6 +37,7 @@ void process_init()
     // create a list of run queues based on threads
     list_init(&process_queue);
     mutex_init(&process_queue_lock);
+    mutex_init(&print_lock);
     next_pid = 1;
 }
 

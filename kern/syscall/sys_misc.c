@@ -5,6 +5,7 @@
 #include "console.h"
 #include <string.h>
 #include <exec2obj.h>
+#include "memory/vm_routines.h"
 
 #define LEN_MIN(x,y) ((x) < (y) ? (x) : (y))
 
@@ -30,11 +31,12 @@ void sys_halt(void)
 int sys_readfile(char *filename, char *buf, int size, int offset)
 {
 	// verify filename ,buf
-	lprintf("I am readfile! filename: %s",filename);
-	lprintf("I am readfile! buf: %s",buf);
-	lprintf("I am readfile! size: %d",size);
-	lprintf("I am readfile! offset: %d",offset);
-
+	// lprintf("I am readfile! filename: %s",filename);
+	// lprintf("I am readfile! buf: %s",buf);
+	// lprintf("I am readfile! size: %d",size);
+	// lprintf("I am readfile! offset: %d",offset);
+    if (!is_user_addr(filename) || !addr_has_mapping(filename)) return -1;   
+    if (!is_user_addr(buf) || !addr_has_mapping(buf)) return -1;   
 
 	if (size < 0 || offset < 0)
 	{
