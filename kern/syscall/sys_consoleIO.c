@@ -10,46 +10,56 @@
 #include "memory/vm_routines.h"
 
 extern TCB *current_thread;
+
+#define MAX_READ_LEN 4096  // Default buffer length, to hold 512 scan codes in a queue
+
 int sys_readline(int len, char *buf)
 {
     if (!is_user_addr(buf) || !addr_has_mapping(buf)) return -1;
+    if (len > MAX_READ_LEN) return -1;
     disable_interrupts();
     current_thread -> state = THREAD_READLINE;
     enable_interrupts();
     schedule(-1);
     lprintf("in readline again");
-    // MAGIC_BREAK;
+    lprintf("the total num is %d", total_num);
     disable_interrupts();
-
+    lprintf("the len is %d", len);
     if (len < 0)  // verify buf
 	{
 		return -1;
 	}
     int count = 0;
-	int c;
+	char c;
+    lprintf("very original count is: %d",count);
     while ((c = readchar()) != -1) 
     {
+        lprintf("i have read %c",c);
         buf[count] = c;
         count ++;
+        lprintf("original count is: %d",count);
 
         if (c == '\b') {
+            lprintf("this is bbb");
             count --;
             if (count > 0) count--;
         }
 
-        if (count == len - 1) {
-            buf[count] = '\0';
+        if (count == len) {
+            lprintf("wtf");
+            buf[count-1] = '\0';
             break;
         }
         
         if (c == '\n') {
-            buf[count-1] = '\0';
-            count--;
+            lprintf("this is nnn");
+            buf[count-1] = '\n';
             break;
         }
     }
+    // MAGIC_BREAK;
     lprintf("readline done, the buf: %s",buf);
-    total_num = total_num - count - 1;
+    total_num = total_num - count;
     lprintf("the total num is %d", total_num);
     enable_interrupts();
 

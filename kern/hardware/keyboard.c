@@ -81,6 +81,8 @@ void keyboard_handler()
         /*check if the key is \n*/
         if (real_char == '\n')
         {
+            lprintf("this is an enter");
+            // MAGIC_BREAK;
             for (n = list_begin(&blocked_queue); n != NULL; n = n -> next)
             {
                 next_readline_thread = list_entry(n, TCB, thread_list_node);
