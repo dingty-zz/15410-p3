@@ -89,15 +89,11 @@ freed only when refcount = 0.
 int sys_remove_pages(void *addr)
 {
     /* step 1: check if removable by inspecting virtual address*/
-    // addr is null
-    if (addr == NULL)
-        return -1;
-    // addr is in kernel memory
-    if ((uint32_t)addr < 0x01000000)
-        return -1;
+    if (!is_user_addr(addr)) return -1;
     // addr is not aligned
-    if (((uint32_t)addr & 0xfff))
-        return -1;
+    if (((uint32_t)addr & 0xfff)) return -1;
+    // no mapping at all
+    if (!addr_has_mapping(addr)) return -1;
 
     /* step 2: check if removable by inspecting the mapped address's flags*/
     uint32_t *PD, *PT;

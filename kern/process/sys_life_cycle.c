@@ -235,7 +235,7 @@ void sys_vanish(void)
  **/
 int sys_wait(int *status_ptr)
 {
-    // checkout ptr is not in kernel space, writable or not
+    if (status_ptr != NULL && !is_user_addr(status_ptr)) return -1;
 
     PCB *current_pcb = current_thread -> pcb;
     list *child_pros = &current_pcb -> children;
@@ -313,15 +313,5 @@ int sys_wait(int *status_ptr)
         }
     }
     return -1;
-
-}
-
-void destroy_pcb(PCB *pcb)
-{
-
-}
-
-void destroy_tcb(TCB *tcb)
-{
 
 }

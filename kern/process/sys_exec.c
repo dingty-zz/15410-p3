@@ -34,6 +34,8 @@ extern TCB *current_thread;
  **/
 int sys_exec(char *execname, char *argvec[])
 {
+    if (!is_user_addr(execname) || !addr_has_mapping(execname)) return -1;
+    if (!is_user_addr(argvec) || !addr_has_mapping(argvec)) return -1;
     char *name = (char *)malloc(strlen(execname) + 1);
     strncpy(name, execname,strlen(execname)+1);
     // name = "swexn_uninstall_test";
