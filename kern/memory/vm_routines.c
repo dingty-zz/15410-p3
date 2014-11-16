@@ -9,7 +9,6 @@
  *  @bug No known bugs
  */
 
-#include <syscall.h>
 #include "vm_routines.h"
 #include "cr.h"
 #include <malloc.h>
@@ -18,6 +17,11 @@
 #include "string.h"
 #include <common_kern.h>
 #include "control_block.h"
+#include <page.h>
+
+#define PAGE_LEN (PAGE_SIZE>>2)             //1024
+#define TOTAL_PHYS_FRAMES (PAGE_SIZE<<4)    //65536
+
 static KF *frame_base;      // always fixed
 static KF *free_frame;      // points to the first free frame where refcount = 0
 
@@ -34,7 +38,7 @@ void mm_init()
     init_free_frame();
 
     // allocate 4k memory for kernel page directory
-    uint32_t *kern_pd = (uint32_t *)memalign(4096, 4 * 4);
+    uint32_t *kern_pd = (uint32_t *)memalign(PAGE_SIZE, 4 * 4);
     set_cr3((uint32_t)kern_pd);
     ////lprintf("the pd uint32_t is %u", (unsigned int)kern_pd);
     ////lprintf("the pd  is %p", kern_pd);
@@ -50,8 +54,8 @@ void mm_init()
     int i, j;
     for (i = 0; i < 4; ++i)
     {
-        uint32_t current_pt = (uint32_t)memalign(4096, 1024 * 4);
-        for (j = 0; j < 1024; ++j)
+        uint32_t current_pt = (uint32_t)memalign(PAGE_SIZE, PAGE_SIZE);
+        for (j = 0; j < PAGE_LEN; ++j)
         {
             uint32_t k = acquire_free_frame();
 
@@ -84,7 +88,7 @@ int virtual_map_physical(uint32_t *PD, uint32_t pd_index, uint32_t pt_index)
     uint32_t free_frame_addr = 0;
     if (pde != 0)
     {
-        uint32_t *PT = (uint32_t *)(pde & 0xfffff000);
+        uint32_t *PT = (uint32_t *)DEFLAG_ADDR(pde);
 
         //lprintf("page table address: %x", (unsigned int)PT);
 
@@ -114,15 +118,15 @@ int virtual_map_physical(uint32_t *PD, uint32_t pd_index, uint32_t pt_index)
 
         //lprintf("acquiring...");
         free_frame_addr = acquire_free_frame();
-                    if (free_frame_addr == 0)
-            {
-                return -1;
-            }
+        if (free_frame_addr == 0)
+        {
+            return -1;
+        }
         //lprintf("Frame frame haahahahais %p", free_frame);
 
         //lprintf("acquiring finished with freeframe %x", (unsigned int)free_frame_addr);
-        uint32_t *PT = (uint32_t *)memalign(4096, 1024 * 4);
-        memset((void *)PT, 0, 4096);
+        uint32_t *PT = (uint32_t *)memalign(PAGE_SIZE, PAGE_SIZE);
+        memset((void *)PT, 0, PAGE_SIZE);
         //lprintf("page table addr: %x", (unsigned int)PT);
 
         PT[pt_index] = free_frame_addr | 0x7;
@@ -136,7 +140,7 @@ int virtual_map_physical(uint32_t *PD, uint32_t pd_index, uint32_t pt_index)
     //lprintf("The freed address is %x",
     // (unsigned int)(pd_index << 22 | pt_index << 12));
     /* ZFOD the virtual address but not the physical address */
-    memset((void *)(pd_index << 22 | pt_index << 12), 0, 4096);
+    memset((void *)(pd_index << 22 | pt_index << 12), 0, PAGE_SIZE);
     //lprintf("Return virtual2physical");
     return 0;
 }
@@ -162,7 +166,7 @@ int virtual_unmap_physical(uint32_t *PD, uint32_t pd_index, uint32_t pt_index)
     }
     else
     {
-        uint32_t *PT = (uint32_t *)(pde & 0xfffff000);
+        uint32_t *PT = (uint32_t *)DEFLAG_ADDR(pde);
 
         //lprintf("page table address: %x", (unsigned int)PT);
 
@@ -176,7 +180,7 @@ int virtual_unmap_physical(uint32_t *PD, uint32_t pd_index, uint32_t pt_index)
         }
         else
         {
-            uint32_t physical_addr = pte & 0xfffff000;
+            uint32_t physical_addr = DEFLAG_ADDR(pte);
             //lprintf("the phys addr: %x",(unsigned int)physical_addr);
             release_free_frame(physical_addr);
             PT[pt_index] = 0;       // Unmap this page
@@ -209,21 +213,22 @@ int allocate_pages(uint32_t *pd, uint32_t virtual_addr, size_t size)
     uint32_t total_size = (virtual_addr & 0xfff) + (uint32_t)size;
     //lprintf("the total_size is %x", (unsigned int)total_size);
 
-    uint32_t times = total_size % 4096 == 0 ?
-                     total_size / 4096 : total_size / 4096 + 1;
+    uint32_t times = total_size % PAGE_SIZE == 0 ?
+                     total_size / PAGE_SIZE : total_size / PAGE_SIZE + 1;
     //lprintf("times to allocation a page: %u \n", (unsigned int)times);
 
     for (i = 0; i < times; ++i)
     {
         //lprintf("i:%d",i);
-        if (size == 4096)
+        if (size == PAGE_SIZE)
         {
             //lprintf("The pd_index+i/1024 is %lu", pd_index+i/1024);
             //lprintf("The pt_index + i1024 is %lu", pt_index + i%1024);
         }
         int actual_offset = pt_index + i;
         int result = 0;
-        virtual_map_physical(pd, pd_index + actual_offset / 1024, actual_offset % 1024);
+        virtual_map_physical(pd, pd_index + actual_offset / PAGE_LEN, 
+                                 actual_offset % PAGE_LEN);
         if (result == -1)
         {
             return -1;
@@ -261,15 +266,16 @@ int free_pages(uint32_t *pd, uint32_t virtual_addr, size_t size)
     uint32_t total_size = (virtual_addr & 0xfff) + (uint32_t)size;
     //lprintf("the total_size is %x", (unsigned int)total_size);
 
-    uint32_t times = total_size % 4096 == 0 ?
-                     total_size / 4096 : total_size / 4096 + 1;
+    uint32_t times = total_size % PAGE_SIZE == 0 ?
+                     total_size / PAGE_SIZE : total_size / PAGE_SIZE + 1;
     //lprintf("times to allocation a page: %u", (unsigned int)times);
 
     for (i = 0; i < times; ++i)
     {
         int actual_offset = pt_index + i;
         int result=0;
-        virtual_unmap_physical(pd, pd_index + actual_offset / 1024, actual_offset % 1024);
+        virtual_unmap_physical(pd, pd_index + actual_offset / PAGE_LEN, 
+                                   actual_offset % PAGE_LEN);
         if (result == -1)
         {
             return -1;
@@ -281,12 +287,12 @@ int free_pages(uint32_t *pd, uint32_t virtual_addr, size_t size)
 uint32_t *init_pd()
 {
     // void *old_cr3 = (void *)get_cr3();
-    uint32_t *pd = (uint32_t *)memalign(4096, 1024 * 4); // Allocate pd for process
-    memset(pd, 0, 1024 * 4);  // clean
+    uint32_t *pd = (uint32_t *)memalign(PAGE_SIZE, PAGE_SIZE); // Allocate pd for process
+    memset(pd, 0, PAGE_SIZE);  // clean
     int i = 0;
     for (i = 0; i < 4; ++i)
     {
-        pd[i] = ((((uint32_t *)get_cr3())[i]) & 0xfffff000) | 0x107;
+        pd[i] = DEFLAG_ADDR((((uint32_t *)get_cr3())[i])) | 0x107;
 
         //lprintf("The directory is %x",(unsigned int)pd[i]);
     }
@@ -295,7 +301,6 @@ uint32_t *init_pd()
 
     //lprintf("after calling initpd, the pd is %x", (unsigned int)get_cr3());
 
-    //MAGIC_BREAK;
     return pd;
 }
 
@@ -314,13 +319,13 @@ uint32_t *init_pd()
 void destroy_page_directory(uint32_t *pd)
 {
     int i;
-    for (i = 4; i < 1024; ++i)
+    for (i = 4; i < PAGE_LEN; ++i)
     {
         if (pd[i]==0)
         {
             continue;
         }
-        destroy_page_table(pd[i] & 0xfffff000);
+        destroy_page_table(DEFLAG_ADDR(pd[i]));
         pd[i] = 0;
     }
 
@@ -329,18 +334,18 @@ void destroy_page_directory(uint32_t *pd)
 void destroy_page_table(uint32_t pt)
 {
     int i;
-    for (i = 0; i < 1024; ++i)
+    for (i = 0; i < PAGE_LEN; ++i)
     {
         uint32_t pte = ((uint32_t *)pt)[i];
         if (pte==0)
         {
             continue;
         }
-        uint32_t physical_addr = pte & 0xfffff000;
+        uint32_t physical_addr = DEFLAG_ADDR(pte);
         release_free_frame(physical_addr);
         ((uint32_t *)pt)[i] = 0;      // Unmap this page
     }
-    sfree((uint32_t *)pt, 1024 * 4);
+    sfree((uint32_t *)pt, PAGE_SIZE);
 }
 
 
@@ -357,11 +362,11 @@ void init_free_frame()
     free_frame_num = machine_phys_frames();
     //initizlie the free frame array
     // bunch of pointers that points to pages
-    frame_base = (KF *)memalign(4096, 8 * 65536);
-    for (i = 0; i < 65536; ++i)
+    frame_base = (KF *)memalign(PAGE_SIZE, 8 * TOTAL_PHYS_FRAMES);
+    for (i = 0; i < TOTAL_PHYS_FRAMES; ++i)
     {
         frame_base[i].refcount = 0;
-        if (i != 65535) frame_base[i].next = &(frame_base[i + 1]);
+        if (i != TOTAL_PHYS_FRAMES-1) frame_base[i].next = &(frame_base[i + 1]);
         if ((void *)&frame_base[i] == (void *)0x1d9ff8)
         {
             //lprintf("The next for 0x1d9ff8 is %p %d", frame_base[i].next, i);
@@ -389,7 +394,7 @@ uint32_t acquire_free_frame()
     }
     uint32_t offset = (uint32_t)free_frame - (uint32_t)frame_base;
     uint32_t index = offset / 8;
-    uint32_t physical_frame_addr = index * 4096;
+    uint32_t physical_frame_addr = index * PAGE_SIZE;
     frame_base[index].refcount++;
 
     // Loop until free_frame points to a free physical page
@@ -422,7 +427,7 @@ uint32_t acquire_free_frame()
 void release_free_frame(uint32_t address)
 {
     //lprintf("ok, you want to release %x, %x",(unsigned int)address, (unsigned int)frame_base);
-    uint32_t index = address / 4096;
+    uint32_t index = address / PAGE_SIZE;
     //lprintf("indexxxx %d", (int)index);
 
     frame_base[index].refcount--;
@@ -459,15 +464,16 @@ void map_readonly(uint32_t *pd, uint32_t virtual_addr, size_t size)
     uint32_t total_size = (virtual_addr & 0xfff) + (uint32_t)size;
     //lprintf("the total_size is %x", (unsigned int)total_size);
 
-    uint32_t times = total_size % 4096 == 0 ?
-                     total_size / 4096 : total_size / 4096 + 1;
+    uint32_t times = total_size % PAGE_SIZE == 0 ?
+                     total_size / PAGE_SIZE : total_size / PAGE_SIZE + 1;
     //lprintf("times to allocation a page: %u \n", (unsigned int)times);
 
     for (i = 0; i < times; ++i)
     {
 
         int actual_offset = pt_index + i;
-        map_readonly_pages(pd, pd_index + actual_offset / 1024, actual_offset % 1024);
+        map_readonly_pages(pd, pd_index + actual_offset / PAGE_LEN, 
+                               actual_offset % PAGE_LEN);
     }
 }
 

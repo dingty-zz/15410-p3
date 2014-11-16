@@ -21,7 +21,6 @@
 #include "simics.h"
 #include "memory/vm_routines.h"
 #include "scheduler.h"
-extern TCB *current_thread;
 
 /** @brief Determine if the given queue is empty
  *

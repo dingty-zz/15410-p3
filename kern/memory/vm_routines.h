@@ -52,4 +52,7 @@ int addr_has_mapping(void *addr);
 #define ADDFLAG(x,flag)          (x | flag)
 #define GET_FLAG(x)              (x & 0xfff)
 
+#define VA_PD_IND(x)			 (x >> 22)
+#define VA_PT_IND(x)			 ((x & 0x3ff000) >> 12)
+
 #endif /*_VM_ROUTINES_H*/

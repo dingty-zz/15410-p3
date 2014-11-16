@@ -9,8 +9,6 @@
 
 #define LEN_MIN(x,y) ((x) < (y) ? (x) : (y))
 
-extern TCB *current_thread;
-
 /** @brief Determine if the given queue is empty
  *
  *  If top == bottom, we know there are nothing in the queue.

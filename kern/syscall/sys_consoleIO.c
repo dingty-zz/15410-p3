@@ -9,8 +9,6 @@
 #include "process/scheduler.h"
 #include "memory/vm_routines.h"
 
-extern TCB *current_thread;
-
 #define MAX_READ_LEN 4096  // Default buffer length, to hold 512 scan codes in a queue
 
 int sys_readline(int len, char *buf)
