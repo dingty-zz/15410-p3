@@ -56,12 +56,17 @@ int sys_readline(int len, char *buf)
 
 int sys_print(int len, char *buf)
 {
-	if (len < 0 || len != strlen(buf) || len > 80*25) // and verify buf
-	{
-		return -1;
-	}
+    lprintf("len is: %d",len);
+    lprintf("strlen is: %d",strlen(buf));
+    lprintf("buf is: %s",buf);
+ //    MAGIC_BREAK;
+	// if (len < 0 || len != strlen(buf) || len > 80*25) // and verify buf
+	// {
+	// 	return -1;
+	// }
 
     putbytes(buf, len);
+    // bzero(buf, len);
 
     return 0;
 }

@@ -3,6 +3,10 @@
 #include "loader.h"
 #include "control_block.h"
 #include "console.h"
+#include <string.h>
+#include <exec2obj.h>
+
+#define LEN_MIN(x,y) ((x) < (y) ? (x) : (y))
 
 extern TCB *current_thread;
 
@@ -23,16 +27,44 @@ void sys_halt(void)
     while(1);
 }
 
-int sys_readfile(char *filename, char *buf, int count, int offset)
+int sys_readfile(char *filename, char *buf, int size, int offset)
 {
 	// verify filename ,buf
-	if (count < 0 || offset < 0)
+	lprintf("I am readfile! filename: %s",filename);
+	lprintf("I am readfile! buf: %s",buf);
+	lprintf("I am readfile! size: %d",size);
+	lprintf("I am readfile! offset: %d",offset);
+
+
+	if (size < 0 || offset < 0)
 	{
-	return -1;
+		lprintf("size, offset error");
+		return -1;
 	}
-	int size = 0;
-	size = getbytes(filename, offset, count, buf);
 
-	return size;
+	int i = 0;
+	int realsize = 0;
+	char* real_starting_point;
+    for (i = 0; i < exec2obj_userapp_count; i++)
+    {   
+        // If we find this filename
+        if (!strcmp(exec2obj_userapp_TOC[i].execname , filename))
+        {
+        	real_starting_point = (char*)(
+        					    (unsigned int)exec2obj_userapp_TOC[i].execbytes 
+        						+ (unsigned int)offset);
+        	realsize = LEN_MIN(size,exec2obj_userapp_TOC[i].execlen - offset);
+            if (realsize < 0) return -1;
+            // realsize = 200;
+            memcpy(buf, (void*)real_starting_point,realsize);
+        	lprintf("the real string is: %s", real_starting_point);
+            lprintf("found a file. its length is: %d",realsize+1);
+            return realsize;
+        }
+    }
 
+    //not found;
+    lprintf("readfile not found file");
+    return -1;
 }
+

@@ -6,7 +6,7 @@ get_cursor_pos:
 pushl	%ebp
 movl	%esp, %ebp
 pushl	%esi
-movl	8(%ebp), %esi
+leal	8(%ebp), %esi
 INT 	$GET_CURSOR_POS_INT
 popl	%esi
 popl	%ebp
