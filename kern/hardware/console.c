@@ -1,216 +1,309 @@
-/** @file console.c
+/** @file  console.c
+ *  @brief console driver
  *
- *  @brief This file includes console device driver functions. There are two
- *         ways to represent the cursor coordinates: the CRTC one and the 
- *         logical one. The logical one is the actual cursor, which determines
- *         where the character should be put next. The CRTC cursor is used for
- *         displaying the logical cursor on to screen when it's visible.
- *         If the arguments are incorrect, I did nothing and return.
+ *  Implementation of console driver.
  *
- *  @author Tianyuan Ding (tding)
- *  @bug No known bugs
+ *  @author Jonathan Xianqi Zeng
+ *  @bug No known bugs.
  */
 
-#include <console.h>
-#include <stdio.h>
 #include <asm.h>
+#include <ctype.h>
+#include <stdio.h>
+#include <x86/video_defines.h>
 #include <simics.h>
+#include "inc/console.h"
 
-/* CRTC cursor coordinates */
-static int c_row = 0;
-static int c_col = 0;
+ /* cursor information*/
+typedef struct{
+    int row;            //row index
+    int col;            //col index
+    int color;          //console color
+    uint16_t offset;    //cursor offset from console_mem_base
+    int is_visible;     //visible or not
+} cursor_t;
 
-/* Logic cursor coordinates */
-static int l_row = 0;
-static int l_col = 0;
 
-/* If CRTC cursor is visible */
-static int visible = 0;
+//global variable carrying the information of our cursor;
+cursor_t myCursor = {0,0,0x7,0xFF,0};
 
-/* Terminal color */
-static int c_color;
 
-/* Helper functions */
-static void scroll_up();
-static void scroll_up();
-static void wrap();
+static void printbyte(char ch);
+static void update_cursor();
 
 int putbyte(char ch)
-{   /* If ch is new line char */
-    if (ch == '\n') wrap();
-    /* If ch is a carrage return char */
-    else if (ch == '\r') {
-        l_col = 0;
-        if (visible) c_col = 0;
-    }
-    /* If ch is backspace */
-    else if (ch == '\b') {
-        if (l_col != 0 ) {  // Clear the previous char
-            *(char *)(CONSOLE_MEM_BASE + 2 * 
-                (CONSOLE_WIDTH * l_row + l_col - 1)) = ' ';
-            *(char *)(CONSOLE_MEM_BASE + 2 * 
-                (CONSOLE_WIDTH * l_row + l_col - 1 ) + 1) 
-            = BGND_BLACK | FGND_WHITE;
-            l_col--;
-            if (visible) c_col--;
-        } // Note I did nothing when a backspace is at the beginning of a line.
-    }
-    else { // If ch is a normal char
-        draw_char(l_row, l_col, ch, c_color);
-        if (l_col + 1 == CONSOLE_WIDTH) wrap();
-        else {
-            l_col++;
-            if (visible) c_col++;
-        }
-    }
-    set_cursor(l_row, l_col);
-    return ch;
+{
+    //call helper function to print and then update cursor;
+    printbyte(ch);
+    update_cursor();
+    return 0;
 }
 
-void putbytes(const char *s, int len)
+void putbytes(const char* s, int len)
 {
-    if (len <= 0 || s == NULL) return;
+    if (len <= 0) return;
     int i;
-    for (i = 0; i < len; ++i)
-        putbyte(s[i]);
+    //print each char in the string and then update cursor;
+    for(i = 0; i < len; i++)
+    {
+        if (s[i] == '\0') break;
+        printbyte(s[i]);
+    }
+    update_cursor();
 }
 
 int sys_set_term_color(int color)
 {
-    if (color < 0) return -1;
-    c_color = color;
-    return color;
+    //check color valid or not first;
+    if (color < 0 || color > 0xFF) return -1;
+    else myCursor.color = color;
+    return 0;
 }
 
-void get_term_color(int *color)
+void get_term_color(int* color)
 {
-    if (color == NULL) return;
-    *color = c_color;
+    if (color== NULL) return;
+    *color = myCursor.color;
 }
 
 int set_cursor(int row, int col)
 {
-    if ( row >= CONSOLE_HEIGHT || row < 0 
-      || col >= CONSOLE_WIDTH || col < 0) return -1;
-
-    if (!visible) {
-        l_row = row;
-        l_col = col;
-        return 0;
-    }
-
-    int offset = CONSOLE_WIDTH * row + col;
-    outb(CRTC_IDX_REG, CRTC_CURSOR_LSB_IDX);
-    outb(CRTC_DATA_REG, offset & 0xFF);
-    outb(CRTC_IDX_REG, CRTC_CURSOR_MSB_IDX);
-    outb(CRTC_DATA_REG, (offset >> 8) & 0xFF);
-    c_row = row;
-    c_col = col;
-    l_row = row;
-    l_col = col;
+    //check row and col valid or not;
+    if (row < 0 || row >= CONSOLE_HEIGHT)
+        return -1;
+    if (col < 0 || col >= CONSOLE_WIDTH)
+        return -1;
+    myCursor.row = row;
+    myCursor.col = col;
+    //update the cursor on the screen after setting it in the info structure;
+    update_cursor();
     return 0;
 }
 
-void get_cursor(int *row, int *col) {
+void get_cursor(int* row, int* col)
+{
+    lprintf("in get cursor");
     if (row == NULL || col == NULL) return;
-
-    *row = l_row;
-    *col = l_col;
+    lprintf("cursor row: %d", myCursor.row);
+    lprintf("cursor col: %d", myCursor.col);
+    lprintf("startrow, %x",(unsigned int)row);
+    lprintf("startcol, %x",(unsigned int)col);
+    *row = myCursor.row;
+    *col = myCursor.col;
 }
 
 void hide_cursor()
 {
-    if (!visible) return;
-
-    int offset = CONSOLE_WIDTH * (CONSOLE_HEIGHT - 1) + CONSOLE_WIDTH;
-    outb(CRTC_IDX_REG, CRTC_CURSOR_LSB_IDX);
-    outb(CRTC_DATA_REG, offset & 0xFF);
-    outb(CRTC_IDX_REG, CRTC_CURSOR_MSB_IDX);
-    outb(CRTC_DATA_REG, (offset >> 8) & 0xFF);
-    visible = 0;
+    //set the visibility info in the cursor info structure
+    if (!myCursor.is_visible) return;
+    else 
+    {
+        myCursor.is_visible = 0;
+        update_cursor();
+    }
 }
 
 void show_cursor()
 {
-    if (visible) return;
-
-    int offset = CONSOLE_WIDTH * l_row + l_col;
-    outb(CRTC_IDX_REG, CRTC_CURSOR_LSB_IDX);
-    outb(CRTC_DATA_REG, offset & 0xFF);
-    outb(CRTC_IDX_REG, CRTC_CURSOR_MSB_IDX);
-    outb(CRTC_DATA_REG, (offset >> 8) & 0xFF);
-    c_row = l_row;
-    c_col = l_col;
-    visible = 1;
+    //set the visibility info in the cursor info structure
+    if (myCursor.is_visible) return;
+    else 
+    {
+        myCursor.is_visible = 1;
+        update_cursor();
+    }
 }
 
 void clear_console()
 {
     int i, j;
-    for (i = 0; i < CONSOLE_HEIGHT; ++i)
-        for (j = 0; j < CONSOLE_WIDTH; ++j)
-            draw_char(i, j, '\0', BGND_BLACK | FGND_WHITE);
-
-    set_cursor(0, 0);
+    char* curPixel;
+    //set cursor back to the beginning of the screen first;
+    myCursor.row = 0;
+    myCursor.col = 0;
+    //clean every position on the screen;
+    for(i = 0; i < CONSOLE_HEIGHT; i++)
+    {
+        for(j = 0; j < CONSOLE_WIDTH; j++)
+        {
+            curPixel = (char*)CONSOLE_MEM_BASE + 2*(i*CONSOLE_WIDTH+j);
+            *curPixel = 0x00;
+            *(curPixel + 1) = myCursor.color;
+        }
+    }
+    update_cursor();
 }
-
 
 void draw_char(int row, int col, int ch, int color)
 {
-    if ( row >= CONSOLE_HEIGHT || row < 0 || col >= CONSOLE_WIDTH || col < 0)
-        return;
- 
-    *(char *)(CONSOLE_MEM_BASE + 2 * (CONSOLE_WIDTH * row + col)) = ch;
-    *(char *)(CONSOLE_MEM_BASE + 2 * (CONSOLE_WIDTH * row + col) + 1) = color;
+    if (row < 0 || row >= CONSOLE_HEIGHT) return;
+    if (col < 0 || col >= CONSOLE_WIDTH) return;
+    if (color < 0 || color > 0xff) return;
+    //calculate the address to put the character;
+    char* addr = (char*)CONSOLE_MEM_BASE + 2*(row * CONSOLE_WIDTH + col);
+    //put the value;
+    *addr = ch;
+    //then put the color;
+    *(addr+1) = color;
 }
 
 char get_char(int row, int col)
 {
-    return *(char *)(CONSOLE_MEM_BASE + 2 * (CONSOLE_WIDTH * row + col));
+    if (row < 0 || row >= CONSOLE_HEIGHT) return 0;
+    if (col < 0 || col >= CONSOLE_WIDTH) return 0;
+    //calculate address for the cahr data,
+    // and then return the value at that address;
+    char* addr = (char*)CONSOLE_MEM_BASE + 2*(row * CONSOLE_WIDTH + col);
+    return *(addr);
 }
 
-/** @brief Change the cursor to the beginning of the next line.
+
+/** Implementation of helper functions **/
+
+/** @brief Helper function to update the offset in the cursor info structure
  *
- *  It will set logical cursor, and CRTC cursor, if visible, to the the
- *  beginning of the next line when called. Scroll up if the current cursor 
- *  is on the bottom line before ready to wrap.
- *
- *  @return void
- **/
-static void wrap()
+ *  @param nothing;
+ *  @return nothing
+ */
+void update_offset()
 {
-    if (l_row + 1 == CONSOLE_HEIGHT) {
-        scroll_up();
-        l_col = 0;
-        if (visible) c_col = 0;
-    } else {
-        l_col = 0;
-        l_row++;
-        if (visible) {
-            c_col = 0;
-            c_row++;
+    if (!myCursor.is_visible) myCursor.offset = 0xFFFF;
+    else myCursor.offset = CONSOLE_WIDTH * myCursor.row + myCursor.col;
+}
+
+/** @brief Helper function to push cursor one position back;
+ *
+ *  @param nothing;
+ *  @return nothing
+ */
+void cursor_back()
+{
+    if (myCursor.col > 0) myCursor.col --;
+    else if (myCursor.col == 0 && myCursor.row == 0) return;
+    else if (myCursor.col == 0 && myCursor.row != 0) 
+    {
+        myCursor.col = CONSOLE_WIDTH - 1;
+        myCursor.row = myCursor.row - 1; 
+    }
+}
+
+/** @brief Helper function to push cursor one position forward;
+ *
+ *  @param nothing;
+ *  @return nothing
+ */
+void cursor_next()
+{
+    if (myCursor.col < CONSOLE_WIDTH-1) myCursor.col ++;
+    else
+    {
+        myCursor.col = 0;
+        myCursor.row = myCursor.row ++; 
+    }
+}
+
+/** @brief Helper function to check whether a screen is already full or not;
+ *
+ *  @param nothing;
+ *  @return 1 if full, 0 otherwise;
+ */
+int is_screen_full()
+{
+    if (myCursor.row < CONSOLE_HEIGHT) return 0;
+    //if if row>=height and col>0, it's for sure full;
+    else if (myCursor.col > 0) return 1;
+    //when row>=height and col=0, if cursoe is in visible mode, then it's full;
+    else
+    {
+        if (myCursor.is_visible) return 1;
+        else return 0;
+    }
+}
+
+/** @brief Helper function to scroll up
+ *
+ *  @param nothing
+ *  @return nothing
+ */
+void scroll_up()
+{
+    int i, j;
+    char *curPixel;
+    char *nextPixel;
+    myCursor.row = myCursor.row - 1;
+    //move each element up a row
+    for(i = 0; i < CONSOLE_HEIGHT; i++){
+        for(j = 0; j < CONSOLE_WIDTH; j++){
+            curPixel = (char *)CONSOLE_MEM_BASE + 2*(i*CONSOLE_WIDTH+j);
+            nextPixel = curPixel + 2*CONSOLE_WIDTH;
+            //if it's already the last line, then clean the line;
+            if(i == CONSOLE_HEIGHT - 1)
+            {
+                *curPixel = 0x00;
+                *(curPixel + 1) = myCursor.color;
+            } 
+            //else, copy the next row to the current row;
+            else 
+            {
+                *curPixel = *nextPixel;
+                *(curPixel + 1) = *(nextPixel+1);
+            }
         }
     }
 }
 
-/** @brief Scroll up the entire screen and continue to print on the new line.
- *  @return void
- **/
-static void scroll_up()
+/** @brief Helper function to show a char on the screen
+ *
+ *  @param the character to be shown on the screen
+ *  @return nothing
+ */
+void printbyte(char ch)
 {
-    int row, col;
-    char ch;
-    int color;
-    for (row = 1; row < CONSOLE_HEIGHT; ++row) {
-        // Copy the contents up a row
-        for (col = 0; col < CONSOLE_WIDTH; ++col) { 
-            ch = *(char *)(CONSOLE_MEM_BASE + 2 * (CONSOLE_WIDTH * row + col));
-            color = *(char *)(CONSOLE_MEM_BASE + 2 * (CONSOLE_WIDTH * row + col) + 1);
-            *(char *)(CONSOLE_MEM_BASE + 2 * (CONSOLE_WIDTH * (row - 1) + col)) = ch;
-            *(char *)(CONSOLE_MEM_BASE + 2 * (CONSOLE_WIDTH * (row - 1) + col) + 1) = color;
-        }
+    uint16_t offset;
+    switch(ch)
+    {
+        //If carriage return, then cursor is at the next row;
+        case '\n':
+            myCursor.row ++;
+            myCursor.col = 0;
+            break;
+        //going back to the beginning of the column;
+        case '\r':
+            myCursor.col = 0;
+            break;
+        //If backspace, then put the cursor back one space by calling
+        //helper function cursor_back, and then put 0x00 at the current place
+        case '\b':
+            cursor_back();
+            offset = myCursor.row * CONSOLE_WIDTH + myCursor.col;
+            *((char*)CONSOLE_MEM_BASE + 2*offset) = 0x00;
+            *((char*)CONSOLE_MEM_BASE + 2*offset + 1) = myCursor.color;
+            break;
+        default:
+            offset = myCursor.row * CONSOLE_WIDTH + myCursor.col;
+            *((char*)CONSOLE_MEM_BASE + 2*offset) = ch;
+            *((char*)CONSOLE_MEM_BASE + 2*offset + 1) = myCursor.color;
+            cursor_next();
     }
-    /* Clear the bottom row */
-    for (col = 0; col < CONSOLE_WIDTH; ++col)
-        draw_char(CONSOLE_HEIGHT - 1, col, '\0', BGND_BLACK | FGND_WHITE);
+    if (is_screen_full()) scroll_up();
+}
+
+/** @brief Helper function to update cursor
+ *
+ *  It set the offset by sending the high bits and low bits separately
+ *
+ *  @param nothing
+ *  @return nothing
+ */
+void update_cursor()
+{
+    uint8_t  high_bits, low_bits;
+    //update the offset first
+    update_offset();
+    high_bits = (myCursor.offset >> 8) & 0x00FF ;
+    low_bits = myCursor.offset & 0x00FF;
+    outb(CRTC_IDX_REG, CRTC_CURSOR_MSB_IDX);
+    outb(CRTC_DATA_REG, high_bits);
+    outb(CRTC_IDX_REG, CRTC_CURSOR_LSB_IDX);
+    outb(CRTC_DATA_REG, low_bits);
 }
