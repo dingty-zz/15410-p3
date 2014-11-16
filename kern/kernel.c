@@ -94,7 +94,7 @@ int kernel_main(mbinfo_t *mbinfo, int argc, char **argv, char **envp)
     // process_create("yield_desc_mkrun", 1);
     // process_create("slaughter", 1);
     // process_create("actual_wait", 1);
-    // process_create("make_crash", 1);
+    // process_create("make_crash", 1);    
 
     // process_create("getpid_test1", 1);   // we run this thread
     // process_create("sleep_test1", 1);   // we run this thread
@@ -114,7 +114,7 @@ int kernel_main(mbinfo_t *mbinfo, int argc, char **argv, char **envp)
     // For future use
 
 
-    // process_create("init", 1);   // we run this thread
+    process_create("init", 1);   // we run this thread
 
     while (1) continue;
 

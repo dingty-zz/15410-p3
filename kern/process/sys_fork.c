@@ -1,3 +1,11 @@
+/** @file sys_fork.c
+ *
+ *  @brief This file includes the implementation fork using ZFOD.
+ *
+ *  @author Xianqi Zeng (xianqiz)
+ *  @author Tianyuan Ding (tding)
+ *  @bug No known bugs
+ */
 #include <syscall.h>
 #include "control_block.h"
 #include "datastructure/linked_list.h"
@@ -116,6 +124,8 @@ int sys_fork(void)
     }
 
     /* Step 3: set up the thread control block */
+    mutex_init(&child_tcb -> tcb_mutex);
+    child_pcb -> children_count=0;
     child_tcb -> pcb = child_pcb;
     child_tcb -> tid = next_tid;
     next_tid++;
@@ -132,9 +142,12 @@ int sys_fork(void)
     /* return twice and values are different */
     child_tcb -> registers.eax = 0;
     parent_tcb -> registers.eax = child_pcb -> pid;
+    list_init(&child_pcb -> threads);
+    list_init(&child_pcb -> va);
     list_insert_last(&child_pcb -> threads, &child_tcb->peer_threads_node);
-
+    lprintf("The length is %d",child_pcb->threads.length);
     /* step 4: set up the process control block */
+    list_init(&child_pcb -> children);
     child_pcb -> pid = next_pid;
     next_pid++;
     child_pcb -> state = PROCESS_RUNNING;

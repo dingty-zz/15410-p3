@@ -19,7 +19,7 @@
 #include "process/enter_user_mode.h"
 
 extern void sys_vanish(void);
-
+extern void sys_set_status();
 
 void get_real_handler(ureg_t* cur_ureg)
 {
@@ -31,6 +31,7 @@ void get_real_handler(ureg_t* cur_ureg)
     { 
         lprintf("not registered; fault!!");
         MAGIC_BREAK;
+        sys_set_status(-2);
         sys_vanish();
     }
     //if installed, try to call the real handler;
