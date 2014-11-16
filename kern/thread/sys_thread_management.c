@@ -153,7 +153,6 @@ int sys_make_runnable(int tid)
     }
     mutex_unlock(&runnable_queue_lock);
     lprintf("143");
-    MAGIC_BREAK;
     // If the target thread is blocked and exist
     int exist = 0;
     TCB *target = NULL;
@@ -306,7 +305,7 @@ static int is_valid_newureg(ureg_t *newureg)
 int sys_swexn(void *esp3, swexn_handler_t eip, void *arg, ureg_t *newureg)
 {
     lprintf("starting swexn...");
-    MAGIC_BREAK;
+    // MAGIC_BREAK;
     //newureg not valid;
     if (!is_valid_newureg(newureg)) return -1;
     //deregister a handler if exists;
@@ -327,6 +326,6 @@ int sys_swexn(void *esp3, swexn_handler_t eip, void *arg, ureg_t *newureg)
         lprintf("I have this newureg! its ss is:%x", newureg->ss);
     else
         lprintf("there is no newureg");
-    MAGIC_BREAK;
+    // MAGIC_BREAK;
     return 0;
 }

@@ -62,7 +62,7 @@ static unsigned int adjusted_size = 0;
 static void *program_stack_low = NULL;
 
 extern int malloc_init();
-extern void handler(void *arg, ureg_t *ureg);  // Thread handler
+extern void myhandler(void *arg, ureg_t *ureg);  // Thread handler
 void run_child(void *(*func)(void *), void *arg);
 int thr_init(unsigned int size);
 int thr_create(void *(*func)(void *), void *arg);
@@ -151,7 +151,7 @@ int thr_create(void *(*func)(void *), void *arg)
         func, arg);
 
     // Install thread handler for each child on the stack above
-    swexn((void*)base_probing_pointer + adjusted_size + 4, handler, NULL, NULL);
+    swexn((void*)base_probing_pointer + adjusted_size + 4, myhandler, NULL, NULL);
     /* Create the data structure for this thread */
     int ret;
     thread_t *new_thread = (thread_t *)malloc(sizeof(thread_t));

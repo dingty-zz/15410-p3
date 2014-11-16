@@ -28,7 +28,7 @@ extern int getesp();
  *  @param arg The argument to be passed in
  *  @param ureg The saved registers structure
  */
-void handler(void *arg, ureg_t *ureg)
+void myhandler(void *arg, ureg_t *ureg)
 {
     int ret;
     unsigned int cr2 = ureg->cr2;
@@ -62,7 +62,7 @@ void handler(void *arg, ureg_t *ureg)
     }
         
     //re-install the handler;
-    swexn((void*)EXCEP_STACK+WORDSIZE, handler, NULL, ureg);
+    swexn((void*)EXCEP_STACK+WORDSIZE, myhandler, NULL, ureg);
     return;
 }
 
@@ -92,7 +92,7 @@ void install_autostack(void *stack_high, void *stack_low)
     if (new_pages((void*)EXCEP_STACK+WORDSIZE-PAGE_SIZE,PAGE_SIZE) < 0) {
         thr_exit((void *)-1);
     }   
-    ret = swexn((void*)EXCEP_STACK+WORDSIZE, handler, NULL, NULL);
+    ret = swexn((void*)EXCEP_STACK+WORDSIZE, myhandler, NULL, NULL);
     // unsuccessful installation of handler
     if (ret<0) {
         thr_exit((void *)-1);

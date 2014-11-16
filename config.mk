@@ -96,7 +96,7 @@ STUDENTFILES =
 ###########################################################################
 # Object files for your thread library
 ###########################################################################
-THREAD_OBJS = malloc.o panic.o
+THREAD_OBJS = malloc.o atomic_xchange.o panic.o getesp.o linked_list.o t_fork.o  mutex.o spinlock.o cond_var.o semaphore.o thread_mgmt.o rwlock.o
 
 # Thread Group Library Support.
 #
@@ -104,7 +104,7 @@ THREAD_OBJS = malloc.o panic.o
 # P3" we give you can't build libthrgrp.a.  Once you install your thread
 # library and fix THREAD_OBJS above, uncomment this line to enable building
 # libthrgrp.a:
-#410USER_LIBS_EARLY += libthrgrp.a
+410USER_LIBS_EARLY += libthrgrp.a
 
 ###########################################################################
 # Object files for your syscall wrappers

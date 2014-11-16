@@ -26,7 +26,7 @@ void get_real_handler(ureg_t* cur_ureg)
     cur_ureg->cr2 = get_cr2();
     lprintf("getting real handler.........print ureg info that I created:");
     lprintf("eip:%x",(unsigned int)cur_ureg->eip);
-    MAGIC_BREAK;
+    // MAGIC_BREAK;
     if (current_thread-> swexn_info.installed_flag==0)
     { 
         lprintf("not registered; fault!!");

@@ -41,7 +41,7 @@ int sys_new_pages(void *addr, int len)
     // portion reserved by kernel;
     if ((uint32_t)addr < 0x01000000)
         return -1;
-    lprintf("In sys");
+    // lprintf("In sys");
     // If os has insufficient resources to satisfy the request
     int requested_page_num = len / 4096;
     // MAGIC_BREAK;
@@ -65,10 +65,10 @@ int sys_new_pages(void *addr, int len)
     }
 
     /* step 2: allocate*/
-    lprintf("FINISHED CHECKING, all passed");
-    lprintf("addr: %x",(unsigned int)addr);
-    lprintf("requested:%d", requested_page_num);
-    lprintf("now, I have this free: %d", free_frame_num);
+    // lprintf("FINISHED CHECKING, all passed");
+    // lprintf("addr: %x",(unsigned int)addr);
+    // lprintf("requested:%d", requested_page_num);
+    // lprintf("now, I have this free: %d", free_frame_num);
     // MAGIC_BREAK;
 
     allocate_pages(PD, (uint32_t)addr, len);
