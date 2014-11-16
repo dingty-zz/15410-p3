@@ -1,8 +1,8 @@
 /** @file control_block.h
  *
- *  @brief This file includes paging handling routines
-*          1. General design, PD, PT descrptions
-           2. How free list works
+ *  @brief This file includes implementation of some of the
+ *         thread management system calls:
+           gettid, deschedule, make_runnable, get_ticks and sleep
  *
  *  @author Xianqi Zeng (xianqiz)
  *  @author Tianyuan Ding (tding)
@@ -24,24 +24,27 @@
 #include "memory/vm_routines.h"
 
 
-// extern TCB *current_thread;
-// extern list runnable_queue;
-// extern list blocked_queue;
-
 #define ALLOWED_BITS    (EFL_CF | EFL_PF | EFL_AF | EFL_ZF | EFL_SF | \
                          EFL_DF | EFL_OF | EFL_AC)
 
-
+/** @brief Determine if the given queue is empty
+ *
+ *  If top == bottom, we know there are nothing in the queue.
+ *
+ *  @param q The pointer to the queue
+ *  @return int 1 means not empty and 0 otherwise
+ **/
 int sys_yield(int tid)
 {
 
     // If tid is invalid
     if (tid < -1) return -1;
 
+    // If tid is -1, directly schedule it
     if (tid == -1)
     {
         schedule(-1);
-        return 0;   // can return back here??
+        return 0;
     }
     else
     {
@@ -106,13 +109,21 @@ int sys_yield(int tid)
     return 0; // can return back here?
 }
 
-
+/** @brief Determine if the given queue is empty
+ *
+ *  If top == bottom, we know there are nothing in the queue.
+ *
+ *  @param q The pointer to the queue
+ *  @return int 1 means not empty and 0 otherwise
+ **/
 int sys_deschedule(int *reject)
 {
     if (!is_user_addr(reject) || !addr_has_mapping(reject)) return -1;
-    // Check pointer
+    mutex_lock(&deschedule_lock);
+    // Check reject pointer
     if (*reject != 0)
     {
+        mutex_unlock(&deschedule_lock);
         return 0;
     }
     // atomicity??
@@ -129,6 +140,14 @@ int sys_deschedule(int *reject)
     return 0;
 }
 
+
+/** @brief Determine if the given queue is empty
+ *
+ *  If top == bottom, we know there are nothing in the queue.
+ *
+ *  @param q The pointer to the queue
+ *  @return int 1 means not empty and 0 otherwise
+ **/
 int sys_make_runnable(int tid)
 {
     lprintf("(x_x)_before make runnable, tid: %d", tid);
@@ -179,6 +198,9 @@ int sys_make_runnable(int tid)
         return -1;
     }
     lprintf("167");
+
+    mutex_lock(&deschedule_lock);
+
     // Make the target thread runnable
     mutex_lock(&target -> tcb_mutex);
     target -> state = THREAD_RUNNABLE;
@@ -195,22 +217,38 @@ int sys_make_runnable(int tid)
     list_insert_last(&runnable_queue, &target->thread_list_node);
     mutex_unlock(&runnable_queue_lock);
 
+    mutex_unlock(&deschedule_lock);
+
+
     lprintf("(x_x)_now make runnable");
     return 0;
 }
 
+
+/** @brief Determine if the given queue is empty
+ *
+ *  If top == bottom, we know there are nothing in the queue.
+ *
+ *  @param q The pointer to the queue
+ *  @return int 1 means not empty and 0 otherwise
+ **/
 int sys_gettid()
 {
     // return the tid from the currenspoding entry in tid
-
-    mutex_lock(&current_thread -> tcb_mutex);
     int tid =  current_thread -> tid;
-    mutex_unlock(&current_thread -> tcb_mutex);
     lprintf("called gettid: [The tid is %d]", tid);
     return tid;
 
 }
 
+
+/** @brief Determine if the given queue is empty
+ *
+ *  If top == bottom, we know there are nothing in the queue.
+ *
+ *  @param q The pointer to the queue
+ *  @return int 1 means not empty and 0 otherwise
+ **/
 int sys_sleep(int ticks)
 {
     if (ticks < 0)
@@ -237,6 +275,14 @@ int sys_sleep(int ticks)
 }
 
 //return 0 if invalid and 1 if valid;
+
+/** @brief Determine if the given queue is empty
+ *
+ *  If top == bottom, we know there are nothing in the queue.
+ *
+ *  @param q The pointer to the queue
+ *  @return int 1 means not empty and 0 otherwise
+ **/
 static int is_valid_newureg(ureg_t *newureg)
 {
     unsigned int kern_stack_high, changedbit, mask;
@@ -304,6 +350,14 @@ static int is_valid_newureg(ureg_t *newureg)
     return 1;
 }
 
+
+/** @brief Determine if the given queue is empty
+ *
+ *  If top == bottom, we know there are nothing in the queue.
+ *
+ *  @param q The pointer to the queue
+ *  @return int 1 means not empty and 0 otherwise
+ **/
 int sys_swexn(void *esp3, swexn_handler_t eip, void *arg, ureg_t *newureg)
 {
     lprintf("starting swexn...");

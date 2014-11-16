@@ -22,7 +22,6 @@
 #include "memory/vm_routines.h"
 #include "process.h"
 #include "assert.h"
-extern TCB *current_thread;
 
 /** @brief Release a frame frame and mark it as freed only when refcount = 0.
  *         If so, let free_frame point to it.
@@ -34,7 +33,7 @@ extern TCB *current_thread;
  **/
 void process_init()
 {
-    // create a list of run queues based on threads
+    // Initalize process queues
     list_init(&process_queue);
     mutex_init(&process_queue_lock);
     mutex_init(&print_lock);
@@ -54,6 +53,7 @@ int process_create(const char *filename, int run)
 {
 
     lprintf("%s", filename);
+    // Allocate new pcb struct
     PCB *process = (PCB *)malloc(sizeof(PCB));
 
     //create a clean page directory
@@ -68,6 +68,7 @@ int process_create(const char *filename, int run)
     {
         // error, the file doesn't exist
         MAGIC_BREAK;
+        return -1;
     }
     // set up process for this program
     process -> state = PROCESS_RUNNABLE;   // currently unused
@@ -97,16 +98,15 @@ int process_create(const char *filename, int run)
 
     thread -> pcb = process;  // cycle reference :)
 
-    /* We need to do this everytime for a thread to run */
-    current_thread = thread;
-    // set up kernel stack pointer possibly bugs here
+
+    // set up stack low pointer and stack high pointer
     set_esp0((uint32_t)(thread -> stack_base + thread -> stack_size));
     
-    *((unsigned int *)(current_thread -> registers.esp)) = 0xffffc000;
-    current_thread -> registers.esp -= 4;
+    *((unsigned int *)(thread -> registers.esp)) = 0xffffc000;
+    thread -> registers.esp -= 4;
 
-    *(unsigned int *)current_thread -> registers.esp = 0xffffffff;
-    current_thread -> registers.esp -= 12;
+    *(unsigned int *)thread -> registers.esp = 0xffffffff;
+    thread -> registers.esp -= 12;
 
     // MAGIC_BREAK;
     if (!run)  // if not run ,we return
@@ -114,6 +114,8 @@ int process_create(const char *filename, int run)
         MAGIC_BREAK;
         return 0;
     }
+        /* We need to do this everytime for a thread to run */
+    current_thread = thread;
     // MAGIC_BREAK;
     lprintf("let it run, enter ring 3!, thread -> registers.eip%x", (unsigned int)thread->registers.eip);
     enter_user_mode(thread -> registers.edi,
@@ -134,26 +136,11 @@ int process_create(const char *filename, int run)
 /** @brief Release a frame frame and mark it as freed only when refcount = 0.
  *         If so, let free_frame point to it.
  *
- *  1. Exit all of the threads
- *  2. Deallocate all of the memory, i.e., free physical frames,
-  unmap user virtual memories
- *  3. Deallocate all of it's source, i.e., free page tables,
- free page directory except kernel
- *     mappings, free PCB. But where to put the mappings
- given PCB to be freed?
+ *  If top == bottom, we know there are nothing in the queue.
  *
- *  @param address address must be both physical address
- and 4KB aligned (really ?)
+ *  @param address address must be both physical
+ address and 4KB aligned (really ?)
  **/
-// Possibly be vanish??
-int process_exit()
-{
-
-    return 0;
-
-}
-
-
 unsigned int program_loader(simple_elf_t se_hdr, PCB *process) {
 
     // lprintf("this is the esp, %x", (unsigned int)get_esp0());

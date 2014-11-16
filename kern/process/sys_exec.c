@@ -15,11 +15,8 @@
 #include "memory/vm_routines.h"
 #include "thread/thread_basic.h"
 
-
-extern list process_queue;
-extern uint32_t next_pid;
-
-extern TCB *current_thread;
+#define ARGC_LIMIT 100
+#define ARGV_LIMIT 50
 
 /* Two things to do:
 1. add return -1, exec_non_exist
@@ -57,6 +54,14 @@ int sys_exec(char *execname, char *argvec[])
     while (argvec[argc] != 0)
     {
         argc++;
+        if (strlen(argvec[argc]) > ARGV_LIMIT)
+        {
+            return -1;
+        }
+    }
+    if (argc > ARGC_LIMIT)
+    {
+        return -1;
     }
 
     // Count the length of total number of char to be copied
@@ -90,8 +95,12 @@ int sys_exec(char *execname, char *argvec[])
 
     lprintf("The argc==%d", argc);
 
+    // Get the current process pcb, we want to replace it as a new one
     PCB *process = current_thread -> pcb;
-
+    list_init(&process -> threads);
+    list_init(&process -> va);
+    list_init(&process -> children);
+    
     // Unmap current page directory and free all its address space
     process -> PD = init_pd();
 
@@ -127,8 +136,8 @@ int sys_exec(char *execname, char *argvec[])
 
     current_thread -> registers.esp -= 4;
 
-
-    enter_user_mode(current_thread -> registers.edi,     // let it run, enter ring 3!
+   // let it run, enter ring 3!
+    enter_user_mode(current_thread -> registers.edi,  
                     current_thread -> registers.esi,
                     current_thread -> registers.ebp,
                     current_thread -> registers.ebx,

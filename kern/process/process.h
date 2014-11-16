@@ -21,8 +21,4 @@ unsigned int program_loader(simple_elf_t se_hdr, PCB *process);
 
 int process_create(const char *filename, int run);
 
-
-int process_exit();
-
-
 #endif /* _PROCESS_H */

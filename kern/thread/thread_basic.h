@@ -18,7 +18,4 @@ void thr_init();
 
 TCB *thr_create(unsigned int eip, int run);
 
-int thr_exit();
-
-
 #endif /* _THREAD_H */

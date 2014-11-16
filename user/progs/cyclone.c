@@ -58,7 +58,7 @@ int main(int argc, char *argv[])
 	  thr_exit_return = 0;
 
 	  lprintf("%s%strying mode %d",TEST_PFX,test_name,i);
-	  misbehave(i);
+
 
 	  REPORT_FAILOUT_ON_ERR((spawn_tid = thr_create(thread1, (void*)i)));
 

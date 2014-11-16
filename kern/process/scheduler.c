@@ -23,24 +23,17 @@
 #include "hardware/timer.h"
 #include "scheduler.h"
 
-
-unsigned int seconds;
-extern list runnable_queue;
-extern TCB *current_thread;  // indicates the current runnign thread
+// We invoke context switch every 20 ticks
+#define SCHEDULE_INTERVAL 30
 
 void tick(unsigned int numTicks)
 {
 
-    if (numTicks % 5 == 0)
+    if (numTicks % SCHEDULE_INTERVAL == 0)
     {
-        ++seconds;
-        if (seconds % 5 == 0)
-        {
-            lprintf("5 seconds, let's context switch\n");
-            schedule(-1);     // schedule
-            lprintf("\nNow we are running in a different thread");
-        }
-
+        lprintf("5 seconds, let's context switch\n");
+        schedule(-1);     // schedule
+        lprintf("\nNow we are running in a different thread");
     }
 
 }
@@ -123,6 +116,9 @@ void schedule(int tid)
         break;      // we don't put the current thread back to queue
 
     case THREAD_BLOCKED:
+        list_insert_last(&blocked_queue, &current_thread->thread_list_node);
+        mutex_unlock(&deschedule_lock);
+        break;
     case THREAD_WAITING:
     case THREAD_READLINE:
     case THREAD_SLEEPING:
@@ -152,6 +148,7 @@ void schedule(int tid)
         //     target = list_entry(n, TCB, thread_list_node);
         //     lprintf("default runnable_queue: %d", target -> tid);
         // }
+        break;
     }
     target = NULL;
     // for (n = list_begin(&blocked_queue); n != NULL; n = n -> next)

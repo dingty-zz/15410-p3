@@ -111,8 +111,6 @@ int kernel_main(mbinfo_t *mbinfo, int argc, char **argv, char **envp)
     // process_create("cho2",1);
 
 
-    // For future use
-
     while (1) continue;
 
     return 0;
