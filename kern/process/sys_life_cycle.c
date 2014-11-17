@@ -1,6 +1,7 @@
-/** @file _life_cycle.c
+/** @file sys_life_cycle.c
  *
- *  @brief This file includes the implementation of the life cycle funcitons.
+ *  @brief This file includes the implementation of the life cycle system calls
+ *         such as thread_fork, wait, set_status and vanish
  *
  *  @author Xianqi Zeng (xianqiz)
  *  @author Tianyuan Ding (tding)
@@ -22,6 +23,7 @@
 #include "memory/vm_routines.h"
 #include "scheduler.h"
 
+#define INIT_PID 2
 /** @brief Determine if the given queue is empty
  *
  *  If top == bottom, we know there are nothing in the queue.
@@ -31,6 +33,7 @@
  **/
 int sys_thread_fork(void)
 {
+    // Get all registers pushed on parent thread's kernel stack
     unsigned int *kernel_stack =
         (unsigned int *)(current_thread -> stack_base +
                          current_thread->stack_size - 60);
@@ -50,16 +53,17 @@ int sys_thread_fork(void)
     PCB *parent_pcb = current_thread -> pcb;
     list threads = parent_pcb -> threads;
 
-    TCB *child_tcb = (TCB *)malloc(sizeof(TCB));
+    // Allocate tcb for child
+    TCB *child_tcb = (TCB *)smemalign(4,sizeof(TCB));
 
     child_tcb -> pcb = parent_pcb;
     child_tcb -> tid = next_tid;
     next_tid++;
 
     child_tcb -> state = THREAD_INIT;
-    /*each thread has its own stack*/
+    /*each thread has its own kernel stack*/
     child_tcb -> stack_size = current_thread -> stack_size;
-    child_tcb -> stack_base = memalign(4, child_tcb -> stack_size);
+    child_tcb -> stack_base = smemalign(4096, child_tcb -> stack_size);
     child_tcb -> esp =
         (uint32_t)child_tcb->stack_base + (uint32_t)child_tcb->stack_size;
     child_tcb -> registers = current_thread -> registers;
@@ -73,12 +77,9 @@ int sys_thread_fork(void)
     return child_tcb -> tid;
 }
 
-/** @brief Determine if the given queue is empty
+/** @brief Set the return status for the current thread
  *
- *  If top == bottom, we know there are nothing in the queue.
- *
- *  @param q The pointer to the queue
- *  @return int 1 means not empty and 0 otherwise
+ *  @param status the return status
  **/
 void sys_set_status(int status)
 {
@@ -88,21 +89,16 @@ void sys_set_status(int status)
     return;
 }
 
-/** @brief Determine if the given queue is empty
- *
- *  If top == bottom, we know there are nothing in the queue.
- *
- *  @param q The pointer to the queue
- *  @return int 1 means not empty and 0 otherwise
+/** @brief vanish the current thread, and reap all the exited thread
+ *         if the current thread is the last thread in the process.
+ *         The current thread, although vanished, is reaped by its
+ *         parent process
  **/
 void sys_vanish(void)
 {
-    lprintf("(x_x)_now sys_vanishs");
     // Get pcb for current process
     mutex_lock(&current_thread -> tcb_mutex);
     PCB *current_pcb = current_thread -> pcb;
-
-    // display to the console by print()....
 
     list threads = current_pcb -> threads;
     lprintf("%d", threads.length);
@@ -115,7 +111,6 @@ void sys_vanish(void)
         TCB *tcb = list_entry(n, TCB, peer_threads_node);
         if (tcb -> state != THREAD_EXIT)
         {
-            lprintf("%d", live_count);
             live_count++;
         }
     }
@@ -132,23 +127,23 @@ void sys_vanish(void)
                 list_delete(&threads, n);
                 list_delete(&blocked_queue, n);
                 list_delete(&runnable_queue, n);
+                // free kernel stack and tcb
                 sfree(tcb -> stack_base, tcb -> stack_size);
                 free(tcb);
             }
         }
 
+        // Set the state to be exit
         current_pcb -> state = PROCESS_EXIT;
         mutex_lock(&process_queue_lock);
         list_delete(&process_queue, &current_pcb -> all_processes_node);
         mutex_unlock(&process_queue_lock);
         PCB *parent = current_pcb -> parent;
 
-        // If the parent has already exited, wake up init
+        // If the parent has already exited, wake up init process
         if (parent == NULL || parent -> state == PROCESS_EXIT)
         {
 
-            lprintf(" todo report the state to init");
-            // MAGIC_BREAK;
             TCB *init = NULL;
             for (n = list_begin(&blocked_queue);
                     n != NULL;
@@ -157,7 +152,7 @@ void sys_vanish(void)
                 init = list_entry(n, TCB, thread_list_node);
                 if (init -> tid == 2)
                 {
-                    lprintf("Find init");
+                    // Find init
 
                     mutex_lock(&blocked_queue_lock);
                     list_delete(&blocked_queue, &init->thread_list_node);
@@ -219,15 +214,13 @@ void sys_vanish(void)
     current_thread -> state = THREAD_EXIT;
 
     mutex_unlock(&current_thread -> tcb_mutex);
-    lprintf("(x_x)_vanish called schedule %d", current_thread -> tid);
-    // context switch it back
+    // context switch
     schedule(-1);
 
 }
 
-/** @brief Determine if the given queue is empty
+/** @brief Wait for a target process to exit
  *
- *  If top == bottom, we know there are nothing in the queue.
  *
  *  @param q The pointer to the queue
  *  @return int 1 means not empty and 0 otherwise
@@ -238,10 +231,10 @@ int sys_wait(int *status_ptr)
 
     PCB *current_pcb = current_thread -> pcb;
     list *child_pros = &current_pcb -> children;
-    lprintf("Note that %d has %d children", current_thread->tid, current_pcb -> children_count);
+
+    // If the process has no children, kernel won't let it wait
     if (current_pcb -> children_count == 0)
     {
-        lprintf("%d, You can't wait", current_thread->tid);
         return -1;
     }
     node *n;
@@ -258,25 +251,35 @@ int sys_wait(int *status_ptr)
             {
                 *status_ptr = pcb -> return_state;
             }
+            // Reaps all the threads for this child
+            list child_threads = pcb -> threads;
+
+            node *temp = NULL;
+            for (temp = list_begin (&child_threads); temp != NULL; temp = temp -> next)
+            {
+                TCB *tcb = list_entry(temp, TCB, peer_threads_node);
+                // Free its kernel stack and tcb
+                sfree(tcb -> stack_base, tcb -> stack_size);
+                free(tcb);
+            }
             // Reap this child
             lprintf("Reap this child %d", pid);
             list_delete(child_pros, &pcb -> peer_processes_node);
             current_pcb -> children_count--;
 
-            destroy_page_directory(pcb -> PD);
+            // Free page directory and pcb
             sfree(pcb -> PD, 4096);
 
             free(pcb);
             return pid;
         }
     }
-    // If no child_pros is exited, wait till one of them exits
+    // If no children process is exited, wait till one of them exits by
+    // calling schedule
     mutex_lock(&current_thread -> tcb_mutex);
     current_thread -> state = THREAD_WAITING;
     mutex_unlock(&current_thread -> tcb_mutex);
-    lprintf("Not available, i %d call schedule", current_thread->tid);
     schedule(-1);
-    lprintf("Someone wakes me %d up", current_thread->tid);
 
 
     // Do the thing again once one exited child wake me up
@@ -292,19 +295,22 @@ int sys_wait(int *status_ptr)
             {
                 *status_ptr = pcb -> return_state;
             }
+            // Reaps all the threads for this child
+            list child_threads = pcb -> threads;
+            //lprintf("child_threads count %d", child_threads.length);
+            node *temp = NULL;
+            for (temp = list_begin (&child_threads); temp != NULL; temp = temp -> next)
+            {
+                TCB *tcb = list_entry(temp, TCB, peer_threads_node);
+                // Free its kernel stack and tcb
+                sfree(tcb -> stack_base, tcb -> stack_size);
+                free(tcb);
+            }
             // Reap this child
-            lprintf("Reap the child after schedule");
             list_delete(child_pros, &pcb -> peer_processes_node);
             current_pcb -> children_count--;
-            for (n = list_begin (&runnable_queue);
-                    n != NULL;
-                    n = n -> next)
-            {
-                // TCB *tcb = list_entry(n, TCB, thread_list_node);
-                // lprintf("The tid in the runnable_queue is %d", tcb->tid);
-            }
-            destroy_page_directory(pcb -> PD);
-            
+
+            // Free page directory and control block
             sfree(pcb -> PD, 4096);
 
             free(pcb);
