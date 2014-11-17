@@ -4,16 +4,155 @@
 
 @author Xianqi Zeng (xianqiz)
 @author Tianyuan Ding (tding)
-@bug 
+@bug  After run make_crash once, it would happen that smemalign would return null
+	  pointer when forking, thus will fail to fork any more process. Thus, future test
+	  program will fail to fork. 
+	  So far, we figured out that the problem has to do with memory freeing after allocation at exiting process, but haven't been able to fix this perfectly.
 
-1. Memory Management
 
-2. Control Blocks
+Part 0. Introduction
+This is the readme document for kernel project, p3, for 15410. Before jumping into our design, this is a visualizatino of the memory space from
+the perspective of a process, with our design of kernel.
 
-3. Process / Thread Handling
 
-4. Scheduler
+-------------------------------------------0xffffffff
+Thread 1 User Stack
+        (1 Page)
+-------------------------------------------
+Thread 1 Exception Handler Stack
+        (1 Page)
+-------------------------------------------
+Thread 2 User Stack
+        (1 Page)
+-------------------------------------------
+Thread 2 Exception Handler Stack
+        (1 Page)
+-------------------------------------------
+.....
+.....
+.....
+.....
+.....
+.....
+.....
+.....
+-------------------------------------------0x01000000 (one-on-one mapping area)
 
-5. 
+	 Kernel Stacks (each thread has one page)
+
+-------------------------------------------0x00000000
+
+In this document, we will explain the following aspects of this project, memory management, control blocks, process/thread handling, scheduler, and interrupt and software exceptions.
+
+
+
+
+--------------------------------------------------------------------------------------
+
+Part I. Memory Management
+The two most important pillars in memory management are 
+(1) Page Directory & Page Table
+(2) Two memory information data structures: frame list to keep allocated frames, and VA_INFO for virtual address and its length/size. 
+
+(1) First of all, our design of page directory is a block of bytes in the kernel stack (a page size, 4096 = 1024 page tables * 4 bytes of pointer / table), with 1024 entries, in the kernel space. 
+
+A Page directory: 
+ ---------------------
+| addr of first table |
+ ---------------------
+| addr of second table| 
+ ---------------------
+| addr of third table |
+ ---------------------
+| addr of fourth table|
+ ---------------------
+| addr of fifth table |
+ ---------------------
+|.....................|
+ ---------------------
+| addr of 1022th table|
+ ---------------------
+| addr of 1023th table|
+ ---------------------
+| addr of 1024th table |
+ ---------------------
+
+Each table is also the same format, with 1024 entires, with each entry being a physical address with flags, mapping to the virtual address corresponding to that entry. The calculation of virtual address corresponding to the jth entry in ith page table in the page directory is: (i<<22)|(j<<12).
+
+A Page directory: 
+ --------------------------
+| addr of mapped phys addr | (1st entry)
+ --------------------------
+| addr of mapped phys addr | 
+ --------------------------
+| addr of mapped phys addr |
+ --------------------------
+| addr of mapped phys addr |
+ --------------------------
+| addr of mapped phys addr |
+ --------------------------
+|..........................|
+ --------------------------
+| addr of mapped phys addr |
+ --------------------------
+| addr of mapped phys addr |
+ --------------------------
+| addr of mapped phys addr | (1024th entry)
+ --------------------------
+
+Each process will have the access to the page directory address, which is essentially the address we will use to set cr3 for the process. A process gets access to this information through the process control block, which will be convered more in detail in the next chapter. This design has the advantage that the memory management within each process, and that when we need to access certain entry, we just need to easily calculate the page directory index and page table index corresponding to the virtual address using the formula very easily.
+
+
+(2) The free frame list and VA_INFO list (defined as va in pcb) are responsible for respecitvely physical frames allocation and virtual pages allocation.
+
+
+
+The VA_INFO list is stored in PCB as a list of allocated virtual addresses and their alllocation information including virtual address and memory length. It serves mainly for new_pages and remove_pages. Since remove_pages only takes virtual address but the length from that address to be removed, we need to keep track of the allocated length for each virtual address on our own and thus need the VA_INFO list.
+
+
+-------------------------------------------------------------------------
+
+Part II. Control Blocks
+We have two types of control blocks, process control block, PCB, and thread control block, TCB, stored in kernel space. We designed them to be separate structures. However, a thread is the basic task unit. We maintain a global current_thread pointer pointing to the TCB of the current thread, and this will lead the current thread to be able to access the current process's PCB, and thus memory information.
+
+Another interesting thing we did is that we used abstract list to store a list of struct. Instead of creating a struct with multiple copy, we created nodes in a sturct (e.g PCB, TCB). For all the global lists, we have nodes in PCB or TCB, so that the thread/prcoess could be added into the corresponding lists.
+
+
+-------------------------------------------------------------------------
+
+
+Part III. Process / Thread Handling
+The life cycle of a process starts in process_create. We need to initilize all the fileds specified in PCB in this functionm, and load the program by specifying eip. We also need to create a thread in this function, since a thread is the basic task unit. 
+
+For a process, an important thing is fork. We use ZFOD for our fork, and ensures that we don't disable paging by using a temporary address to help copy data from original physical address to the new physical address. More details will be covered in the fork function.
+
+For a thread, thread fork is implemented similar to the fork function, without memory copying. In addition, the life cycle of a thread starts when we call thr_create and initilize everything in a tcb.
+
+
+-------------------------------------------------------------------------
+
+Part IV. Scheduler
+
+We used a round robin scheduler as this is more intuitive and fair for every process. The round robin scheduler is triggered by the timer interrupt handler function tick, which will put the current thread into a queue of runnable threads and then wake up the next runnable threads in the queue.
+
+Totally, we set the following different status for a thread, which is stored in TCB, the design of which makes sure that we can access to the status of the thread in the list whenever we want, and most importantly that when a thread needs to wait on a condition to happen, it will be set to that status, and then when the condition happens, the condition will triggers the thread waiting for it to be runnable, and ultimately running.: 
+a. THREAD_EXIT
+b. THREAD_BLOCKED
+c. THREAD_RUNNING
+d. THREAD_RUNNBALE
+e. THREAD_WAITING
+f. THREAD_SLEEPING
+g. THREAD_INIT
+h. THREAD_READLINE
+They are explained futher in control_block.h
+
+
+-------------------------------------------------------------------------
+
+
+Part V. Interrupt and Software Exeptions
+We used trap gates for software exception handling installation, and used interrupt gates for keybaord and timer interrupt handling installation. This design makes sure that timer handler and keyboard handler will not be interrupt by maskable interrupts and software exceptions.
+
+For a software exceptions, we have an exception wrapper, which will essentially build the ureg structure and then check if there is a user-specified handler. If not, then it will vanish, else it will run the user-specified handler installed by swexn. The design of the wrapper benefits us to find out which action we should take after the exception happens.
 
 */

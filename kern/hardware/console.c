@@ -1,7 +1,7 @@
 /** @file  console.c
  *  @brief console driver
  *
- *  Implementation of console driver.
+ *  Implementation of console driver. Code from P1.
  *
  *  @author Jonathan Xianqi Zeng
  *  @bug No known bugs.
@@ -31,6 +31,12 @@ cursor_t myCursor = {0,0,0x7,0xFF,0};
 static void printbyte(char ch);
 static void update_cursor();
 
+
+/** @brief The function print a byte on console
+ *
+ *  @param character to be printed
+ *  @return 0
+ */
 int putbyte(char ch)
 {
     //call helper function to print and then update cursor;
@@ -39,6 +45,11 @@ int putbyte(char ch)
     return 0;
 }
 
+/** @brief The function print multiple bytes on console
+ *
+ *  @param the string to be printed and the length to be printed
+ *  @return nothing
+ */
 void putbytes(const char* s, int len)
 {
     if (len <= 0) return;
@@ -52,6 +63,11 @@ void putbytes(const char* s, int len)
     update_cursor();
 }
 
+/** @brief The function to set term color to the color specified
+ *
+ *  @param the number of the color that the terminal to be set to
+ *  @return 0 on success, -1 on failure
+ */
 int sys_set_term_color(int color)
 {
     //check color valid or not first;
@@ -60,12 +76,22 @@ int sys_set_term_color(int color)
     return 0;
 }
 
+/** @brief The function set the color code into the pointer argument
+ *
+ *  @param the pointer to integer to be set to the color of current terminal
+ *  @return nothing
+ */
 void get_term_color(int* color)
 {
     if (color== NULL) return;
     *color = myCursor.color;
 }
 
+/** @brief The function to set cursor to the specified location
+ *
+ *  @param x,y integers that specifies the location
+ *  @return 0 on success, -1 on failure
+ */
 int set_cursor(int row, int col)
 {
     //check row and col valid or not;
@@ -80,6 +106,11 @@ int set_cursor(int row, int col)
     return 0;
 }
 
+/** @brief The function to get the current cursor and store in the argument
+ *
+ *  @param pointers to store the current location
+ *  @return nothing
+ */
 void get_cursor(int* row, int* col)
 {
     lprintf("in get cursor");
@@ -92,6 +123,11 @@ void get_cursor(int* row, int* col)
     *col = myCursor.col;
 }
 
+/** @brief hide cursor from screen
+ *
+ *  @param nothing
+ *  @return nothing
+ */
 void hide_cursor()
 {
     //set the visibility info in the cursor info structure
@@ -103,6 +139,11 @@ void hide_cursor()
     }
 }
 
+/** @brief show cursor on screen
+ *
+ *  @param nothing
+ *  @return nothing
+ */
 void show_cursor()
 {
     //set the visibility info in the cursor info structure
@@ -114,6 +155,11 @@ void show_cursor()
     }
 }
 
+/** @brief clear the console
+ *
+ *  @param nothing
+ *  @return nothing
+ */
 void clear_console()
 {
     int i, j;
@@ -134,6 +180,11 @@ void clear_console()
     update_cursor();
 }
 
+/** @brief the function to draw a char on screen
+ *
+ *  @param row, column, char, and its color
+ *  @return nothing
+ */
 void draw_char(int row, int col, int ch, int color)
 {
     if (row < 0 || row >= CONSOLE_HEIGHT) return;
@@ -147,6 +198,11 @@ void draw_char(int row, int col, int ch, int color)
     *(addr+1) = color;
 }
 
+/** @brief the function return char at specific location
+ *
+ *  @param row, column
+ *  @return the character at the specified location
+ */
 char get_char(int row, int col)
 {
     if (row < 0 || row >= CONSOLE_HEIGHT) return 0;

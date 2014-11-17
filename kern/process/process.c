@@ -79,10 +79,9 @@ int process_create(const char *filename, int run)
 
     // lprintf("shabi1");
     // MAGIC_BREAK;
-
     list_init(&process -> threads);
     list_init(&process -> children);
-
+    list_init(&process -> va);
     list_insert_last(&process_queue, &process -> all_processes_node);
 
     // Load the program, copy the content to the memory and get the eip

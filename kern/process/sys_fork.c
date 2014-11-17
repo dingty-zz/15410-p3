@@ -138,6 +138,9 @@ int sys_fork(void)
     /* return twice and values are different */
     child_tcb -> registers.eax = 0;
     parent_tcb -> registers.eax = child_pcb -> pid;
+
+    child_tcb -> swexn_info = parent_tcb -> swexn_info;
+    
     list_init(&child_pcb -> threads);
     list_init(&child_pcb -> va);
     list_insert_last(&child_pcb -> threads, &child_tcb->peer_threads_node);

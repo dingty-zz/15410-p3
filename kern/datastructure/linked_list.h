@@ -1,3 +1,4 @@
+
 /**
 * @file linked_list.h
 *
@@ -33,7 +34,7 @@ typedef struct node_t
 } node;
 
 
-// Generic doubly linked list structure
+/* Generic doubly linked list structure */
 typedef struct list_t
 {
     int     length;     // Length of the list
@@ -42,11 +43,11 @@ typedef struct list_t
 } list;
 
 
-// Some generic list functions
+/* generic list functions interface */
 node *list_begin(list *l);
 node *list_end(list *l);
 void list_init(list *l);
-node *list_delete(list *l, node *n);  // generic delete function
+node *list_delete(list *l, node *n);
 node *list_delete_first(list *l);
 node *list_delete_last(list *l);
 void list_insert_first(list *l, node *j);
