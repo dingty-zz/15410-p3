@@ -1,6 +1,6 @@
 /** @file scheduler.c
  *
- *  @brief This file the scheduler and context switch routine.
+ *  @brief This file the scheduler and context switch routines.
  *
  *  @author Xianqi Zeng (xianqiz)
  *  @author Tianyuan Ding (tding)

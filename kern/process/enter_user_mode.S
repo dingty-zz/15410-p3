@@ -1,9 +1,19 @@
+/**
+ * @file enter_user_mode.S
+ *
+ * @brief This file provids the actual implementation for
+ *        a thread entering the user mode by iret
+ *
+ * @author Xianqi Zeng (xianqiz)
+ * @author Tianyuan Ding (tding)
+ *
+ */
 .global enter_user_mode
 
 enter_user_mode:
      
 
-     popl      %eax       # return address
+     popl      %eax       # pop return address
      popl      %edi
      popl      %esi
      popl      %ebp
@@ -18,14 +28,6 @@ enter_user_mode:
      movl      %eax, %es 
      movl      %eax, %fs 
      movl      %eax, %gs
-     popl      %eax
-
- 
-     # pushl $0x2b
-     # pushl %ecx  # arbitrary stack pointer
-     # pushf     
-
-     # pushl $0x23
-     # pushl %ebx             
+     popl      %eax         
      
      iret
