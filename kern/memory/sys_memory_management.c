@@ -14,12 +14,11 @@
 #include <page.h>
 #include <cr.h>
 
-/** @brief Release a frame frame and mark it as freed only when refcount = 0.
- *         If so, let free_frame point to it.
+/** @brief new pages system call system land implementation
  *
- *  If top == bottom, we know there are nothing in the queue.
+ *  check if this new pages request is valid first
  *
- *  @param address address must be both
+ *  @param the address to be allocated and its length
  *  @return 1 on success, 0 on failure
  **/
 int sys_new_pages(void *addr, int len)
@@ -32,10 +31,8 @@ int sys_new_pages(void *addr, int len)
     // len is not a positive multiple of the page size
     if (len < 0 || (len & 0xfff) != 0)
         return -1;
-    // lprintf("In sys");
     // If os has insufficient resources to satisfy the request
     int requested_page_num = len / 4096;
-    // MAGIC_BREAK;
     if (requested_page_num > free_frame_num) return -1;
     // if any portion already in task's address space;
     int i;
@@ -54,13 +51,7 @@ int sys_new_pages(void *addr, int len)
         /*already mapped, reject*/
         if (phys_adddr != 0) return -1;
     }
-
     /* step 2: allocate*/
-    // lprintf("FINISHED CHECKING, all passed");
-    // lprintf("addr: %x",(unsigned int)addr);
-    // lprintf("requested:%d", requested_page_num);
-    // lprintf("now, I have this free: %d", free_frame_num);
-    // MAGIC_BREAK;
 
     allocate_pages(PD, (uint32_t)addr, len);
     //Lastly, insert the va node into the list
@@ -69,22 +60,15 @@ int sys_new_pages(void *addr, int len)
     current_va_info -> len = len;
 
     list_insert_last(&current_thread->pcb->va, &current_va_info->va_node);
-    if ((uint32_t)addr == 0x40000000)
-    {
-        lprintf("HEREHEREHERE4");
-        // MAGIC_BREAK;
-    }
     return 0;
 }
 
-/** @brief Release a frame frame and mark it as
-freed only when refcount = 0.
- *         If so, let free_frame point to it.
+/** @brief remove pages system call
  *
- *  If top == bottom, we know there are nothing in the queue.
+ *  remove the address. the length of that address is specified in VA_INFO struct
  *
- *  @param address address must be both physical
- ddress and 4KB aligned (really ?)
+ *  @param the address to be removed
+ *  @return 1 on success, 0 on failure
  **/
 int sys_remove_pages(void *addr)
 {
@@ -103,7 +87,6 @@ int sys_remove_pages(void *addr)
     PT = (uint32_t *) DEFLAG_ADDR(PD[pd_index]);
     uint32_t phys_addr_raw = PT[pt_index];
 
-    //lprintf("physical address is:%x",(unsigned int)phys_addr_raw);
     if ((phys_addr_raw & 0x7) != 0x7) return -1;
 
     /* step 3: search for the allocation info */
@@ -111,10 +94,8 @@ int sys_remove_pages(void *addr)
     int current_len;
     uint32_t current_virtual_addr;
     /* try to find the address allocation info in the list*/
-    //lprintf("now ready to remove, %x",(unsigned int)addr);
     while (current_node != NULL)
     {
-        //lprintf("in the loop");
         VA_INFO *current_struct = list_entry(current_node, VA_INFO, va_node);
         current_virtual_addr = current_struct -> virtual_addr;
         current_len = current_struct->len;
@@ -122,7 +103,6 @@ int sys_remove_pages(void *addr)
                 (unsigned int)current_virtual_addr, current_len);
         if (current_virtual_addr == (uint32_t) addr)
         {
-            //lprintf("found");
             free_pages(current_thread -> pcb -> PD, (uint32_t)addr, current_len);
             list_delete(&current_thread->pcb->va, current_node);
             set_cr3((uint32_t)PD);

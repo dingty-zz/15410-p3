@@ -16,7 +16,8 @@
 
 static void (*callback)(unsigned int);
 
-unsigned int numTicks = 0;  // Number of total ticks
+// Number of total ticks
+unsigned int numTicks = 0;
 
 int timer_handler()
 {
