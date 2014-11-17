@@ -31,14 +31,11 @@
 
 void tick(unsigned int numTicks)
 {
-
     if (numTicks % SCHEDULE_INTERVAL == 0)
     {
         // let's context switch
-        lprintf("5 seconds, let's context switch\n");
         schedule(-1);     // schedule
         // Now we are running in a different thread
-        lprintf("\nNow we are running in a different thread");
     }
 
 }
@@ -51,7 +48,6 @@ void tick(unsigned int numTicks)
  **/
 void schedule(int tid)
 {
-    // MAGIC_BREAK;
     disable_interrupts();
     // Before actual context switching, we make sleeping thread to be
     // runnable if it's the time to wake it up
@@ -71,15 +67,7 @@ void schedule(int tid)
         }
     }
 
-    lprintf("return or not, well, I am thread: %d and state %d", current_thread->tid, current_thread -> state);
-    lprintf("The length of runnable quueee is %d", runnable_queue.length);
     TCB *target = NULL;
-
-    // for (n = list_begin(&runnable_queue); n != NULL; n = n -> next)
-    // {
-    //     target = list_entry(n, TCB, thread_list_node);
-    //     lprintf("target id : %d", target -> tid);
-    // }
 
     // If there is no runnable thread in the runnable queue and the current
     // thread is idle, we won't do context switch. Instead, we will let idle
@@ -87,8 +75,6 @@ void schedule(int tid)
 
     if (current_thread -> tid == IDLE_PID && runnable_queue.length == 0)
     {
-        lprintf("reach here");
-        // MAGIC_BREAK;
         return;
     }
 
@@ -99,18 +85,12 @@ void schedule(int tid)
         node *n  = list_delete_first(&runnable_queue);
         next_thread = list_entry(n, TCB, thread_list_node);
     }
-    else      // Search for a specific target thread
+    else      
     {
+        // Search for a specific target thread
         next_thread = list_search_tid(&runnable_queue, tid);
         list_delete(&runnable_queue, &next_thread->thread_list_node);
     }
-    if (next_thread == NULL)
-    {
-        lprintf("oops");
-    }
-    lprintf("The next thread is %d", next_thread->tid);
-    lprintf("Before switching, the current getcr3 is %x", (unsigned int)get_cr3());
-
     /* Checks the current state of the current thread, and decide which queue
        should the process goes to */
     switch (current_thread -> state)
@@ -129,53 +109,18 @@ void schedule(int tid)
     case THREAD_WAITING:
     case THREAD_READLINE:
     case THREAD_SLEEPING:
-        lprintf("gotcha!");
         list_insert_last(&blocked_queue, &current_thread->thread_list_node);
-        // for (n = list_begin(&blocked_queue); n != NULL; n = n -> next)
-        // {
-        //     target = list_entry(n, TCB, thread_list_node);
-        //     lprintf("switch sleeping blocked_queue: %d", target -> tid);
-        // }
-        // for (n = list_begin(&runnable_queue); n != NULL; n = n -> next)
-        // {
-        //     target = list_entry(n, TCB, thread_list_node);
-        //     lprintf("switch sleeping runnable_queue: %d", target -> tid);
-        // }
         break;
-
     // The thread is runnable by default, we put it into the runnable queue
     default:
         list_insert_last(&runnable_queue, &current_thread->thread_list_node);
-        // for (n = list_begin(&blocked_queue); n != NULL; n = n -> next)
-        // {
-        //     target = list_entry(n, TCB, thread_list_node);
-        //     lprintf("default blocked_queue: %d", target -> tid);
-        // }
-        // for (n = list_begin(&runnable_queue); n != NULL; n = n -> next)
-        // {
-        //     target = list_entry(n, TCB, thread_list_node);
-        //     lprintf("default runnable_queue: %d", target -> tid);
-        // }
         break;
     }
     target = NULL;
-    // for (n = list_begin(&blocked_queue); n != NULL; n = n -> next)
-    // {
-    //     target = list_entry(n, TCB, thread_list_node);
-    //     lprintf("blocked id again: %d", target -> tid);
-    // }
-    // for (n = list_begin(&runnable_queue); n != NULL; n = n -> next)
-    // {
-    //     target = list_entry(n, TCB, thread_list_node);
-    //     lprintf("runnable_queue id again: %d", target -> tid);
-    // }
-    // MAGIC_BREAK;
-    // lprintf("Switch from current: %p, to next: %p\n", current_thread, next_thread);
     // Do the context switch between two threads
     current_thread = context_switch(current_thread, next_thread);
 
     lprintf(" current running: %d\n", current_thread->tid);
-    // MAGIC_BREAK;
     enable_interrupts();
 }
 
@@ -188,22 +133,10 @@ void schedule(int tid)
  **/
 TCB *context_switch(TCB *current, TCB *next)
 {
-    lprintf("Switch from current: %d, to next: %d\n", current->tid, next->tid);
-
-    // MAGIC_BREAK;
     set_cr3((uint32_t)next -> pcb -> PD);
-    // MAGIC_BREAK;
-
     // Set esp0 for the next thread
     set_esp0((uint32_t)(next -> stack_base + next -> stack_size));
     do_switch(current, next, next -> state);
-    // TCB *temp = next;
-    // next = current;
-    // current = temp;
-    lprintf("(^_^)Switch from current: %d, to next: %d\n", current->tid, next -> tid);
-
-
-
     return current;
 }
 
@@ -216,14 +149,9 @@ TCB *context_switch(TCB *current, TCB *next)
  **/
 void prepare_init_thread(TCB *next)
 {
-    lprintf("%p", next);
-    lprintf("105, run this thread");
-    // set_cr3((uint32_t)next -> pcb -> PD);
-    // set_esp0((uint32_t)(next -> stack_base + next -> stack_size));
     next -> state = THREAD_RUNNING;
     current_thread = next;
     enable_interrupts();
-    // MAGIC_BREAK;
     // Enter user space
     enter_user_mode(next -> registers.edi,
                     next -> registers.esi,
