@@ -22,19 +22,17 @@
 #include "memory/vm_routines.h"
 #include "scheduler.h"
 
-/** @brief Determine if the given queue is empty
+/** @brief The thread_fork implementation
  *
- *  If top == bottom, we know there are nothing in the queue.
- *
- *  @param q The pointer to the queue
- *  @return int 1 means not empty and 0 otherwise
+ *  similar to fork, other than without any memory mangement
+ *  @param nothing
+ *  @return -1 on failure, 0 to child, child tid to parent
  **/
 int sys_thread_fork(void)
 {
     unsigned int *kernel_stack =
         (unsigned int *)(current_thread -> stack_base +
                          current_thread->stack_size - 60);
-    //lprintf("the kernel_stack is : %p", kernel_stack);
     current_thread -> registers.ss = kernel_stack[14];
     current_thread -> registers.esp = kernel_stack[13];
     current_thread -> registers.eflags = kernel_stack[12];
@@ -46,18 +44,16 @@ int sys_thread_fork(void)
     current_thread -> registers.edx = kernel_stack[6];
     current_thread -> registers.ecx = kernel_stack[5];
     current_thread -> registers.ebx = kernel_stack[4];
-
     PCB *parent_pcb = current_thread -> pcb;
     list threads = parent_pcb -> threads;
-
+    /* create a new thread*/
     TCB *child_tcb = (TCB *)malloc(sizeof(TCB));
-
     child_tcb -> pcb = parent_pcb;
     child_tcb -> tid = next_tid;
     next_tid++;
-
+    /* copy thread info*/
     child_tcb -> state = THREAD_INIT;
-    /*each thread has its own stack*/
+    /* each thread has its own stack */
     child_tcb -> stack_size = current_thread -> stack_size;
     child_tcb -> stack_base = memalign(4, child_tcb -> stack_size);
     child_tcb -> esp =
@@ -66,10 +62,9 @@ int sys_thread_fork(void)
 
     child_tcb -> registers.eax = 0;
     current_thread -> registers.eax = child_tcb -> tid;
-
+    /* put into our global list*/
     list_insert_last(&threads, &child_tcb->peer_threads_node);
     list_insert_last(&runnable_queue, &child_tcb->thread_list_node);
-
     return child_tcb -> tid;
 }
 
