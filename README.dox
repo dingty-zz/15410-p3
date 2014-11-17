@@ -103,7 +103,10 @@ A Page directory:
 Each process will have the access to the page directory address, which is essentially the address we will use to set cr3 for the process. A process gets access to this information through the process control block, which will be convered more in detail in the next chapter. This design has the advantage that the memory management within each process, and that when we need to access certain entry, we just need to easily calculate the page directory index and page table index corresponding to the virtual address using the formula very easily.
 
 
-(2) The free frame list and VA_INFO list (defined as va in pcb) are responsible for respecitvely physical frames allocation and virtual pages allocation.
+(2) The free frame list and VA_INFO list (defined as va in pcb) are responsible for respecitvely physical frames allocation and virtual pages allocation. We keep track of all free physical pages
+by linked struct called kernel_frame, which contains a refcount and next pointer that points to the next kernel_frame struct. We also keeps track of a frame_base pointer that points to the top of the free list and free_frame always points to the kernel_frame struct whose refcount is 0. We acqure the 
+free frame by refer to this pointer, which achieves o(1) time. After we have release a free physical
+page, we let the free_frame pointer points to the corresponding struct.
 
 
 
