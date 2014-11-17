@@ -27,29 +27,36 @@
 /* Configure the timer to generate interrupts every 10 milliseconds. */
 #define FREQ 100
 
+/** @brief install exceptions handlers, interrupt handlers
+ *  
+ *  We use trap gate for software exceptions and interrupt gate 
+ *  for NMI interrupts (i.e keyboard and timer)
+ *
+ *  @param the tickback function for timer interrupt
+ *  @return 0
+ **/
 int handler_install(void (*tickback)(unsigned int))
 {
     /* Initialize the fault handlers */
 
-    _handler_install(SWEXN_CAUSE_DIVIDE, DE);   //no error code
-    _handler_install(SWEXN_CAUSE_DEBUG, DB);    //no error code
+    _handler_install(SWEXN_CAUSE_DIVIDE, DE);          //no error code
+    _handler_install(SWEXN_CAUSE_DEBUG, DB);           //no error code
     _handler_install(SWEXN_CAUSE_BREAKPOINT, BP);      //no error code
     _handler_install(SWEXN_CAUSE_OVERFLOW, OF);        //no error code
     _handler_install(SWEXN_CAUSE_BOUNDCHECK, BR);      //no error code
     _handler_install(SWEXN_CAUSE_OPCODE, UD);          //no error code
     _handler_install(SWEXN_CAUSE_NOFPU, NM);           //no error code
 
-    _handler_install(SWEXN_CAUSE_SEGFAULT, NP);            //error code: yes
-    _handler_install(SWEXN_CAUSE_STACKFAULT, SS);          //error code: yes
-    _handler_install(SWEXN_CAUSE_PROTFAULT, GP);           //error code: yes
-    _handler_install(SWEXN_CAUSE_PAGEFAULT, PF);   //error code: yes
+    _handler_install(SWEXN_CAUSE_SEGFAULT, NP);        //error code: yes
+    _handler_install(SWEXN_CAUSE_STACKFAULT, SS);      //error code: yes
+    _handler_install(SWEXN_CAUSE_PROTFAULT, GP);       //error code: yes
+    _handler_install(SWEXN_CAUSE_PAGEFAULT, PF);       //error code: yes
 
-    _handler_install(SWEXN_CAUSE_FPUFAULT, MF);  //no error code
-    _handler_install(SWEXN_CAUSE_ALIGNFAULT, AC);  //error code: yes, 0
-    _handler_install(SWEXN_CAUSE_SIMDFAULT, XF);  //no error code
+    _handler_install(SWEXN_CAUSE_FPUFAULT, MF);        //no error code
+    _handler_install(SWEXN_CAUSE_ALIGNFAULT, AC);      //error code: yes, 0
+    _handler_install(SWEXN_CAUSE_SIMDFAULT, XF);       //no error code
 
     /* Initialize the hardware handlers */
-
     /* Initialize the timer */
     uint32_t period = TIMER_RATE / FREQ;
     outb(TIMER_MODE_IO_PORT, TIMER_SQUARE_WAVE);
@@ -92,7 +99,7 @@ int handler_install(void (*tickback)(unsigned int))
     return 0;
 }
 
-/** @brief Install the handler to the respective idt entry.
+/** @brief Install a software exception handler to the corresponding idt entry.
  *
  *  It first builds the TRAP GATE and then inserts it into IDT.
  *
@@ -119,7 +126,7 @@ void _handler_install(int idt_entry, void (*handler)())
 }
 
 
-/** @brief Install the interrupt handler to the respective idt entry.
+/** @brief Install an interrupt handler to the respective idt entry.
  *
  *  It first builds the INTERRUPT GATE and then inserts it into IDT.
  *
