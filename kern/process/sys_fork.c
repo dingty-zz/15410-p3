@@ -23,19 +23,17 @@
 
 typedef struct entry_info
 {
-    int pd_index;
-    int pt_index;
-    uint32_t free_virtual_addr;
+    int pd_index;   // the page directory index
+    int pt_index;   // the page table index
+    uint32_t free_virtual_addr; // Calculated freed virtual address
 } entry_struct;
 
 static entry_struct entry;
 
-/** @brief Determine if the given queue is empty
+/** @brief Find and fill in the free entry from the parent page directory
  *
- *  If top == bottom, we know there are nothing in the queue.
- *
- *  @param q The pointer to the queue
- *  @return int 1 means not empty and 0 otherwise
+ *  @param parent_directory The pointer to page directory
+ *  @return int 1 on success and 0 otherwise
  **/
 int find_free_entry(uint32_t *parent_directory)
 {
@@ -43,6 +41,7 @@ int find_free_entry(uint32_t *parent_directory)
     for (i = 4; i < PD_SIZE; ++i)
     {
         uint32_t current_pde = DEFLAG_ADDR(parent_directory[i]);
+        // continue when the current page directory entry is 0
         if (current_pde == 0) continue;
         for (j = 0; j < PT_SIZE; ++j)
         {
@@ -53,14 +52,13 @@ int find_free_entry(uint32_t *parent_directory)
                 entry.pt_index = j;
                 entry.free_virtual_addr = (i << 22) | (j << 12);
                 return 1;
-                return 1;
             }
         }
     }
     return 0;
 }
 
-/** @brief Determine if the given queue is empty
+/** @brief The fork implementation, cop
  *
  *  If top == bottom, we know there are nothing in the queue.
  *
