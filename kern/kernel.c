@@ -1,6 +1,7 @@
-/** @file process.c
+/** @file kernel.c
  *
- *  @brief This file defines process manipulation routines
+ *  @brief This file initialize the kernel by following the steps specified
+ *         in the handout
  *
  *  @author Xianqi Zeng (xianqiz)
  *  @author Tianyuan Ding (tding)
@@ -69,47 +70,8 @@ int kernel_main(mbinfo_t *mbinfo, int argc, char **argv, char **envp)
     lprintf("Hello from a brand new kernel!");
     process_create("idle", 0);   // we hang idle
 
-
-
-
-
-    // process_create("ck1", 1);   // we hang this thread
-
-    // process_create("merchant", 0);   // we run this thread
-    // process_create("peon", 1);
-
-
-    // process_create("idle", 0);   // we hang idle
-    // process_create("getpid_test1", 1);   // we run this thread
-    // process_create("coolness", 1);   // we run this thread
-    // process_create("remove_pages_test2", 1);   // we run this thread
-
-    // process_create("swexn_basic_test",1);
-    // process_create("swexn_cookie_monster",1);
-    // process_create("swexn_dispatch",0);
-    // process_create("swexn_regs",0);
-    // process_create("swexn_uninstall_test",1);
-
-
-    // process_create("yield_desc_mkrun", 1);
-    // process_create("slaughter", 1);
-    // process_create("actual_wait", 1);
-    // process_create("make_crash", 1);    
-
-    // process_create("getpid_test1", 1);   // we run this thread
-    // process_create("sleep_test1", 1);   // we run this thread
-    // process_create("new_pages", 1);   // we run this thread
-    // process_create("deschedule_hang", 1);   // we run this thread
-    // process_create("remove_pages_test1",1);
-
-    // process_create("minclone_mem",1);
-
+    // Load and run init process
     process_create("init",1);
-    // process_create("cat",1);
-    // process_create("ck1");
-
-    // process_create("cho2",1);
-
 
     // For future use
 

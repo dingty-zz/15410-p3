@@ -86,5 +86,3 @@ void sfree(void *buf, size_t size)
     mutex_unlock(&malloc_mutex);
     return;
 }
-
-

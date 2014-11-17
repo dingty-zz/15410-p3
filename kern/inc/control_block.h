@@ -1,8 +1,7 @@
 /** @file control_block.h
  *
- *  @brief This file includes paging handling routines
-*          1. General design, PD, PT descrptions
-           2. How free list works
+ *  @brief This file specifies control block, global control
+ *   variables and definintion of thread and process state
  *
  *  @author Xianqi Zeng (xianqiz)
  *  @author Tianyuan Ding (tding)
@@ -31,7 +30,7 @@
 #define THREAD_RUNNABLE 1
 
 // The thread is waiting for another thread to exit
-#define THREAD_WAITING 2 
+#define THREAD_WAITING 2
 
 // The thread is sleeping by sleep()
 #define THREAD_SLEEPING 3
@@ -103,7 +102,7 @@ typedef struct TCB_t
     uint32_t esp;
 
     // Process the thread belongs to
-    PCB *pcb; 
+    PCB *pcb;
 
     // Thread id
     int tid;
@@ -117,14 +116,14 @@ typedef struct TCB_t
     // The number of ticks that this thread should sleep
     unsigned int duration;
 
-// Thread kernel stack base pointer
-    void *stack_base;   
+    // Thread kernel stack base pointer
+    void *stack_base;
 
-    // 4096 (1 page) by default        
-    unsigned int stack_size;  
+    // 4096 (1 page) by default
+    unsigned int stack_size;
 
     // Registers that the thread is used when it's running in user space
-    ureg_t registers;  
+    ureg_t registers;
 
     // The inner node that belongs to the list of peer threads created by
     // this process via threadfork
@@ -155,7 +154,7 @@ uint32_t next_tid;
 
 uint32_t next_pid;
 
-// Thread that has state THREAD_BLOCKED, THREAD_SLEEPING, 
+// Thread that has state THREAD_BLOCKED, THREAD_SLEEPING,
 // THREAD_WAITING and THREAD_READLINE should go into this queue
 mutex_t blocked_queue_lock;
 list blocked_queue;
@@ -163,6 +162,9 @@ list blocked_queue;
 // Thread that has state THREAD_RUNNABLE or THREAD_INIT should go in this queue
 mutex_t runnable_queue_lock;
 list runnable_queue;
+
+// Lock that is used for atomicity of deschedule and make_runnable
+mutex_t deschedule_lock;
 
 mutex_t process_queue_lock;
 list process_queue;

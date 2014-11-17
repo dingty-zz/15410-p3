@@ -23,48 +23,45 @@
 #include "hardware/timer.h"
 #include "scheduler.h"
 
+// This is the idle pid, we assign it to be 1
+#define IDLE_PID 1
 
-unsigned int seconds;
-extern list runnable_queue;
-extern TCB *current_thread;  // indicates the current runnign thread
+// We invoke context switch every 100 ticks
+#define SCHEDULE_INTERVAL 100
 
 void tick(unsigned int numTicks)
 {
 
-    if (numTicks % 5 == 0)
+    if (numTicks % SCHEDULE_INTERVAL == 0)
     {
-        ++seconds;
-        if (seconds % 5 == 0)
-        {
-            lprintf("5 seconds, let's context switch\n");
-            schedule(-1);     // schedule
-            lprintf("\nNow we are running in a different thread");
-        }
-
+        // let's context switch
+        lprintf("5 seconds, let's context switch\n");
+        schedule(-1);     // schedule
+        // Now we are running in a different thread
+        lprintf("\nNow we are running in a different thread");
     }
 
 }
-// have the priority to schedule the blocked thread?  i think so
-/** @brief Determine if the given queue is empty
+
+/** @brief Do the scheduling by switch from the current thread's kernel
+ *         stack to the next thread's kernel stack. Determine which queue
+ *         should the current thread goes by checking its status
  *
- *  If top == bottom, we know there are nothing in the queue.
- *
- *  @param q The pointer to the queue
- *  @return int 1 means not empty and 0 otherwise
+ *  @param tid schedule to a specific thread, -1 schedule in FIFO manner
  **/
 void schedule(int tid)
 {
     // MAGIC_BREAK;
     disable_interrupts();
     // Before actual context switching, we make sleeping thread to be
-    // runnable if it's the time to wake up
+    // runnable if it's the time to wake it up
     node *n;
     for (n = list_begin(&blocked_queue); n != NULL; n = n -> next)
     {
         TCB *tcb = list_entry(n, TCB, thread_list_node);
         if (tcb -> state == THREAD_SLEEPING)
         {
-            // lprintf("find a sleeping thread");
+            // find a sleeping thread that is able to be woken up
             if (tcb -> start_ticks + tcb -> duration < sys_get_ticks())
             {
                 tcb -> state = THREAD_RUNNABLE;
@@ -73,11 +70,6 @@ void schedule(int tid)
             }
         }
     }
-
-    // Unless the current thread is non-schedulable, and there is no
-    // runnable thread, calling schedule must
-    // result in a context switch, finding a schedulable thread as much
-    // as possible
 
     lprintf("return or not, well, I am thread: %d and state %d", current_thread->tid, current_thread -> state);
     lprintf("The length of runnable quueee is %d", runnable_queue.length);
@@ -89,9 +81,11 @@ void schedule(int tid)
     //     lprintf("target id : %d", target -> tid);
     // }
 
-    // TODO, schedule halt for spinning
+    // If there is no runnable thread in the runnable queue and the current
+    // thread is idle, we won't do context switch. Instead, we will let idle
+    // to run again
 
-    if (current_thread -> tid == 1 && runnable_queue.length == 0)
+    if (current_thread -> tid == IDLE_PID && runnable_queue.length == 0)
     {
         lprintf("reach here");
         // MAGIC_BREAK;
@@ -105,7 +99,7 @@ void schedule(int tid)
         node *n  = list_delete_first(&runnable_queue);
         next_thread = list_entry(n, TCB, thread_list_node);
     }
-    else      // Search for a specific thread
+    else      // Search for a specific target thread
     {
         next_thread = list_search_tid(&runnable_queue, tid);
         list_delete(&runnable_queue, &next_thread->thread_list_node);
@@ -117,12 +111,21 @@ void schedule(int tid)
     lprintf("The next thread is %d", next_thread->tid);
     lprintf("Before switching, the current getcr3 is %x", (unsigned int)get_cr3());
 
+    /* Checks the current state of the current thread, and decide which queue
+       should the process goes to */
     switch (current_thread -> state)
     {
+    // If the current thread is exited, we don't put the it back to any queue    
     case THREAD_EXIT:
-        break;      // we don't put the current thread back to queue
+        break;     
 
+    /* If the current thread is blocked by calling deschedule, we put it into the block
+       queue after deschedule_lock is unlocked */
     case THREAD_BLOCKED:
+        list_insert_last(&blocked_queue, &current_thread->thread_list_node);
+        mutex_unlock(&deschedule_lock);
+        break;
+    // If the current thread is blocked, we put it into the block queue 
     case THREAD_WAITING:
     case THREAD_READLINE:
     case THREAD_SLEEPING:
@@ -140,6 +143,7 @@ void schedule(int tid)
         // }
         break;
 
+    // The thread is runnable by default, we put it into the runnable queue
     default:
         list_insert_last(&runnable_queue, &current_thread->thread_list_node);
         // for (n = list_begin(&blocked_queue); n != NULL; n = n -> next)
@@ -152,6 +156,7 @@ void schedule(int tid)
         //     target = list_entry(n, TCB, thread_list_node);
         //     lprintf("default runnable_queue: %d", target -> tid);
         // }
+        break;
     }
     target = NULL;
     // for (n = list_begin(&blocked_queue); n != NULL; n = n -> next)
@@ -166,6 +171,7 @@ void schedule(int tid)
     // }
     // MAGIC_BREAK;
     // lprintf("Switch from current: %p, to next: %p\n", current_thread, next_thread);
+    // Do the context switch between two threads
     current_thread = context_switch(current_thread, next_thread);
 
     lprintf(" current running: %d\n", current_thread->tid);
@@ -173,12 +179,12 @@ void schedule(int tid)
     enable_interrupts();
 }
 
-/** @brief Determine if the given queue is empty
+/** @brief Do the real context switch by changing the kernel stack pointer
+ *         from the current thread's kernel stack to the next thread's kernel stack
  *
- *  If top == bottom, we know there are nothing in the queue.
- *
- *  @param q The pointer to the queue
- *  @return int 1 means not empty and 0 otherwise
+ *  @param current points to the current running thread tcb
+ *  @param next points to the next threads tcb
+ *  @return TCB * the pointer to the current thread after context switch
  **/
 TCB *context_switch(TCB *current, TCB *next)
 {
@@ -188,7 +194,7 @@ TCB *context_switch(TCB *current, TCB *next)
     set_cr3((uint32_t)next -> pcb -> PD);
     // MAGIC_BREAK;
 
-
+    // Set esp0 for the next thread
     set_esp0((uint32_t)(next -> stack_base + next -> stack_size));
     do_switch(current, next, next -> state);
     // TCB *temp = next;
@@ -201,12 +207,12 @@ TCB *context_switch(TCB *current, TCB *next)
     return current;
 }
 
-/** @brief Determine if the given queue is empty
+/** @brief Run the thread that hasn't been run before, whose state is 
+ *         THREAD_INIT
+ *         We push its initial registers on to its kernel stack and using
+ *         iret to enter user space and let it run.
  *
- *  If top == bottom, we know there are nothing in the queue.
- *
- *  @param q The pointer to the queue
- *  @return int 1 means not empty and 0 otherwise
+ *  @param next points to the next thread tcb whose state is THREAD_INIT
  **/
 void prepare_init_thread(TCB *next)
 {
@@ -218,6 +224,7 @@ void prepare_init_thread(TCB *next)
     current_thread = next;
     enable_interrupts();
     // MAGIC_BREAK;
+    // Enter user space
     enter_user_mode(next -> registers.edi,
                     next -> registers.esi,
                     next -> registers.ebp,
@@ -232,10 +239,11 @@ void prepare_init_thread(TCB *next)
                     next -> registers.ss);
 }
 
-/** @brief The generic function to search for a specific tid in a list
+/** @brief Search a specific thread from a queue by tid
  *
- *  @param l the pointer to the node with that specific tid
- *  @return the node that matches the tid
+ *  @param l the pointer to the queue
+ *  @param tid the tid to be searched for
+ *  @return TCB * that points to the matching thread
  */
 TCB *list_search_tid(list *l, int tid)
 {

@@ -18,7 +18,9 @@
 #define PD_SIZE 1024
 
 
-// a node that keeps track of allocated physical frames
+/* a node that keeps track of allocated physical frames;
+ * There is a global list containing these nodes;
+ */
 typedef struct kernel_frame
 {
 	unsigned int refcount;	
@@ -26,6 +28,10 @@ typedef struct kernel_frame
 } KF;
 
 
+/* a node that keeps track of information of allocated virtual pages;
+ * Each process has its own va list in PCB to track its allocated 
+ * virtual addresses
+ */
 typedef struct addr_info
 {
 	uint32_t virtual_addr;
