@@ -10,5 +10,3 @@ swexn_wrapper:
 
 
 	call sys_swexn
-
-	

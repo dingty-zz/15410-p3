@@ -24,24 +24,28 @@
 #include "memory/vm_routines.h"
 
 
-// extern TCB *current_thread;
-// extern list runnable_queue;
-// extern list blocked_queue;
-
+/* allowed user modifiable bits for eflags*/
 #define ALLOWED_BITS    (EFL_CF | EFL_PF | EFL_AF | EFL_ZF | EFL_SF | \
                          EFL_DF | EFL_OF | EFL_AC)
 
+ 
 
+/** @brief yield to a target thread via calling schedule
+ *
+ *  @param tid the target thread id or -1 yield to an arbitrary thread
+ *  @return int 0 on success, -1 when can't yield to the target thread
+ **/
 int sys_yield(int tid)
 {
 
     // If tid is invalid
     if (tid < -1) return -1;
 
+    // If tid is -1, directly schedule it
     if (tid == -1)
     {
         schedule(-1);
-        return 0;   // can return back here??
+        return 0;
     }
     else
     {
@@ -69,7 +73,6 @@ int sys_yield(int tid)
         mutex_lock(&current_thread -> tcb_mutex);
         if (current_thread -> tid == tid)
         {
-            lprintf("(x_x)_yield to itself");
 
             mutex_unlock(&current_thread -> tcb_mutex);
             return -1;
@@ -94,7 +97,6 @@ int sys_yield(int tid)
         mutex_unlock(&runnable_queue_lock);
         if (!exist)
         {
-            lprintf("(x_x)_doesn't exist");
 
             return -1;
         }
@@ -103,21 +105,29 @@ int sys_yield(int tid)
         schedule(tid);
     }
 
-    return 0; // can return back here?
+    return 0;
 }
 
-
+/** @brief Atomically deschedule the current thread after checking reject
+ *         pointer
+ *  
+ *  @param reject pointer to decide whether to deschedule or not
+ *  @return int 0 on success, -1 otherwise
+ **/
 int sys_deschedule(int *reject)
 {
     if (!is_user_addr(reject) || !addr_has_mapping(reject)) return -1;
-    // Check pointer
+    // Achieve atomicity so that other thread can't make runnable to this thread 
+    mutex_lock(&deschedule_lock);
+    // Check reject pointer
     if (*reject != 0)
     {
+        mutex_unlock(&deschedule_lock);
         return 0;
     }
-    // atomicity??
+  
     mutex_lock(&current_thread -> tcb_mutex);
-    // Set status to blocked
+    // Set status to be blocked
     current_thread -> state = THREAD_BLOCKED;
     mutex_unlock(&current_thread -> tcb_mutex);
 
@@ -129,6 +139,13 @@ int sys_deschedule(int *reject)
     return 0;
 }
 
+
+/** @brief Make the target thread be runnable if the target thread is able
+ *         to be made runnable
+ *
+ *  @param tid the target thread id
+ *  @return int 0 on success and -1 otherwise
+ **/
 int sys_make_runnable(int tid)
 {
     lprintf("(x_x)_before make runnable, tid: %d", tid);
@@ -138,7 +155,7 @@ int sys_make_runnable(int tid)
     }
 
     node *n;
-    // Find if the target is runnable, if so, return -1
+    // Find if the target is already runnable, if so, return -1
     mutex_lock(&runnable_queue_lock);
     for (n = list_begin (&runnable_queue); n != NULL; n = n -> next)
     {
@@ -172,6 +189,7 @@ int sys_make_runnable(int tid)
     mutex_unlock(&blocked_queue_lock);
     lprintf("159");
 
+    // If such thread doesn't exist, return -1
     if (!exist)
     {
         lprintf("sys_make_runnable[ohoh, it doens't exist]");
@@ -179,6 +197,9 @@ int sys_make_runnable(int tid)
         return -1;
     }
     lprintf("167");
+
+    mutex_lock(&deschedule_lock);
+
     // Make the target thread runnable
     mutex_lock(&target -> tcb_mutex);
     target -> state = THREAD_RUNNABLE;
@@ -195,22 +216,33 @@ int sys_make_runnable(int tid)
     list_insert_last(&runnable_queue, &target->thread_list_node);
     mutex_unlock(&runnable_queue_lock);
 
+    mutex_unlock(&deschedule_lock);
+
+
     lprintf("(x_x)_now make runnable");
     return 0;
 }
 
+
+/** @brief Return the current thread id
+ *
+ *  @return int the current thread id
+ **/
 int sys_gettid()
 {
-    // return the tid from the currenspoding entry in tid
-
-    mutex_lock(&current_thread -> tcb_mutex);
+    // return the tid from the current thread
     int tid =  current_thread -> tid;
-    mutex_unlock(&current_thread -> tcb_mutex);
     lprintf("called gettid: [The tid is %d]", tid);
     return tid;
 
 }
 
+
+/** @brief Deschedules the calling thread until at least ticks timer 
+ *         interrupts have occurred after the call
+ *  @param ticks The number of ticks that the thread needs to sleep
+ *  @return int 0 on success and -1 otherwise
+ **/
 int sys_sleep(int ticks)
 {
     if (ticks < 0)
@@ -219,7 +251,7 @@ int sys_sleep(int ticks)
     }
     else if (ticks == 0)
     {
-        return 0;
+        return 0;  // returns immediately when ticks is 0
     }
     else
     {
@@ -229,14 +261,20 @@ int sys_sleep(int ticks)
         current_thread -> state = THREAD_SLEEPING;
         mutex_unlock(&current_thread -> tcb_mutex);
 
-        // Put this thread to sleep
+        // Put this thread to sleep by calling schedule
         lprintf("let's sleep by schedule");
         schedule(-1);
     }
     return 0;
 }
 
-//return 0 if invalid and 1 if valid;
+/** @brief Determine if the newureg is valid or not
+ *
+ *  helper function for sys_swexn
+ *
+ *  @param newureg
+ *  @return int 0 if invalid and 1 if valid;
+ **/
 static int is_valid_newureg(ureg_t *newureg)
 {
     unsigned int kern_stack_high, changedbit, mask;
@@ -261,32 +299,26 @@ static int is_valid_newureg(ureg_t *newureg)
                 newureg -> cause != SWEXN_CAUSE_ALIGNFAULT  &&
                 newureg -> cause != SWEXN_CAUSE_SIMDFAULT)
         {
-            lprintf("newureg failed becuase of cause");
             return 0;
         }
         if (newureg -> cs != SEGSEL_USER_CS)
         {
-            lprintf("newureg failed becuase of cs");
             return 0;
         }
         if (newureg -> ds != SEGSEL_USER_DS)
         {
-            lprintf("newureg failed becuase of ds");
             return 0;
         }
         if (newureg -> ebp <= kern_stack_high)
         {
-            lprintf("newureg failed becuase of ebp");
             return 0;
         }
         if (newureg -> esp <= kern_stack_high)
         {
-            lprintf("newureg failed becuase of esp");
             return 0;
         }
         if (newureg -> eip <= kern_stack_high)
         {
-            lprintf("newureg failed becuase of ebp");
             return 0;
         }
         //check changed bits of eflags are only those allowed
@@ -295,19 +327,24 @@ static int is_valid_newureg(ureg_t *newureg)
         //There is(are) unallowed bit(s) that's been changed;
         if ( (changedbit | mask) != ALLOWED_BITS )
         {
-            lprintf("eflags from the struct:%x", (unsigned int)newureg->eflags);
-            lprintf("eflags from the current eflags: %x", (unsigned int)original_eflags);
-            lprintf("newureg failed becuase of eflags bits");
             return 0;
         }
     }
     return 1;
 }
 
+
+/** @brief system land implementation of swexn
+ *
+ *  check if any of eip and esp3 is null first; basic idea is to store
+ *  the handler information in the swexn_info sturcture in tcb
+ *
+ *  @param esp3, eip, argumet, and the newureg structure built
+ *  @return 0 on success and -1 on failure
+ **/
 int sys_swexn(void *esp3, swexn_handler_t eip, void *arg, ureg_t *newureg)
 {
     lprintf("starting swexn...");
-    // MAGIC_BREAK;
     //newureg not valid;
     if (!is_valid_newureg(newureg)) return -1;
     //deregister a handler if exists;
@@ -324,10 +361,5 @@ int sys_swexn(void *esp3, swexn_handler_t eip, void *arg, ureg_t *newureg)
     current_thread -> swexn_info.arg = arg;
     current_thread -> swexn_info.newureg = newureg;
     current_thread -> swexn_info.installed_flag = 1;
-    if (newureg != NULL)
-        lprintf("I have this newureg! its ss is:%x", newureg->ss);
-    else
-        lprintf("there is no newureg");
-    // MAGIC_BREAK;
     return 0;
 }
