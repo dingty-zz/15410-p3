@@ -1,3 +1,12 @@
+/** @file sys_misc.c
+ *
+ *  @brief This file provides the implementation for halt and readfile
+ *          system calls
+ *
+ *  @author Xianqi Zeng (xianqiz)
+ *  @author Tianyuan Ding (tding)
+ *  @bug No known bugs
+ */
 #include <syscall.h>
 #include "simics.h"
 #include "loader.h"
@@ -9,23 +18,26 @@
 
 #define LEN_MIN(x,y) ((x) < (y) ? (x) : (y))
 
-/** @brief Determine if the given queue is empty
+/** @brief Shutdown the entire system
  *
- *  If top == bottom, we know there are nothing in the queue.
- *
- *  @param q The pointer to the queue
- *  @return int 1 means not empty and 0 otherwise
  **/
 void sys_halt(void)
 {
 	clear_console();        
     lprintf("Shutting down...");
     sim_halt();
-
-    // TODO power off
-    while(1);
 }
 
+/** @brief Fill the user-specified buffer buf with count bytes 
+ *   starting offset bytes from the beginning of the RAM disk file 
+ *     specified by filename.
+ *
+ *  @param filename the filename
+ *  @param buf the buffer to be filled in
+ *  @param size the number of bytes to be copied
+ *  @param offset the offset from the file
+ *  @return 0 on success, -1 otherwise
+ **/
 int sys_readfile(char *filename, char *buf, int size, int offset)
 {
 	// verify filename ,buf

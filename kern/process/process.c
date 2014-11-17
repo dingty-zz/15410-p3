@@ -111,7 +111,6 @@ int process_create(const char *filename, int run)
     // MAGIC_BREAK;
     if (!run)  // if not run ,we return
     {
-        MAGIC_BREAK;
         return 0;
     }
     // MAGIC_BREAK;
