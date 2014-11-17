@@ -7,8 +7,8 @@
  *  @bug No known bugs
  */
 
-#ifndef EXCEPTION_HANDLER_WRAPPERS
-#define EXCEPTION_HANDLER_WRAPPERS
+#ifndef _EXCEPTION_HANDLER_WRAPPERS
+#define _EXCEPTION_HANDLER_WRAPPERS
 
 void DE();
 void DB();
@@ -26,4 +26,4 @@ void AC();
 void MC();
 void XF();
 
-#endif
+#endif /* _EXCEPTION_HANDLER_WRAPPERS */

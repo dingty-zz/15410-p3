@@ -79,17 +79,16 @@ int process_create(const char *filename, int run)
 
     // lprintf("shabi1");
     // MAGIC_BREAK;
-
     list_init(&process -> threads);
     list_init(&process -> children);
-
+    list_init(&process -> va);
     list_insert_last(&process_queue, &process -> all_processes_node);
 
     // Load the program, copy the content to the memory and get the eip
     unsigned int eip = program_loader(se_hdr, process);
 
-        // lprintf("shabi2");
-        // MAGIC_BREAK;
+    // lprintf("shabi2");
+    // MAGIC_BREAK;
     // Create a single thread for this process
     TCB *thread = thr_create(eip, run); // please see thread.c
     list_insert_last(&process -> threads, &thread -> peer_threads_node);

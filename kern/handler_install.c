@@ -24,8 +24,6 @@
 #include "syscall_handler.h"
 #include <ureg.h>
 
-extern void PF();
-
 /* Configure the timer to generate interrupts every 10 milliseconds. */
 #define FREQ 100
 
@@ -33,30 +31,22 @@ int handler_install(void (*tickback)(unsigned int))
 {
     /* Initialize the fault handlers */
 
-    // for instance,
-    // _handler_install(SWEXN_CAUSE_DIVIDE, DE);   //no error code
-    // _handler_install(SWEXN_CAUSE_DEBUG, DB);    //no error code
-    // _handler_install(SWEXN_CAUSE_BREAKPOINT, BP);          //no error code
-    // _handler_install(SWEXN_CAUSE_OVERFLOW, OF);            //no error code
-    // _handler_install(SWEXN_CAUSE_BOUNDCHECK, BR);          //no error code
-    // _handler_install(SWEXN_CAUSE_OPCODE, UD);              //no error code
-    // _handler_install(SWEXN_CAUSE_NOFPU, NM);               //no error code
+    _handler_install(SWEXN_CAUSE_DIVIDE, DE);   //no error code
+    _handler_install(SWEXN_CAUSE_DEBUG, DB);    //no error code
+    _handler_install(SWEXN_CAUSE_BREAKPOINT, BP);      //no error code
+    _handler_install(SWEXN_CAUSE_OVERFLOW, OF);        //no error code
+    _handler_install(SWEXN_CAUSE_BOUNDCHECK, BR);      //no error code
+    _handler_install(SWEXN_CAUSE_OPCODE, UD);          //no error code
+    _handler_install(SWEXN_CAUSE_NOFPU, NM);           //no error code
 
-    // _handler_install(SWEXN_CAUSE_SEGFAULT, NP);            //error code: yes
-    // _handler_install(SWEXN_CAUSE_STACKFAULT, SS);          //error code: yes
-    // _handler_install(SWEXN_CAUSE_PROTFAULT, GP);           //error code: yes
+    _handler_install(SWEXN_CAUSE_SEGFAULT, NP);            //error code: yes
+    _handler_install(SWEXN_CAUSE_STACKFAULT, SS);          //error code: yes
+    _handler_install(SWEXN_CAUSE_PROTFAULT, GP);           //error code: yes
     _handler_install(SWEXN_CAUSE_PAGEFAULT, PF);   //error code: yes
-    // _handler_install(0x16, MF);  //no error code
-    // _handler_install(0x17, AC);  //error code: yes, 0
-    // _handler_install(0x19, XF);  //no error code
 
-
-    /* no need to write swexn handler */
-    // _handler_install(0x8, DF);               //error code: 0; pushed cs, eip undefined
-    // _handler_install(0x10, TS);              //error code: yes
-    // _handler_install(0x18, MC);  //no error code
-
-
+    _handler_install(SWEXN_CAUSE_FPUFAULT, MF);  //no error code
+    _handler_install(SWEXN_CAUSE_ALIGNFAULT, AC);  //error code: yes, 0
+    _handler_install(SWEXN_CAUSE_SIMDFAULT, XF);  //no error code
 
     /* Initialize the hardware handlers */
 

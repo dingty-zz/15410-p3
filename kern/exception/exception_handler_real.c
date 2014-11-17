@@ -25,14 +25,11 @@ extern void sys_set_status();
 void get_real_handler(ureg_t* cur_ureg)
 {
     cur_ureg->cr2 = get_cr2();
-    lprintf("getting real handler.........print ureg info that I created:");
-    lprintf("eip:%x",(unsigned int)cur_ureg->eip);
-    // MAGIC_BREAK;
     if (current_thread-> swexn_info.installed_flag==0)
     { 
-        lprintf("not registered; fault!!");
         sys_set_status(-2);
-
+        printf("Vanish! CPU registers info: cr2: 0x%x, esp0: 0x%x",
+                (unsigned int)get_cr2(), (unsigned int)get_esp0());
         /* reap peer threads first before vanishing the thread itself*/
         PCB *current_pcb = current_thread -> pcb;
         // display to the console by print()....
