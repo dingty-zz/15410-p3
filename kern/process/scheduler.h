@@ -1,9 +1,8 @@
  /**
- * @file do_switch.h
+ * @file scheduler.h
  *
- * @brief This file defines two status of the spinlock and 
- *		  several lock manipulation functions.
- *
+ * @brief This file defines several functions that are used by the 
+ *		  scheduling system
  * @author Xianqi Zeng (xianqiz)
  * @author Tianyuan Ding (tding)
  *
