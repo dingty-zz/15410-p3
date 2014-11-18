@@ -28,8 +28,8 @@
 #define FREQ 100
 
 /** @brief install exceptions handlers, interrupt handlers
- *  
- *  We use trap gate for software exceptions and interrupt gate 
+ *
+ *  We use trap gate for software exceptions and interrupt gate
  *  for NMI interrupts (i.e keyboard and timer)
  *
  *  @param the tickback function for timer interrupt
@@ -88,7 +88,7 @@ int handler_install(void (*tickback)(unsigned int))
     _handler_install(READLINE_INT, (void *)readline);
     _handler_install(NEW_PAGES_INT, (void *)new_pages);
     _handler_install(REMOVE_PAGES_INT, (void *)remove_pages);
-    _handler_install(SWEXN_INT, (void *)sys_swexn_wrapper);    
+    _handler_install(SWEXN_INT, (void *)sys_swexn_wrapper);
     _handler_install(THREAD_FORK_INT, (void *)thread_fork_wrapper);
     _handler_install(GET_TICKS_INT, (void *)get_ticks);
     _handler_install(YIELD_INT, (void *)yield);

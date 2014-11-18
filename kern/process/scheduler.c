@@ -34,7 +34,7 @@ void tick(unsigned int numTicks)
     if (numTicks % SCHEDULE_INTERVAL == 0)
     {
         // let's context switch
-        schedule(-1);     // schedule
+        schedule(-1); 
         // Now we are running in a different thread
     }
 
@@ -120,7 +120,6 @@ void schedule(int tid)
     // Do the context switch between two threads
     current_thread = context_switch(current_thread, next_thread);
 
-    lprintf(" current running: %d\n", current_thread->tid);
     enable_interrupts();
 }
 

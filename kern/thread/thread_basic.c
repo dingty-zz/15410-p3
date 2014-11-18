@@ -1,4 +1,4 @@
-/** @file thread.c
+/** @file thread_basic.c
  *
  *  @brief This file includes some kernel thread routines.
  *

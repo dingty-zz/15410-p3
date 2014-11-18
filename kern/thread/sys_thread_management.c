@@ -1,8 +1,8 @@
-/** @file control_block.h
+/** @file sys_thread_management.c
  *
- *  @brief This file includes paging handling routines
-*          1. General design, PD, PT descrptions
-           2. How free list works
+ *  @brief This file includes implementation of some of the
+ *         thread management system calls:
+           gettid, deschedule, make_runnable, get_ticks and sleep
  *
  *  @author Xianqi Zeng (xianqiz)
  *  @author Tianyuan Ding (tding)
@@ -49,8 +49,6 @@ int sys_yield(int tid)
     }
     else
     {
-        lprintf("(x_x)_inside yeild");
-
         // If the target thread is blocked
         mutex_lock(&blocked_queue_lock);
         node *n;
@@ -61,7 +59,6 @@ int sys_yield(int tid)
             TCB *tcb = list_entry(n, TCB, thread_list_node);
             if (tcb -> tid == tid)
             {
-                lprintf("(x_x)_yield to a blocked thread");
                 mutex_unlock(&blocked_queue_lock);
 
                 return -1;
@@ -97,10 +94,8 @@ int sys_yield(int tid)
         mutex_unlock(&runnable_queue_lock);
         if (!exist)
         {
-
             return -1;
         }
-        lprintf("(x_x)_schedule in yield");
         // Finally, tid is valid, we schedule to this thread
         schedule(tid);
     }
@@ -132,8 +127,6 @@ int sys_deschedule(int *reject)
     mutex_unlock(&current_thread -> tcb_mutex);
 
     // Call the scheduler
-    lprintf("(x_x)_deschedule call schedule");
-
     schedule(-1);
 
     return 0;
@@ -148,7 +141,6 @@ int sys_deschedule(int *reject)
  **/
 int sys_make_runnable(int tid)
 {
-    lprintf("(x_x)_before make runnable, tid: %d", tid);
     if (tid <= 0)
     {
         return -1;
@@ -165,13 +157,11 @@ int sys_make_runnable(int tid)
             if (tcb -> state == THREAD_RUNNABLE)
             {
                 mutex_unlock(&runnable_queue_lock);
-                lprintf("sys_make_runnable:[ohoh, it's runnable]");
                 return -1;
             }
         }
     }
     mutex_unlock(&runnable_queue_lock);
-    lprintf("143");
     // If the target thread is blocked and exist
     int exist = 0;
     TCB *target = NULL;
@@ -181,23 +171,19 @@ int sys_make_runnable(int tid)
         target = list_entry(n, TCB, thread_list_node);
         if (target -> tid == tid && target -> state == THREAD_BLOCKED)
         {
-
             exist = 1;
             break;
         }
     }
     mutex_unlock(&blocked_queue_lock);
-    lprintf("159");
 
     // If such thread doesn't exist, return -1
     if (!exist)
     {
-        lprintf("sys_make_runnable[ohoh, it doens't exist]");
-
         return -1;
     }
-    lprintf("167");
 
+    // Achieves the atomicity
     mutex_lock(&deschedule_lock);
 
     // Make the target thread runnable
@@ -219,7 +205,6 @@ int sys_make_runnable(int tid)
     mutex_unlock(&deschedule_lock);
 
 
-    lprintf("(x_x)_now make runnable");
     return 0;
 }
 
@@ -232,7 +217,6 @@ int sys_gettid()
 {
     // return the tid from the current thread
     int tid =  current_thread -> tid;
-    lprintf("called gettid: [The tid is %d]", tid);
     return tid;
 
 }
@@ -262,7 +246,6 @@ int sys_sleep(int ticks)
         mutex_unlock(&current_thread -> tcb_mutex);
 
         // Put this thread to sleep by calling schedule
-        lprintf("let's sleep by schedule");
         schedule(-1);
     }
     return 0;

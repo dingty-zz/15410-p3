@@ -28,8 +28,6 @@ static KF *free_frame;      // points to the first free frame where refcount = 0
 /** @brief Initialize the whole memory system, immediately
  *         called when the kernel enters to enable paging
  *
- *  If top == bottom, we know there are nothing in the queue.
- *
  *  @param q The pointer to the queue
  *  @return int 1 means not empty and 0 otherwise
  **/

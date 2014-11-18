@@ -1,4 +1,4 @@
-/** @file exception_handler_real.h
+/** @file exception_handler_real.c
  *
  *  @brief This file defines the function to 
  *         call the user defined exception handler
@@ -18,10 +18,20 @@
 #include <stdio.h>
 #include "process/enter_user_mode.h"
 #include <malloc.h>
+#include "syscall_handler.h"
 
-extern void sys_vanish(void);
-extern void sys_set_status();
 
+/** @brief The function to call the user-installed handler if there exists one,
+ *         to vanish if there doesn't exist one
+ *         
+ *  This function will first attmpt to check if there is any user installed 
+ *  handler; If so, it will restore the information and build the cur_ureg on 
+ *  user stack, then return to user stack and call the handler with 
+ *  the built cur_ureg on the userstack
+ *
+ *  @param cur_ureg, the ureg structure built by the exeption handler wrapper
+ *  @return nothing
+ */
 void get_real_handler(ureg_t* cur_ureg)
 {
     cur_ureg->cr2 = get_cr2();
@@ -32,33 +42,32 @@ void get_real_handler(ureg_t* cur_ureg)
                 (unsigned int)get_cr2(), (unsigned int)get_esp0());
         /* reap peer threads first before vanishing the thread itself*/
         PCB *current_pcb = current_thread -> pcb;
-        // display to the console by print()....
         list threads = current_pcb -> threads;
         node *n;
-        // printf("Vanish! CPU registers info: cr2: %p, eip: %p, esp: %p, 
-        //         ebp: %p", get_cr2(),get_eip(),get_esp(),get_ebp());
+        /* display to the console the fault related information */
         for (n = list_begin(&threads); n != NULL; n = n -> next)
         {
             TCB *tcb = list_entry(n, TCB, peer_threads_node);
-            // We only reap threads that is not the current thread
+            /* We only reap threads that is not the current thread */
             if (tcb -> tid != current_thread -> tid)
             {
                 list_delete(&threads, n);
                 list_delete(&blocked_queue, n);
                 list_delete(&runnable_queue, n);
                 sfree(tcb -> stack_base, tcb -> stack_size);
-                free(tcb);
+                sfree(tcb, sizeof(TCB));
             }
         }
         sys_vanish();
     }
-    //if installed, try to call the real handler;
-	void* new_esp = current_thread -> swexn_info.esp3;
-	void* new_eip = current_thread -> swexn_info.eip;
-	void* arg = current_thread -> swexn_info.arg;
+
+    /* if installed, try to call the real handler; */
+    void* new_esp = current_thread -> swexn_info.esp3;
+    void* new_eip = current_thread -> swexn_info.eip;
+    void* arg = current_thread -> swexn_info.arg;
     void* now_esp;
     
-    //deregister;
+    /* deregister this handler since it will be called;*/
     current_thread -> swexn_info.esp3 = NULL;
     current_thread -> swexn_info.eip = NULL;
     current_thread -> swexn_info.arg = NULL;
@@ -66,18 +75,18 @@ void get_real_handler(ureg_t* cur_ureg)
     current_thread -> swexn_info.installed_flag = 0;
     current_thread -> swexn_info.eflags = cur_ureg -> eflags;
     
-    //copy the ureg;
+    /* copy the ureg; */
     new_esp = new_esp - (sizeof(ureg_t));
     memcpy(new_esp, cur_ureg, sizeof(ureg_t));
     now_esp = new_esp - 4;
-    //push argument ureg_t* ureg
+    /* push argument ureg_t* ureg */
     *(uint32_t *)(now_esp) = (uint32_t) new_esp;
     now_esp -= 4;
-    //push void* arg
+    /* push void* arg */
     *(uint32_t *)(now_esp) = (uint32_t) arg;
     now_esp -= 4;
-
-   	enter_user_mode(current_thread -> registers.edi,     // let it run, enter ring 3!
+    /* let it run, enter ring 3! */
+    enter_user_mode(current_thread -> registers.edi,
                     current_thread -> registers.esi,
                     current_thread -> registers.ebp,
                     current_thread -> registers.ebx,
@@ -90,5 +99,5 @@ void get_real_handler(ureg_t* cur_ureg)
                     (uint32_t)now_esp,
                     current_thread -> registers.ss);
 
- 	return;  
+    return;  
 }

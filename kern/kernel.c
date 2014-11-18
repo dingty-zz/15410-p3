@@ -40,6 +40,7 @@ extern int malloc_init();
  *
  *  This is the entrypoint for the kernel.
  *
+ * @param
  * @return Does not return
  */
 int kernel_main(mbinfo_t *mbinfo, int argc, char **argv, char **envp)
