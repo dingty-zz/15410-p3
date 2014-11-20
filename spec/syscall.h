@@ -80,6 +80,13 @@ void misbehave(int mode);
 typedef void (*swexn_handler_t)(void *arg, ureg_t *ureg);
 int swexn(void *esp3, swexn_handler_t eip, void *arg, ureg_t *newureg);
 
+/* Project 4 F2014 */
+int asignal(int tid, int signum);
+int await(sigmask_t mask);
+int amask(sigaction_t action, sigmask_t mask, sigmask_t *oldmaskp);
+int atimer(int mode, int period);
+#define EINTR -1
+
 /* Previous API */
 /*
 void exit(int status) NORETURN;

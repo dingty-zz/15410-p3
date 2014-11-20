@@ -26,8 +26,12 @@
 
 
 # location of official support code and libraries
-AFS_PATH=${AFS_PATH-/afs/cs.cmu.edu/academic/class/15410-f14/Web/update/proj3}
-WEB_URL=${WEB_URL-'http://www.cs.cmu.edu/~410-f14/update/proj3'}
+AFS_PATH=${AFS_PATH-/afs/cs.cmu.edu/academic/class/15410-f14/Web/update/proj4}
+WEB_URL=${WEB_URL-'http://www.cs.cmu.edu/~410-f14/update/proj4'}
+
+#echo OVERRIDE
+#AFS_PATH=/afs/andrew.cmu.edu/usr2/de0u/410/private/davide/XXX/proj4
+#WEB_URL='http://nosuchhost.cs.cmu.edu/nothing'
 
 # the name of the file containing the MD5s for the files we want to update
 WHAT=all.md5s

@@ -17,12 +17,38 @@
 #define SWEXN_CAUSE_ALIGNFAULT   0x11
 #define SWEXN_CAUSE_SIMDFAULT    0x13  /* SSE/SSE2 FPU is angry */
 
+/* Used for aswexn P4 F14 */
+#define SIGKILL        0x18
+#define SIGALRM        0x19
+#define SIGVTALRM      0x1A
+#define SIGDANGER      0x1B
+#define SIGUSR1        0x1C
+#define SIGUSR2        0x1D
+#define SIGUSR3        0x1E
+#define MIN_SIG SIGKILL
+#define MAX_SIG SIGUSR3
+
+/* sigaction_t values */
+#define ASWEXN_SET 0
+#define ASWEXN_ADD 1
+#define ASWEXN_SUBTRACT 2
+
+/* atimer() modes */
+#define ASWEXN_VIRTUAL  0
+#define ASWEXN_REAL     1
+
 #ifndef ASSEMBLER
+#include <stdint.h>
+typedef uint32_t sigaction_t;
+typedef uint32_t sigmask_t;
 
 typedef struct ureg_t {
 	unsigned int cause;
-	unsigned int cr2;   /* Or else zero. */
-
+	union {
+        /* zero if neither field is relevant */
+        unsigned int cr2;       /* #PF only */
+        int          signaler;  /* ASWEXN P4F14 */
+	};
 	unsigned int ds;
 	unsigned int es;
 	unsigned int fs;

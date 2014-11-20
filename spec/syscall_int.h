@@ -41,6 +41,11 @@
 /* #define CAS2I_RUNFLAG_INT   0x61 */
 #define READFILE_INT        0x62
 
+#define ASIGNAL_INT         0x63
+#define AWAIT_INT           0x64
+#define AMASK_INT           0x65
+#define ATIMER_INT          0x66
+
 #define SWEXN_INT           0x74
 
 /* The syscalls in here, INCLUSIVE, are promised not to be
