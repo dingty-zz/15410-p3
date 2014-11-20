@@ -96,6 +96,14 @@ int handler_install(void (*tickback)(unsigned int))
     _handler_install(SET_TERM_COLOR_INT, (void *)set_term_color);
     _handler_install(GET_CURSOR_POS_INT, (void *)get_cursor_pos);
     _handler_install(SET_CURSOR_POS_INT, (void *)set_cursor_pos);
+
+
+    /* Install p4 aswexn handlers */
+    _handler_install(ASIGNAL_INT, (void *)asignal);
+    _handler_install(AWAIT_INT, (void *)await);
+    _handler_install(AMASK_INT, (void *)amask);
+    _handler_install(ATIMER_INT, (void *)atimer);
+
     return 0;
 }
 

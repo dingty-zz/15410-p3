@@ -68,7 +68,8 @@ swexn_stands_for_swextensible swexn_uninstall_test \
 minclone_mem \
 wait_getpid work mem_permissions make_crash \
 make_crash_helper chow yield_desc_mkrun loader_test1 \
-fork_wait_bomb fork_exit_bomb ack cho_variant fib mem_eat_test
+fork_wait_bomb fork_exit_bomb ack cho_variant fib mem_eat_test \
+kill tv_user_test time_work asrv arcv
 
 ###########################################################################
 # Test programs you have written which you wish to run
@@ -132,6 +133,7 @@ KERNEL_OBJS = \
 kernel.o loader.o malloc_wrappers.o handler_install.o \
 datastructure/linked_list.o \
 exception/exception_handlers.o exception/exception_handler_wrappers.o exception/exception_handler_real.o\
+exception/aswexn.o exception/sys_aswexn.o \
 hardware/hardware_handler_wrappers.o hardware/keyboard.o hardware/timer.o \
 hardware/console.o \
 locks/atomic_xchange.o locks/mutex.o \
