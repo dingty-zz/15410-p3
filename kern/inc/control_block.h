@@ -41,6 +41,10 @@
 // The thread is calling readline and should block
 #define THREAD_READLINE 5
 
+// The thread is waiting for a signal due to calling await
+#define THREAD_SIGNAL_BLOCKED 6
+
+
 // The process is in exit state, waiting for parent to reap it
 #define PROCESS_EXIT -2
 #define PROCESS_BLOCKED -1
@@ -48,6 +52,8 @@
 #define PROCESS_RUNNABLE 1
 #define PROCESS_IDLE 2
 
+#define SIGNAL_ENQUEUED  0
+#define SIGNAL_DEQUEUED  1
 
 
 typedef struct PCB_t
@@ -95,6 +101,15 @@ typedef struct s_info
     unsigned int eflags; //eflags when page fault happens;
 } swexninfo;
 
+// As defined by spec, the signal carries information about the 
+// signal number and the tid for the signaler
+typedef struct signal_info_type
+{
+    unsigned int cause;
+    int     signaler;
+    node    signal_list_node;
+} signal_t;
+
 typedef struct TCB_t
 {
     // The current kernel stack pointer that is used for context
@@ -141,6 +156,16 @@ typedef struct TCB_t
     // The swexn handler information
     swexninfo swexn_info;
 
+    /* Information for handling p4 aswexn signals */
+
+    // The array of all types of signals, 0 is ignored, 1 is received
+    int signals[7];
+
+    // The list of pending signals
+    list pending_signals;
+
+    // The current signal mask
+    sigmask_t mask;
 } TCB;
 
 

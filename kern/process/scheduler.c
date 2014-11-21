@@ -121,6 +121,13 @@ void schedule(int tid)
     current_thread = context_switch(current_thread, next_thread);
 
     // Check if the current thread has pending signals
+    if (current_thread -> pending_signals.length != 0)
+    {
+        // Invoke the signal handler by calling the wrapper first
+        signal_handler_wrappers();
+        // Assume by calling swexn in handler, we can return here, the 
+        // thread can run as normal
+    }
     enable_interrupts();
 }
 
