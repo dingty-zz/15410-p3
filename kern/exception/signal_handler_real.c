@@ -34,12 +34,17 @@ extern void sys_vanish();
     cur_ureg -> cause = s -> cause;
     cur_ureg -> signaler = s -> signaler;
 
+    // Mark the signal as dequeued
+    current_thread -> signals[s -> cause - MIN_SIG] = SIGNAL_DEQUEUED;
+
     // If this signal is SIGKILL, we do ... before vanish
     if (s -> cause == SIGKILL)
     {
     	// do something before we vanish
+        free(s);
     	sys_vanish();
     }
+    free(s);
 
     /* if installed, try to call the real handler; */
     void* new_esp = current_thread -> swexn_info.esp3;
@@ -65,7 +70,7 @@ extern void sys_vanish();
     /* push void* arg */
     *(uint32_t *)(now_esp) = (uint32_t) arg;
     now_esp -= 4;
-    /* let it run, enter ring 3! */
+    /* Call the signal handler */
     enter_user_mode(current_thread -> registers.edi,
                     current_thread -> registers.esi,
                     current_thread -> registers.ebp,

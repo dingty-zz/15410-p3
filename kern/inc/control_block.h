@@ -11,7 +11,7 @@
 #ifndef _CONTROL_B_H
 #define _CONTROL_B_H
 
-#include "ureg.h"
+#include <ureg.h>
 #include "datastructure/linked_list.h"
 #include <elf/elf_410.h>
 #include "locks/mutex_type.h"
@@ -161,7 +161,7 @@ typedef struct TCB_t
     /* Information for handling p4 aswexn signals */
 
     // The array of all types of signals, 0 is ignored, 1 is received
-    int signals[7];
+    int signals[MAX_SIG - MIN_SIG];
 
     // The list of pending signals
     list pending_signals;
@@ -214,6 +214,7 @@ list process_queue;
 mutex_t print_lock;
 
 // A list of all threads that have registered a real alarm signal
+mutex_t alarm_list_lock;
 list alarm_list;
 
 // The number of free physical 

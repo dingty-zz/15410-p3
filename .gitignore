@@ -13,3 +13,4 @@ g.sh
 kernel.log
 kernel.strip
 *.json
+user/progs

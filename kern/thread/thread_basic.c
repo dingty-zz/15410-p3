@@ -18,7 +18,7 @@
 #include "eflags.h"
 #include "locks/mutex_type.h"
 #include "thread_basic.h"
-
+#include <ureg.h>
 /** @brief initialize threads
  *
  *  initialize the global runnable queue and block queue for threads;
@@ -76,6 +76,17 @@ TCB *thr_create(unsigned int eip, int run)
     // set up user stack pointer
     tcb -> registers.esp = 0xffffff10; 
     tcb -> registers.ss = SEGSEL_USER_DS;
+
+    // Set up the thread signal structure
+    bzero(tcb -> signals, (MAX_SIG - MIN_SIG)*sizeof(int));
+    list_init(&tcb -> pending_signals);
+    tcb -> mask = 0;
+    tcb -> virtual_mode = 0;
+    tcb -> virtual_period = 0;
+    tcb -> virtual_tick = 0;
+    tcb -> real_period = 0;
+    tcb -> real_tick = 0;
+
     if (!run)
     {
         list_insert_last(&runnable_queue, &tcb -> thread_list_node);

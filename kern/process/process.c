@@ -32,6 +32,8 @@ void process_init()
     list_init(&process_queue);
     mutex_init(&process_queue_lock);
     mutex_init(&print_lock);
+    mutex_init(&alarm_list_lock);
+    list_init(&alarm_list);
     next_pid = 1;
 }
 
