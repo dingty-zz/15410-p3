@@ -1,6 +1,7 @@
-/** @file exception_handler_wrappers.c
+/** @file exception_handler_wrappers.S
  *
- *  @brief This file includes timer handler and keyboard handler wrappers.
+ *  @brief This file builds the ureg struct for the swexn to return back to 
+ *		   user space
  *
  *  @author Xianqi Zeng (xianqiz)
  *  @author Tianyuan Ding (tding)

@@ -120,6 +120,7 @@ void schedule(int tid)
     // Do the context switch between two threads
     current_thread = context_switch(current_thread, next_thread);
 
+    // Check if the current thread has pending signals
     enable_interrupts();
 }
 
