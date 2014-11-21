@@ -53,9 +53,9 @@ int sys_asignal(int tid, int signum)
                     list_insert_last(&tcb -> pending_signals, &sig -> signal_list_node);
                     if (tcb -> state == THREAD_SIGNAL_BLOCKED)
                     {
-                    	tcb -> state == THREAD_RUNNABLE;
-                    	list_delete(&blocked_queue, &tcb -> thread_list_node);
-                    	list_insert_last(&runnable_queue, &tcb -> thread_list_node);
+                        tcb -> state == THREAD_RUNNABLE;
+                        list_delete(&blocked_queue, &tcb -> thread_list_node);
+                        list_insert_last(&runnable_queue, &tcb -> thread_list_node);
                     }
                 }
                 return 0;
@@ -113,7 +113,7 @@ int sys_asignal(int tid, int signum)
                 if (tcb -> signals[signum - MIN_SIG] != SIGNAL_ENQUEUED && \
                         (tcb -> mask >> signum) & 0x1 == 1)
                 {
-                	// TODO check if the tcb is in the blocked queue
+                    // TODO check if the tcb is in the blocked queue
                     signal_t *sig = make_signal_node(current_thread -> tid);
                     list_insert_last(&tcb -> pending_signals, &sig -> signal_list_node);
                 }
@@ -133,18 +133,18 @@ int sys_asignal(int tid, int signum)
  **/
 int sys_await(sigmask_t mask)
 {
-	if (mask == 0 && !current_thread -> swexn_info.installed_flag)
-	{
-		return -1;
-	}
-	// to achieve atmoitity (possibly vs amask) please think of if deadlock can happen???	
+    if (mask == 0 && !current_thread -> swexn_info.installed_flag)
+    {
+        return -1;
+    }
+    // to achieve atmoitity (possibly vs amask) please think of if deadlock can happen???
     mutex_lock(&current_thread -> tcb_mutex);
-	sigmask_t old_mask = current_thread -> mask;
-	current_thread -> mask = mask;
-	current_thread -> state = THREAD_SIGNAL_BLOCKED;
-	schedule(-1);
-	current_thread -> mask = old_mask;
-	mutex_unlock(&current_thread -> tcb_mutex);
+    sigmask_t old_mask = current_thread -> mask;
+    current_thread -> mask = mask;
+    current_thread -> state = THREAD_SIGNAL_BLOCKED;
+    schedule(-1);
+    current_thread -> mask = old_mask;
+    mutex_unlock(&current_thread -> tcb_mutex);
     return 0;
 }
 
@@ -173,7 +173,7 @@ int sys_amask(sigaction_t action, sigmask_t mask, sigmask_t *oldmaskp)
         break;
 
     case ASWEXN_SUBTRACT:
-        current_thread -> mask &= mask;
+        current_thread -> mask &= (~mask);
         break;
 
     default:
@@ -192,6 +192,54 @@ int sys_amask(sigaction_t action, sigmask_t mask, sigmask_t *oldmaskp)
  **/
 int sys_atimer(int mode, int period)
 {
+    if (period < 0)
+    {
+        return -1;
+    }
+    if (period == 0)
+    {
+        switch (mode)
+        {
+        case ASWEXN_VIRTUAL:
+            current_thread -> virtual_mode = MODE_OFF;
+            current_thread -> virtual_period = 0;
+            current_thread -> virtual_tick = 0;
+            break;
+
+        case ASWEXN_REAL:
+            if (/* thread is in the queue */)
+            {
+                list_delete(&alarm_list, &current_thread -> alarm_list_node);
+                current_thread -> real_period = 0;
+                current_thread -> real_tick = 0;
+            }
+            break;
+
+        default:
+            return -1;
+        }
+    }
+    else
+    {
+        switch (mode)
+        {
+        case ASWEXN_VIRTUAL:
+            current_thread -> virtual_mode = MODE_ON;
+            current_thread -> virtual_period = period;
+            current_thread -> virtual_tick = 0;
+            break;
+
+        case ASWEXN_REAL:
+            list_insert_last(&alarm_list, &current_thread -> alarm_list_node);
+            current_thread -> real_period = period;
+            current_thread -> real_tick = 0;
+            break;
+
+        default:
+            return -1;
+
+        }
+    }
     return 0;
 }
 

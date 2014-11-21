@@ -55,6 +55,8 @@
 #define SIGNAL_ENQUEUED  0
 #define SIGNAL_DEQUEUED  1
 
+#define MODE_OFF 0
+#define MODE_ON  1
 
 typedef struct PCB_t
 {
@@ -166,6 +168,20 @@ typedef struct TCB_t
 
     // The current signal mask
     sigmask_t mask;
+
+    /* For atimer purposes */
+    int virtual_mode;
+
+    int virtual_period;
+    
+    int virtual_tick;
+
+    int real_period;
+    
+    int real_tick;
+
+    node alarm_list_node;
+
 } TCB;
 
 
@@ -196,6 +212,9 @@ list process_queue;
 
 // print lock
 mutex_t print_lock;
+
+// A list of all threads that have registered a real alarm signal
+list alarm_list;
 
 // The number of free physical 
 int free_frame_num;

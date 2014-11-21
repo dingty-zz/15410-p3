@@ -31,6 +31,29 @@
 
 void tick(unsigned int numTicks)
 {
+    // For thread execution time
+    if (current_thread -> virtual_period == MODE_ON)
+    {
+        current_thread -> virtual_tick = \
+        ++current_thread -> virtual_tick % current_thread -> virtual_period;
+        if (current_thread -> virtual_tick == 0)
+        {
+            /* send it a SIGVTALRM signal */
+        }
+    }
+
+    // For threads wall time
+    node *n;
+    for (n = list_begin(&alarm_list); n != NULL; n = n -> next) {
+        TCB *tcb = list_entry(n, TCB, alarm_list_node);
+        tcb -> real_tick = \
+        ++tcb -> real_tick % tcb -> real_period;
+        if (tcb -> real_tick == 0)
+        {
+            /* send it a SIGALRM signal */
+        }
+    }
+
     if (numTicks % SCHEDULE_INTERVAL == 0)
     {
         // let's context switch
@@ -109,6 +132,7 @@ void schedule(int tid)
     case THREAD_WAITING:
     case THREAD_READLINE:
     case THREAD_SLEEPING:
+    case THREAD_SIGNAL_BLOCKED:
         list_insert_last(&blocked_queue, &current_thread->thread_list_node);
         break;
     // The thread is runnable by default, we put it into the runnable queue
