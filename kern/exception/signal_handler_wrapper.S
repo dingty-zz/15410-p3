@@ -1,4 +1,4 @@
-/** @file signal_handler_wrappers.S
+/** @file signal_handler_wrapper.S
  *
  *  @brief 
  *
@@ -7,8 +7,8 @@
  *  @bug No known bugs
  */
  
-.global signal_handler_wrappers
-
+.global signal_handler_wrapper
+.extern get_real_signal_handler
 // build the ureg structure for exceptions that do not push error code
 // ss,esp,eflags,cs,eip
 #define 	PUSH_GENERAL_INFO	;\
@@ -36,8 +36,8 @@
 			pushl   $0
 
 #define 	POP_GENERAL_INFO	;\
-			popl    $0
-			popl	$0						;\
+			popl    %ds
+			popl	%ds						;\
 			popl	%ds      				;\
 			popl	%es     				;\
 			popl	%fs		 				;\
@@ -45,7 +45,7 @@
 			popl	%edi	 				;\
 			popl	%esi	 				;\
 			popl	(%ebp) 					;\
-			popl	$0    				    ;\
+			popl	%ebx    				    ;\
 			popl	%ebx				    ;\
 			popl	%edx     				;\
 			popl	%ecx	 				;\
@@ -66,9 +66,9 @@
 			popl    %esp	
 
 
-DE:
+signal_handler_wrapper:
 	PUSH_GENERAL_INFO
 	pushl	$0			# cause will be set later
 	GO_TO_REAL_SIGNAL_HANDLER
-	popl	$0
+	popl	%eax
 	POP_GENERAL_INFO

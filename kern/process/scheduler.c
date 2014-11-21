@@ -22,7 +22,7 @@
 #include "enter_user_mode.h"
 #include "hardware/timer.h"
 #include "scheduler.h"
-
+#include "exception/sys_aswexn.h"
 // This is the idle pid, we assign it to be 1
 #define IDLE_PID 1
 
@@ -148,7 +148,7 @@ void schedule(int tid)
     if (current_thread -> pending_signals.length != 0)
     {
         // Invoke the signal handler by calling the wrapper first
-        signal_handler_wrappers();
+        signal_handler_wrapper();
         // Assume by calling swexn in handler, we can return here, the 
         // thread can run as normal
     }

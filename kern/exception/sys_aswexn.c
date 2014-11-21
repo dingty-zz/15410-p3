@@ -8,10 +8,20 @@
  */
 #include <syscall.h>
 #include <ureg.h>
+#include "sys_aswexn.h"
 #include "control_block.h"
-#include "mutex_type.h"
-#include "scheduler.h"
+#include "datastructure/linked_list.h"
+#include "seg.h"
+#include "cr.h"
 #include "simics.h"
+#include "malloc.h"
+#include <elf/elf_410.h>
+#include "common_kern.h"
+#include "string.h"
+#include "eflags.h"
+#include "locks/mutex_type.h"
+#include "memory/vm_routines.h"
+#include "process/scheduler.h"
 
 /** @brief The thread_fork implementation
  *
@@ -47,13 +57,13 @@ int sys_asignal(int tid, int signum)
                 // If the signal is not in the queue and the 1<<signum bit in
                 // the mask is tured on, we enqueue this signal
                 if (tcb -> signals[signum - MIN_SIG] != SIGNAL_ENQUEUED && \
-                        (tcb -> mask >> signum) & 0x1 == 1)
+                        ((tcb -> mask >> signum) & 0x1) == 1)
                 {
-                    signal_t *sig = make_signal_node(current_thread -> tid);
+                    signal_t* sig = make_signal_node(current_thread -> tid, signum);
                     list_insert_last(&tcb -> pending_signals, &sig -> signal_list_node);
                     if (tcb -> state == THREAD_SIGNAL_BLOCKED)
                     {
-                        tcb -> state == THREAD_RUNNABLE;
+                        tcb -> state = THREAD_RUNNABLE;
                         list_delete(&blocked_queue, &tcb -> thread_list_node);
                         list_insert_last(&runnable_queue, &tcb -> thread_list_node);
                     }
@@ -72,9 +82,9 @@ int sys_asignal(int tid, int signum)
                 // If the signal is not in the queue and the 1<<signum bit in
                 // the mask is tured on, we enqueue this signal
                 if (tcb -> signals[signum - MIN_SIG] != SIGNAL_ENQUEUED && \
-                        (tcb -> mask >> signum) & 0x1 == 1)
+                        ((tcb -> mask >> signum) & 0x1) == 1)
                 {
-                    signal_t *sig = make_signal_node(current_thread -> tid);
+                    signal_t* sig = make_signal_node(current_thread -> tid, signum);
                     list_insert_last(&tcb -> pending_signals, &sig -> signal_list_node);
                 }
                 return 0;
@@ -111,10 +121,10 @@ int sys_asignal(int tid, int signum)
                 // If the signal is not in the queue and the 1<<signum bit in
                 // the mask is tured on, we enqueue this signal
                 if (tcb -> signals[signum - MIN_SIG] != SIGNAL_ENQUEUED && \
-                        (tcb -> mask >> signum) & 0x1 == 1)
+                        ((tcb -> mask >> signum) & 0x1) == 1)
                 {
                     // TODO check if the tcb is in the blocked queue
-                    signal_t *sig = make_signal_node(current_thread -> tid);
+                    signal_t *sig = make_signal_node(current_thread -> tid, signum);
                     list_insert_last(&tcb -> pending_signals, &sig -> signal_list_node);
                 }
             }
@@ -207,7 +217,7 @@ int sys_atimer(int mode, int period)
             break;
 
         case ASWEXN_REAL:
-            if (/* thread is in the queue */)
+            if (/* thread is in the queue */1)
             {
                 list_delete(&alarm_list, &current_thread -> alarm_list_node);
                 current_thread -> real_period = 0;
@@ -249,12 +259,12 @@ int sys_atimer(int mode, int period)
  *  @param nothing
  *  @return -1 on failure, 0 to child, child tid to parent
  **/
-signal_t *make_signal_node(int tid, int signum)
+signal_t *make_signal_node(int sender, int signum)
 {
-    signal_t sig = (signal_t *)malloc(sizeof(signal_t));
+    signal_t *sig = (signal_t *)malloc(sizeof(signal_t));
     sig -> cause = signum;
-    sig -> signaler = tid;
-    sig -> node.prev = NULL;
-    sig -> node.next = NULL;
+    sig -> signaler = sender;
+    sig -> signal_list_node.prev = NULL;
+    sig -> signal_list_node.next = NULL;
     return sig;
 }

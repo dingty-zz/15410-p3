@@ -10,8 +10,13 @@
 #include <syscall.h>
 #include <ureg.h>
 #include "control_block.h"
+#include "string.h"
+#include "datastructure/linked_list.h"
 #include "simics.h"
-
+#include <stdint.h>
+#include <stddef.h>
+#include "process/enter_user_mode.h"
+extern void sys_vanish();
 
  void get_real_signal_handler(ureg_t* cur_ureg) {
 

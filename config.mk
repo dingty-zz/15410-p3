@@ -62,7 +62,7 @@ exec_basic ck1 exec_basic_helper peon merchant fork_test1 \
 fork_bomb cat cho coolness deschedule_hang getpid_test1 halt_test knife stack_test1 \
 loader_test2 print_basic readline_basic remove_pages_test1 \
 remove_pages_test2 actual_wait \
-sleep_test1 new_pages \
+sleep_test1 new_pages wild_test1 \
 swexn_basic_test swexn_cookie_monster swexn_dispatch swexn_regs \
 swexn_stands_for_swextensible swexn_uninstall_test \
 minclone_mem \
@@ -135,6 +135,8 @@ kernel.o loader.o malloc_wrappers.o handler_install.o \
 datastructure/linked_list.o \
 exception/exception_handlers.o exception/exception_handler_wrappers.o exception/exception_handler_real.o\
 exception/aswexn.o exception/sys_aswexn.o \
+exception/signal_handler_wrapper.o \
+exception/signal_handler_real.o \
 hardware/hardware_handler_wrappers.o hardware/keyboard.o hardware/timer.o \
 hardware/console.o \
 locks/atomic_xchange.o locks/mutex.o \
