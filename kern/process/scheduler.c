@@ -36,9 +36,13 @@ void tick(unsigned int numTicks)
     {
         current_thread -> virtual_tick = \
         ++current_thread -> virtual_tick % current_thread -> virtual_period;
-        if (current_thread -> virtual_tick == 0)
+        if (current_thread -> virtual_tick == 0 && \
+            current_thread -> signals[SIGVTALRM - MIN_SIG] != SIGNAL_ENQUEUED &&\
+            ((current_thread -> mask >> SIGVTALRM) & 0x1) == 1)
         {
             /* send it a SIGVTALRM signal */
+            signal_t *vtalrm_sig = make_signal_node(0, SIGVTALRM);
+            list_insert_last(&current_thread -> pending_signals, &vtalrm_sig -> signal_list_node);
         }
     }
 
@@ -48,9 +52,13 @@ void tick(unsigned int numTicks)
         TCB *tcb = list_entry(n, TCB, alarm_list_node);
         tcb -> real_tick = \
         ++tcb -> real_tick % tcb -> real_period;
-        if (tcb -> real_tick == 0)
+        if (tcb -> real_tick == 0 && \
+            tcb -> signals[SIGALRM - MIN_SIG] != SIGNAL_ENQUEUED && \
+            ((tcb -> mask >> SIGALRM) & 0x1) == 1)
         {
             /* send it a SIGALRM signal */
+            signal_t *alrm_sig = make_signal_node(0, SIGALRM);
+            list_insert_last(&tcb -> pending_signals, &alrm_sig -> signal_list_node);
         }
     }
 

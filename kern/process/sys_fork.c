@@ -133,6 +133,17 @@ int sys_fork(void)
     parent_tcb -> registers.eax = child_pcb -> pid;
 
     child_tcb -> swexn_info = parent_tcb -> swexn_info;
+
+    // Set up the thread signal structure
+    bzero(child_tcb -> signals, (MAX_SIG - MIN_SIG)*sizeof(int));
+    list_init(&child_tcb -> pending_signals);
+    child_tcb -> mask = parent_tcb -> mask;
+    child_tcb -> virtual_mode = 0;
+    child_tcb -> virtual_period = 0;
+    child_tcb -> virtual_tick = 0;
+    child_tcb -> real_period = 0;
+    child_tcb -> real_tick = 0;
+
     
     list_init(&child_pcb -> threads);
     list_init(&child_pcb -> va);

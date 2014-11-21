@@ -9,6 +9,7 @@
  */
 #include <syscall.h>
 #include <ureg.h>
+#include "malloc.h"
 #include "control_block.h"
 #include "string.h"
 #include "datastructure/linked_list.h"

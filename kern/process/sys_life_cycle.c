@@ -68,6 +68,16 @@ int sys_thread_fork(void)
 
     child_tcb -> registers.eax = 0;
     current_thread -> registers.eax = child_tcb -> tid;
+
+    // Set up the thread signal structure
+    bzero(child_tcb -> signals, (MAX_SIG - MIN_SIG)*sizeof(int));
+    list_init(&child_tcb -> pending_signals);
+    child_tcb -> mask = 0;
+    child_tcb -> virtual_mode = 0;
+    child_tcb -> virtual_period = 0;
+    child_tcb -> virtual_tick = 0;
+    child_tcb -> real_period = 0;
+    child_tcb -> real_tick = 0;
     /* put into our global list*/
     list_insert_last(&threads, &child_tcb->peer_threads_node);
     list_insert_last(&runnable_queue, &child_tcb->thread_list_node);

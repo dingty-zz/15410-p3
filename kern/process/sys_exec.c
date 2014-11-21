@@ -103,6 +103,25 @@ int sys_exec(char *execname, char *argvec[])
     current_thread -> registers.eip = program_loader(se_hdr, process);
     enable_interrupts();
     
+    // Set up the thread signal structure
+    bzero(current_thread -> signals, (MAX_SIG - MIN_SIG)*sizeof(int));
+
+    // Discard all the pending signals
+    while(current_thread -> pending_signals.length != 0) {
+        node *n  = list_delete_first(&current_thread -> pending_signals);
+        signal_t *sig = list_entry(n, signal_t, signal_list_node);
+        free(sig);
+    }
+    list_init(&current_thread -> pending_signals);
+    // TODO, remove itself from the real signal queue if it has ever
+    // registered one
+    current_thread -> mask = 0;
+    current_thread -> virtual_mode = 0;
+    current_thread -> virtual_period = 0;
+    current_thread -> virtual_tick = 0;
+    current_thread -> real_period = 0;
+    current_thread -> real_tick = 0;
+
     // set up kernel stack pointer 
     set_esp0((uint32_t)(current_thread -> stack_base + current_thread -> stack_size));
 
