@@ -24,7 +24,7 @@
 #include "process/scheduler.h"
 
 
-static int sys_real_asignal(TCB* tcb, int signum)
+static int sys_real_asignal(TCB *tcb, int signum)
 {
     // If the signal is not in the queue and the 1<<signum bit in
     // the mask is turned on, we enqueue this signal
@@ -32,14 +32,22 @@ static int sys_real_asignal(TCB* tcb, int signum)
             ((tcb -> mask >> signum) & 0x1) == 1)
     {
         signal_t *sig = make_signal_node(current_thread -> tid, signum);
+        mutex_lock(&tcb -> tcb_mutex);
         list_insert_last(&tcb -> pending_signals, &sig -> signal_list_node);
         if (tcb -> state == THREAD_SIGNAL_BLOCKED || tcb -> state == THREAD_READLINE ||
-            tcb -> state == THREAD_READLINE || tcb -> state == THREAD_SLEEPING)
+                tcb -> state == THREAD_READLINE || tcb -> state == THREAD_SLEEPING)
         {
             tcb -> state = THREAD_RUNNABLE;
+            mutex_lock(&blocked_queue_lock);
             list_delete(&blocked_queue, &tcb -> thread_list_node);
+            mutex_unlock(&blocked_queue_lock);
+
+            mutex_lock(&runnable_queue_lock);
             list_insert_last(&runnable_queue, &tcb -> thread_list_node);
+            mutex_unlock(&runnable_queue_lock);
+
         }
+        mutex_unlock(&tcb -> tcb_mutex);
     }
     return 0;
 }
@@ -64,10 +72,13 @@ int sys_asignal(int tid, int signum)
     }
 
     node *n;
+        lprintf("The tid is %d and signum is %d", tid, signum);
 
     if (tid > 0)
     {
+        lprintf("Tid is > 0");
         // If the target tid is in the blocked queue
+        mutex_lock(&blocked_queue_lock);
         for (n = list_begin(&blocked_queue);
                 n != NULL;
                 n = n -> next)
@@ -75,10 +86,13 @@ int sys_asignal(int tid, int signum)
             TCB *tcb = list_entry(n, TCB, thread_list_node);
             if (tcb -> tid == tid)
             {
+                mutex_unlock(&blocked_queue_lock);
+
                 return sys_real_asignal(tcb, signum);
             }
         }
         // If the target tid is in the runnable queue
+        mutex_lock(&runnable_queue_lock);
         for (n = list_begin(&runnable_queue);
                 n != NULL;
                 n = n -> next)
@@ -86,6 +100,7 @@ int sys_asignal(int tid, int signum)
             TCB *tcb = list_entry(n, TCB, thread_list_node);
             if (tcb -> tid == tid)
             {
+                mutex_unlock(&runnable_queue_lock);
                 return sys_real_asignal(tcb, signum);
             }
         }
@@ -95,10 +110,14 @@ int sys_asignal(int tid, int signum)
     // that the tid can be only possibly found in the current process's threads
     else if (tid < 0)
     {
+        lprintf("Tid is < 0");
+
         PCB *target_process = NULL;
         TCB *target_thread = NULL;
         int exist = 0;
         node *n;
+        mutex_lock(&blocked_queue_lock);
+
         for (n = list_begin(&blocked_queue);
                 n != NULL;
                 n = n -> next)
@@ -110,8 +129,10 @@ int sys_asignal(int tid, int signum)
                 break;
             }
         }
+        mutex_unlock(&blocked_queue_lock);
         if (!exist)
         {
+            mutex_lock(&runnable_queue_lock);
             for (n = list_begin(&runnable_queue);
                     n != NULL;
                     n = n -> next)
@@ -124,6 +145,7 @@ int sys_asignal(int tid, int signum)
                 }
             }
         }
+        mutex_unlock(&runnable_queue_lock);
         // If such thread exists, we send signal to all threads in the list
         if (exist)
         {
@@ -145,7 +167,7 @@ int sys_asignal(int tid, int signum)
 
 /** @brief The system land await implementation
  *
- *  
+ *
  *  @param mask
  *  @return -1 on failure, 0 on success
  **/
@@ -217,6 +239,8 @@ int sys_atimer(int mode, int period)
     {
         return -1;
     }
+    mutex_lock(&current_thread -> tcb_mutex);
+
     if (period == 0)
     {
         switch (mode)
@@ -228,7 +252,7 @@ int sys_atimer(int mode, int period)
             break;
 
         case ASWEXN_REAL:
-            if (/* thread is in the queue */1)
+            if (list_search_tid(&alarm_list, current_thread -> tid) != NULL)
             {
                 list_delete(&alarm_list, &current_thread -> alarm_list_node);
                 current_thread -> real_period = 0;
@@ -237,6 +261,8 @@ int sys_atimer(int mode, int period)
             break;
 
         default:
+            mutex_unlock(&current_thread -> tcb_mutex);
+
             return -1;
         }
     }
@@ -257,10 +283,12 @@ int sys_atimer(int mode, int period)
             break;
 
         default:
+            mutex_unlock(&current_thread -> tcb_mutex);
             return -1;
 
         }
     }
+    mutex_unlock(&current_thread -> tcb_mutex);
     return 0;
 }
 
