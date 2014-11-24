@@ -59,7 +59,7 @@ int sys_asignal(int tid, int signum)
                 if (tcb -> signals[signum - MIN_SIG] != SIGNAL_ENQUEUED && \
                         ((tcb -> mask >> signum) & 0x1) == 1)
                 {
-                    signal_t* sig = make_signal_node(current_thread -> tid, signum);
+                    signal_t *sig = make_signal_node(current_thread -> tid, signum);
                     list_insert_last(&tcb -> pending_signals, &sig -> signal_list_node);
                     if (tcb -> state == THREAD_SIGNAL_BLOCKED)
                     {
@@ -84,7 +84,7 @@ int sys_asignal(int tid, int signum)
                 if (tcb -> signals[signum - MIN_SIG] != SIGNAL_ENQUEUED && \
                         ((tcb -> mask >> signum) & 0x1) == 1)
                 {
-                    signal_t* sig = make_signal_node(current_thread -> tid, signum);
+                    signal_t *sig = make_signal_node(current_thread -> tid, signum);
                     list_insert_last(&tcb -> pending_signals, &sig -> signal_list_node);
                 }
                 return 0;
@@ -96,24 +96,40 @@ int sys_asignal(int tid, int signum)
     // that the tid can be only possibly found in the current process's threads
     else if (tid < 0)
     {
-        PCB *current_process = current_thread -> pcb;
+        PCB *target_process = NULL;
+        TCB *target_thread = NULL;
         int exist = 0;
         node *n;
-        for (n = list_begin(&current_process -> threads);
+        for (n = list_begin(&blocked_queue);
                 n != NULL;
                 n = n -> next)
         {
-            TCB *tcb = list_entry(n, TCB, peer_threads_node);
-            if (tcb -> tid == tid)
+            target_thread = list_entry(n, TCB, thread_list_node);
+            if (target_thread -> tid == -tid)
             {
                 exist = 1;
                 break;
             }
         }
+        if (!exist)
+        {
+            for (n = list_begin(&runnable_queue);
+                    n != NULL;
+                    n = n -> next)
+            {
+                target_thread = list_entry(n, TCB, thread_list_node);
+                if (target_thread -> tid == -tid)
+                {
+                    exist = 1;
+                    break;
+                }
+            }
+        }
         // If such thread exists, we send signal to all threads in the list
         if (exist)
         {
-            for (n = list_begin(&current_process -> threads);
+            target_process = target_thread -> pcb;
+            for (n = list_begin(&target_process -> threads);
                     n != NULL;
                     n = n -> next)
             {
