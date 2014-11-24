@@ -83,14 +83,19 @@ int sys_asignal(int tid, int signum)
                 n != NULL;
                 n = n -> next)
         {
+            lprintf("Lopo");
             TCB *tcb = list_entry(n, TCB, thread_list_node);
             if (tcb -> tid == tid)
             {
+                lprintf("Find tid");
                 mutex_unlock(&blocked_queue_lock);
 
                 return sys_real_asignal(tcb, signum);
             }
         }
+
+        mutex_unlock(&blocked_queue_lock);
+
         // If the target tid is in the runnable queue
         mutex_lock(&runnable_queue_lock);
         for (n = list_begin(&runnable_queue);
@@ -104,6 +109,8 @@ int sys_asignal(int tid, int signum)
                 return sys_real_asignal(tcb, signum);
             }
         }
+                mutex_unlock(&runnable_queue_lock);
+        
     }
     // Since our implementation rejects process make syscalls like fork or exec when
     // it's already multi-threaded, we will assume
@@ -182,7 +189,9 @@ int sys_await(sigmask_t mask)
     sigmask_t old_mask = current_thread -> mask;
     current_thread -> mask = mask;
     current_thread -> state = THREAD_SIGNAL_BLOCKED;
+    lprintf("sys_await will call schedule!");
     schedule(-1);
+    lprintf("After schedule in await");
     current_thread -> mask = old_mask;
     mutex_unlock(&current_thread -> tcb_mutex);
     return 0;

@@ -35,7 +35,7 @@ await:
 
 	PUSHREGS
 
-	pushl 	(%esi)
+	pushl 	%esi
 	call 	sys_await
 	popl 	%esi
 	

@@ -52,6 +52,7 @@ void mutex_destroy(mutex_t *mp)
  */
 void mutex_lock(mutex_t *mp)
 {
+    // lprintf("I want to holds a lock %p", mp);
     int is_locked = 0;
     while ((is_locked = atomic_xchange(&(mp->status))))  {
         lprintf("The current thread that holds the lock is %d", mp -> tid);

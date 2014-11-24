@@ -344,5 +344,6 @@ int sys_swexn(void *esp3, swexn_handler_t eip, void *arg, ureg_t *newureg)
     current_thread -> swexn_info.arg = arg;
     current_thread -> swexn_info.newureg = newureg;
     current_thread -> swexn_info.installed_flag = 1;
+    lprintf("End swexn");
     return 0;
 }

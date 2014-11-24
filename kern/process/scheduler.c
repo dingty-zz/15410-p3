@@ -106,6 +106,7 @@ void schedule(int tid)
 
     if (current_thread -> tid == IDLE_PID && runnable_queue.length == 0)
     {
+        lprintf("only idle is running");
         return;
     }
 
@@ -122,6 +123,7 @@ void schedule(int tid)
         next_thread = list_search_tid(&runnable_queue, tid);
         list_delete(&runnable_queue, &next_thread->thread_list_node);
     }
+    lprintf("The next tthread will run is %d",next_thread->tid);
     /* Checks the current state of the current thread, and decide which queue
        should the process goes to */
     switch (current_thread -> state)
@@ -151,11 +153,13 @@ void schedule(int tid)
     target = NULL;
     // Do the context switch between two threads
     current_thread = context_switch(current_thread, next_thread);
-
+    lprintf("Now switch to tid %d",current_thread->tid);
+    lprintf("The pending %p",&current_thread -> pending_signals);
     // Check if the current thread has pending signals
-    if (current_thread -> pending_signals.length != 0)
+    if (current_thread -> pending_signals.length > 0)
     {
         // Invoke the signal handler by calling the wrapper first
+        lprintf("scheduler wants to call the signal handler for tid: %d", current_thread->tid);
         signal_handler_wrapper();
         // Assume by calling swexn in handler, we can return here, the 
         // thread can run as normal
@@ -191,6 +195,7 @@ void prepare_init_thread(TCB *next)
     next -> state = THREAD_RUNNING;
     current_thread = next;
     enable_interrupts();
+    lprintf("we init %d",next -> tid);
     // Enter user space
     enter_user_mode(next -> registers.edi,
                     next -> registers.esi,
