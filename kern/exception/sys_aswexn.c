@@ -23,11 +23,10 @@
 #include "memory/vm_routines.h"
 #include "process/scheduler.h"
 
-/** @brief The thread_fork implementation
+/** @brief The system land asignal implementation
  *
- *  similar to fork, other than without any memory mangement
- *  @param nothing
- *  @return -1 on failure, 0 to child, child tid to parent
+ *  @param thread id, and signal nuber
+ *  @return -1 on failure, 0 on success
  **/
 int sys_asignal(int tid, int signum)
 {
@@ -55,7 +54,7 @@ int sys_asignal(int tid, int signum)
             if (tcb -> tid == tid)
             {
                 // If the signal is not in the queue and the 1<<signum bit in
-                // the mask is tured on, we enqueue this signal
+                // the mask is turned on, we enqueue this signal
                 if (tcb -> signals[signum - MIN_SIG] != SIGNAL_ENQUEUED && \
                         ((tcb -> mask >> signum) & 0x1) == 1)
                 {
@@ -135,11 +134,11 @@ int sys_asignal(int tid, int signum)
     return -1;
 }
 
-/** @brief The thread_fork implementation
+/** @brief The system land await implementation
  *
- *  similar to fork, other than without any memory mangement
- *  @param nothing
- *  @return -1 on failure, 0 to child, child tid to parent
+ *  
+ *  @param mask
+ *  @return -1 on failure, 0 on success
  **/
 int sys_await(sigmask_t mask)
 {
@@ -170,6 +169,8 @@ int sys_amask(sigaction_t action, sigmask_t mask, sigmask_t *oldmaskp)
     mutex_lock(&current_thread -> tcb_mutex);
     if (oldmaskp != NULL)
     {
+        /* check valid address first*/
+        if (!is_user_addr(oldmaskp) || !addr_has_mapping(oldmaskp)) return -1;
         *oldmaskp = current_thread -> mask;
     }
     switch (action)
@@ -191,6 +192,7 @@ int sys_amask(sigaction_t action, sigmask_t mask, sigmask_t *oldmaskp)
         return -1;
     }
     mutex_unlock(&current_thread -> tcb_mutex);
+
     return 0;
 }
 
