@@ -23,6 +23,28 @@
 #include "memory/vm_routines.h"
 #include "process/scheduler.h"
 
+
+static int sys_real_asignal(TCB* tcb, int signum)
+{
+    // If the signal is not in the queue and the 1<<signum bit in
+    // the mask is turned on, we enqueue this signal
+    if (tcb -> signals[signum - MIN_SIG] != SIGNAL_ENQUEUED && \
+            ((tcb -> mask >> signum) & 0x1) == 1)
+    {
+        signal_t *sig = make_signal_node(current_thread -> tid, signum);
+        list_insert_last(&tcb -> pending_signals, &sig -> signal_list_node);
+        if (tcb -> state == THREAD_SIGNAL_BLOCKED || tcb -> state == THREAD_READLINE ||
+            tcb -> state == THREAD_READLINE || tcb -> state == THREAD_SLEEPING)
+        {
+            tcb -> state = THREAD_RUNNABLE;
+            list_delete(&blocked_queue, &tcb -> thread_list_node);
+            list_insert_last(&runnable_queue, &tcb -> thread_list_node);
+        }
+    }
+    return 0;
+}
+
+
 /** @brief The system land asignal implementation
  *
  *  @param thread id, and signal nuber
@@ -53,21 +75,7 @@ int sys_asignal(int tid, int signum)
             TCB *tcb = list_entry(n, TCB, thread_list_node);
             if (tcb -> tid == tid)
             {
-                // If the signal is not in the queue and the 1<<signum bit in
-                // the mask is turned on, we enqueue this signal
-                if (tcb -> signals[signum - MIN_SIG] != SIGNAL_ENQUEUED && \
-                        ((tcb -> mask >> signum) & 0x1) == 1)
-                {
-                    signal_t *sig = make_signal_node(current_thread -> tid, signum);
-                    list_insert_last(&tcb -> pending_signals, &sig -> signal_list_node);
-                    if (tcb -> state == THREAD_SIGNAL_BLOCKED)
-                    {
-                        tcb -> state = THREAD_RUNNABLE;
-                        list_delete(&blocked_queue, &tcb -> thread_list_node);
-                        list_insert_last(&runnable_queue, &tcb -> thread_list_node);
-                    }
-                }
-                return 0;
+                return sys_real_asignal(tcb, signum);
             }
         }
         // If the target tid is in the runnable queue
@@ -78,15 +86,7 @@ int sys_asignal(int tid, int signum)
             TCB *tcb = list_entry(n, TCB, thread_list_node);
             if (tcb -> tid == tid)
             {
-                // If the signal is not in the queue and the 1<<signum bit in
-                // the mask is tured on, we enqueue this signal
-                if (tcb -> signals[signum - MIN_SIG] != SIGNAL_ENQUEUED && \
-                        ((tcb -> mask >> signum) & 0x1) == 1)
-                {
-                    signal_t *sig = make_signal_node(current_thread -> tid, signum);
-                    list_insert_last(&tcb -> pending_signals, &sig -> signal_list_node);
-                }
-                return 0;
+                return sys_real_asignal(tcb, signum);
             }
         }
     }
@@ -133,15 +133,8 @@ int sys_asignal(int tid, int signum)
                     n = n -> next)
             {
                 TCB *tcb = list_entry(n, TCB, peer_threads_node);
-                // If the signal is not in the queue and the 1<<signum bit in
-                // the mask is tured on, we enqueue this signal
-                if (tcb -> signals[signum - MIN_SIG] != SIGNAL_ENQUEUED && \
-                        ((tcb -> mask >> signum) & 0x1) == 1)
-                {
-                    // TODO check if the tcb is in the blocked queue
-                    signal_t *sig = make_signal_node(current_thread -> tid, signum);
-                    list_insert_last(&tcb -> pending_signals, &sig -> signal_list_node);
-                }
+                /* send signal to each of the tcb in the process*/
+                sys_real_asignal(tcb, signum);
             }
             return 0;
         }
