@@ -138,6 +138,8 @@ int sys_fork(void)
     bzero(child_tcb -> signals, (MAX_SIG - MIN_SIG)*sizeof(int));
     list_init(&child_tcb -> pending_signals);
     child_tcb -> mask = parent_tcb -> mask;
+            lprintf("The mask is %u",(unsigned int) child_tcb -> mask);
+    
     child_tcb -> virtual_mode = 0;
     child_tcb -> virtual_period = 0;
     child_tcb -> virtual_tick = 0;

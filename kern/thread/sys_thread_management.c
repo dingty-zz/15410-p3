@@ -28,7 +28,7 @@
 #define ALLOWED_BITS    (EFL_CF | EFL_PF | EFL_AF | EFL_ZF | EFL_SF | \
                          EFL_DF | EFL_OF | EFL_AC)
 
- 
+
 
 /** @brief yield to a target thread via calling schedule
  *
@@ -105,14 +105,14 @@ int sys_yield(int tid)
 
 /** @brief Atomically deschedule the current thread after checking reject
  *         pointer
- *  
+ *
  *  @param reject pointer to decide whether to deschedule or not
  *  @return int 0 on success, -1 otherwise
  **/
 int sys_deschedule(int *reject)
 {
     if (!is_user_addr(reject) || !addr_has_mapping(reject)) return -1;
-    // Achieve atomicity so that other thread can't make runnable to this thread 
+    // Achieve atomicity so that other thread can't make runnable to this thread
     mutex_lock(&deschedule_lock);
     // Check reject pointer
     if (*reject != 0)
@@ -120,7 +120,7 @@ int sys_deschedule(int *reject)
         mutex_unlock(&deschedule_lock);
         return 0;
     }
-  
+
     mutex_lock(&current_thread -> tcb_mutex);
     // Set status to be blocked
     current_thread -> state = THREAD_BLOCKED;
@@ -222,7 +222,7 @@ int sys_gettid()
 }
 
 
-/** @brief Deschedules the calling thread until at least ticks timer 
+/** @brief Deschedules the calling thread until at least ticks timer
  *         interrupts have occurred after the call
  *  @param ticks The number of ticks that the thread needs to sleep
  *  @return int 0 on success and -1 otherwise
@@ -280,28 +280,47 @@ static int is_valid_newureg(ureg_t *newureg)
                 newureg -> cause != SWEXN_CAUSE_PAGEFAULT   &&
                 newureg -> cause != SWEXN_CAUSE_FPUFAULT    &&
                 newureg -> cause != SWEXN_CAUSE_ALIGNFAULT  &&
-                newureg -> cause != SWEXN_CAUSE_SIMDFAULT)
+                newureg -> cause != SWEXN_CAUSE_SIMDFAULT   &&
+                newureg -> cause != SIGKILL      &&
+                newureg -> cause != SIGALRM       &&
+                newureg -> cause != SIGVTALRM  &&
+                newureg -> cause != SIGDANGER    &&
+                newureg -> cause != SIGUSR1  &&
+                newureg -> cause != SIGUSR2      &&
+                newureg -> cause != SIGUSR3       )
         {
+            lprintf("296");
+
             return 0;
         }
         if (newureg -> cs != SEGSEL_USER_CS)
         {
+            lprintf("302");
+
             return 0;
         }
         if (newureg -> ds != SEGSEL_USER_DS)
         {
+            lprintf("308");
+
             return 0;
         }
         if (newureg -> ebp <= kern_stack_high)
         {
+            lprintf("314");
+
             return 0;
         }
         if (newureg -> esp <= kern_stack_high)
         {
+            lprintf("320");
+
             return 0;
         }
         if (newureg -> eip <= kern_stack_high)
         {
+            lprintf("326");
+
             return 0;
         }
         //check changed bits of eflags are only those allowed
@@ -310,6 +329,8 @@ static int is_valid_newureg(ureg_t *newureg)
         //There is(are) unallowed bit(s) that's been changed;
         if ( (changedbit | mask) != ALLOWED_BITS )
         {
+            lprintf("336");
+
             return 0;
         }
     }
@@ -327,12 +348,13 @@ static int is_valid_newureg(ureg_t *newureg)
  **/
 int sys_swexn(void *esp3, swexn_handler_t eip, void *arg, ureg_t *newureg)
 {
-    lprintf("starting swexn...");
+    lprintf("starting swexn... cause %d, signaler %d", newureg -> cs, newureg -> signaler);
     //newureg not valid;
     if (!is_valid_newureg(newureg)) return -1;
     //deregister a handler if exists;
     if (esp3 == NULL || eip == NULL)
     {
+        lprintf("all null");
         bzero(&current_thread->swexn_info, sizeof(swexninfo));
         return 0;
     }

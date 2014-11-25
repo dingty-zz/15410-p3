@@ -4,5 +4,5 @@
 #include "control_block.h"
 
 signal_t *make_signal_node(int sender, int signum);
-void signal_handler_wrapper();
+void signal_handler_wrapper(node *n);
 #endif /* _SYS_ASWEXN_H */

@@ -19,21 +19,23 @@
 #include "process/enter_user_mode.h"
 extern void sys_vanish();
 
- void get_real_signal_handler(ureg_t* cur_ureg) {
+ void get_real_signal_handler(node *n,ureg_t* cur_ureg) {
 
  	// If this thread has no swexn handler installed, we simply return
     if (current_thread-> swexn_info.installed_flag==0)
     {
+        lprintf("you didn't reistre a handler");
     	return;
     }
 
 	// Get this signal 
-    node *node  = list_delete_first(&current_thread -> pending_signals);
-    signal_t *s = list_entry(node, signal_t, signal_list_node);
+    list_delete(&current_thread -> pending_signals,n );
+    signal_t *s = list_entry(n, signal_t, signal_list_node);
 
     // Fill in ureg entries
     cur_ureg -> cause = s -> cause;
     cur_ureg -> signaler = s -> signaler;
+
     /* check whether the thread used to be blocked by syscall*/
     if (current_thread -> has_aborted_sys_flag == 1)
     {
@@ -42,6 +44,10 @@ extern void sys_vanish();
                              current_thread -> stack_size - 32);
         cur_ureg -> eax = -1;
     }
+
+    lprintf("The cause is %d", s -> cause);
+    lprintf("The signeraler is %d", s -> signaler);
+
 
     // Mark the signal as dequeued
     current_thread -> signals[s -> cause - MIN_SIG] = SIGNAL_DEQUEUED;
@@ -79,6 +85,8 @@ extern void sys_vanish();
     /* push void* arg */
     *(uint32_t *)(now_esp) = (uint32_t) arg;
     now_esp -= 4;
+
+    lprintf("Call the signal handler");
 
     /* Call the signal handler */
     enter_user_mode(current_thread -> registers.edi,

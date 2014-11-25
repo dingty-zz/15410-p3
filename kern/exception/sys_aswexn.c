@@ -28,11 +28,11 @@ static int sys_real_asignal(TCB *tcb, int signum)
 {
     // If the signal is not in the queue and the 1<<signum bit in
     // the mask is turned on, we enqueue this signal
-    if (tcb -> signals[signum - MIN_SIG] != SIGNAL_ENQUEUED && \
-            ((tcb -> mask >> signum) & 0x1) == 1)
+        mutex_lock(&tcb -> tcb_mutex);
+
+    if (tcb -> signals[signum - MIN_SIG] != SIGNAL_ENQUEUED)
     {
         signal_t *sig = make_signal_node(current_thread -> tid, signum);
-        mutex_lock(&tcb -> tcb_mutex);
         list_insert_last(&tcb -> pending_signals, &sig -> signal_list_node);
         if (tcb -> state == THREAD_SIGNAL_BLOCKED || tcb -> state == THREAD_READLINE ||
                 tcb -> state == THREAD_WAITING || tcb -> state == THREAD_SLEEPING)
@@ -49,8 +49,9 @@ static int sys_real_asignal(TCB *tcb, int signum)
             mutex_unlock(&runnable_queue_lock);
 
         }
-        mutex_unlock(&tcb -> tcb_mutex);
     }
+        mutex_unlock(&tcb -> tcb_mutex);
+
     return 0;
 }
 
@@ -73,6 +74,17 @@ int sys_asignal(int tid, int signum)
     {
         lprintf("Send signal to itself okaaaaaay???");
         // return -1;
+    mutex_lock(&current_thread -> tcb_mutex);
+    lprintf("The is %d", current_thread -> signals[signum - MIN_SIG] );
+ if (current_thread -> signals[signum - MIN_SIG] != SIGNAL_ENQUEUED)
+    {
+
+        lprintf("We make a signal node for zi ji");
+                signal_t *sig = make_signal_node(current_thread -> tid, signum);
+        list_insert_last(&current_thread -> pending_signals, &sig -> signal_list_node);
+    }
+    mutex_unlock(&current_thread -> tcb_mutex);
+    return 0;
     }
 
     node *n;
@@ -111,7 +123,7 @@ int sys_asignal(int tid, int signum)
             {
                 mutex_unlock(&runnable_queue_lock);
                 lprintf("Find tid");
-                
+
                 return sys_real_asignal(tcb, signum);
             }
         }
@@ -195,7 +207,11 @@ int sys_await(sigmask_t mask)
     mutex_lock(&current_thread -> tcb_mutex);
     sigmask_t old_mask = current_thread -> mask;
     current_thread -> mask = mask;
+if (current_thread -> pending_signals.length == 0) {
+    lprintf("the length is 0 so we block");
     current_thread -> state = THREAD_SIGNAL_BLOCKED;
+
+}
     lprintf("sys_await will call schedule!");
     mutex_unlock(&current_thread -> tcb_mutex);
 
