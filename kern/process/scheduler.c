@@ -35,10 +35,10 @@ void tick(unsigned int numTicks)
     if (current_thread -> virtual_period == MODE_ON)
     {
         current_thread -> virtual_tick = \
-        ++current_thread -> virtual_tick % current_thread -> virtual_period;
+                                         ++current_thread -> virtual_tick % current_thread -> virtual_period;
         if (current_thread -> virtual_tick == 0 && \
-            current_thread -> signals[SIGVTALRM - MIN_SIG] != SIGNAL_ENQUEUED &&\
-            ((current_thread -> mask >> SIGVTALRM) & 0x1) == 1)
+                current_thread -> signals[SIGVTALRM - MIN_SIG] != SIGNAL_ENQUEUED && \
+                ((current_thread -> mask >> SIGVTALRM) & 0x1) == 1)
         {
             /* send it a SIGVTALRM signal */
             signal_t *vtalrm_sig = make_signal_node(0, SIGVTALRM);
@@ -48,13 +48,14 @@ void tick(unsigned int numTicks)
 
     // For threads wall time
     node *n;
-    for (n = list_begin(&alarm_list); n != NULL; n = n -> next) {
+    for (n = list_begin(&alarm_list); n != NULL; n = n -> next)
+    {
         TCB *tcb = list_entry(n, TCB, alarm_list_node);
         tcb -> real_tick = \
-        ++tcb -> real_tick % tcb -> real_period;
+                           ++tcb -> real_tick % tcb -> real_period;
         if (tcb -> real_tick == 0 && \
-            tcb -> signals[SIGALRM - MIN_SIG] != SIGNAL_ENQUEUED && \
-            ((tcb -> mask >> SIGALRM) & 0x1) == 1)
+                tcb -> signals[SIGALRM - MIN_SIG] != SIGNAL_ENQUEUED && \
+                ((tcb -> mask >> SIGALRM) & 0x1) == 1)
         {
             /* send it a SIGALRM signal */
             signal_t *alrm_sig = make_signal_node(0, SIGALRM);
@@ -65,7 +66,7 @@ void tick(unsigned int numTicks)
     if (numTicks % SCHEDULE_INTERVAL == 0)
     {
         // let's context switch
-        schedule(-1); 
+        schedule(-1);
         // Now we are running in a different thread
     }
 
@@ -117,20 +118,20 @@ void schedule(int tid)
         node *n  = list_delete_first(&runnable_queue);
         next_thread = list_entry(n, TCB, thread_list_node);
     }
-    else      
+    else
     {
         // Search for a specific target thread
         next_thread = list_search_tid(&runnable_queue, tid);
         list_delete(&runnable_queue, &next_thread->thread_list_node);
     }
-    lprintf("The next tthread will run is %d",next_thread->tid);
+    lprintf("The next tthread will run is %d", next_thread->tid);
     /* Checks the current state of the current thread, and decide which queue
        should the process goes to */
     switch (current_thread -> state)
     {
-    // If the current thread is exited, we don't put the it back to any queue    
+    // If the current thread is exited, we don't put the it back to any queue
     case THREAD_EXIT:
-        break;     
+        break;
 
     /* If the current thread is blocked by calling deschedule, we put it into the block
        queue after deschedule_lock is unlocked */
@@ -138,7 +139,7 @@ void schedule(int tid)
         list_insert_last(&blocked_queue, &current_thread->thread_list_node);
         mutex_unlock(&deschedule_lock);
         break;
-    // If the current thread is blocked, we put it into the block queue 
+    // If the current thread is blocked, we put it into the block queue
     case THREAD_WAITING:
     case THREAD_READLINE:
     case THREAD_SLEEPING:
@@ -153,15 +154,26 @@ void schedule(int tid)
     target = NULL;
     // Do the context switch between two threads
     current_thread = context_switch(current_thread, next_thread);
-    lprintf("Now switch to tid %d",current_thread->tid);
-    lprintf("The pending %p",&current_thread -> pending_signals);
+    lprintf("Now switch to tid %d", current_thread->tid);
+    lprintf("The pending %p", &current_thread -> pending_signals);
     // Check if the current thread has pending signals
     if (current_thread -> pending_signals.length > 0)
     {
         // Invoke the signal handler by calling the wrapper first
         lprintf("scheduler wants to call the signal handler for tid: %d", current_thread->tid);
-        signal_handler_wrapper();
-        // Assume by calling swexn in handler, we can return here, the 
+        node *n = NULL;
+        for (n = list_begin(&current_thread -> pending_signals);
+                n != NULL;
+                n = n -> next)
+        {
+            signal_t *sig = list_entry(n, signal_t, signal_list_node);
+            if (((current_thread -> mask >> sig -> cause) & 0x1) == 1)
+            {
+                signal_handler_wrapper(n);
+                break;
+            }
+        }
+        // Assume by calling swexn in handler, we can return here, the
         // thread can run as normal
     }
     enable_interrupts();
@@ -183,7 +195,7 @@ TCB *context_switch(TCB *current, TCB *next)
     return current;
 }
 
-/** @brief Run the thread that hasn't been run before, whose state is 
+/** @brief Run the thread that hasn't been run before, whose state is
  *         THREAD_INIT
  *         We push its initial registers on to its kernel stack and using
  *         iret to enter user space and let it run.
@@ -195,7 +207,7 @@ void prepare_init_thread(TCB *next)
     next -> state = THREAD_RUNNING;
     current_thread = next;
     enable_interrupts();
-    lprintf("we init %d",next -> tid);
+    lprintf("we init %d", next -> tid);
     // Enter user space
     enter_user_mode(next -> registers.edi,
                     next -> registers.esi,

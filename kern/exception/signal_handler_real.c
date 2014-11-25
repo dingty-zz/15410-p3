@@ -19,7 +19,7 @@
 #include "process/enter_user_mode.h"
 extern void sys_vanish();
 
- void get_real_signal_handler(ureg_t* cur_ureg) {
+ void get_real_signal_handler(node *n,ureg_t* cur_ureg) {
 
  	// If this thread has no swexn handler installed, we simply return
     if (current_thread-> swexn_info.installed_flag==0)
@@ -28,8 +28,8 @@ extern void sys_vanish();
     }
 
 	// Get this signal 
-    node *node  = list_delete_first(&current_thread -> pending_signals);
-    signal_t *s = list_entry(node, signal_t, signal_list_node);
+    list_delete(&current_thread -> pending_signals,n );
+    signal_t *s = list_entry(n, signal_t, signal_list_node);
 
     // Fill in ureg entries
     cur_ureg -> cause = s -> cause;

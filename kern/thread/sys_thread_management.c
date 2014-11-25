@@ -28,7 +28,7 @@
 #define ALLOWED_BITS    (EFL_CF | EFL_PF | EFL_AF | EFL_ZF | EFL_SF | \
                          EFL_DF | EFL_OF | EFL_AC)
 
- 
+
 
 /** @brief yield to a target thread via calling schedule
  *
@@ -105,14 +105,14 @@ int sys_yield(int tid)
 
 /** @brief Atomically deschedule the current thread after checking reject
  *         pointer
- *  
+ *
  *  @param reject pointer to decide whether to deschedule or not
  *  @return int 0 on success, -1 otherwise
  **/
 int sys_deschedule(int *reject)
 {
     if (!is_user_addr(reject) || !addr_has_mapping(reject)) return -1;
-    // Achieve atomicity so that other thread can't make runnable to this thread 
+    // Achieve atomicity so that other thread can't make runnable to this thread
     mutex_lock(&deschedule_lock);
     // Check reject pointer
     if (*reject != 0)
@@ -120,7 +120,7 @@ int sys_deschedule(int *reject)
         mutex_unlock(&deschedule_lock);
         return 0;
     }
-  
+
     mutex_lock(&current_thread -> tcb_mutex);
     // Set status to be blocked
     current_thread -> state = THREAD_BLOCKED;
@@ -222,7 +222,7 @@ int sys_gettid()
 }
 
 
-/** @brief Deschedules the calling thread until at least ticks timer 
+/** @brief Deschedules the calling thread until at least ticks timer
  *         interrupts have occurred after the call
  *  @param ticks The number of ticks that the thread needs to sleep
  *  @return int 0 on success and -1 otherwise
@@ -281,6 +281,16 @@ static int is_valid_newureg(ureg_t *newureg)
                 newureg -> cause != SWEXN_CAUSE_FPUFAULT    &&
                 newureg -> cause != SWEXN_CAUSE_ALIGNFAULT  &&
                 newureg -> cause != SWEXN_CAUSE_SIMDFAULT)
+        {
+            return 0;
+        }
+        if (newureg -> cause != SIGKILL      &&
+                newureg -> cause != SIGALRM       &&
+                newureg -> cause != SIGVTALRM  &&
+                newureg -> cause != SIGDANGER    &&
+                newureg -> cause != SIGUSR1  &&
+                newureg -> cause != SIGUSR2      &&
+                newureg -> cause != SIGUSR3       )
         {
             return 0;
         }

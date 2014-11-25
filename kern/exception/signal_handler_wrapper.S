@@ -62,13 +62,13 @@
 //push cur_ureg with type of ureg_t* and call get_real_handler
 #define     GO_TO_REAL_SIGNAL_HANDLER ;\
 			pushl	%esp				;\
+			pushl 	8(%ebp)			;\
 			call 	get_real_signal_handler	;\
+			popl    %esp	
 			popl    %esp	
 
 
 signal_handler_wrapper:
 	PUSH_GENERAL_INFO
-	pushl	$0			# cause will be set later
 	GO_TO_REAL_SIGNAL_HANDLER
-	popl	%eax
 	POP_GENERAL_INFO

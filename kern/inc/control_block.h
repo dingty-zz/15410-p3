@@ -52,8 +52,8 @@
 #define PROCESS_RUNNABLE 1
 #define PROCESS_IDLE 2
 
-#define SIGNAL_ENQUEUED  0
-#define SIGNAL_DEQUEUED  1
+#define SIGNAL_ENQUEUED  1
+#define SIGNAL_DEQUEUED  0
 
 #define MODE_OFF 0
 #define MODE_ON  1
