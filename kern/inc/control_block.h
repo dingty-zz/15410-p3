@@ -169,6 +169,9 @@ typedef struct TCB_t
     // The current signal mask
     sigmask_t mask;
 
+    /* the flag to check that a blocked thread received a signal */
+    int has_aborted_sys_flag;
+
     /* For atimer purposes */
     int virtual_mode;
 

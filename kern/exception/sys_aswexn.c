@@ -35,8 +35,10 @@ static int sys_real_asignal(TCB *tcb, int signum)
         mutex_lock(&tcb -> tcb_mutex);
         list_insert_last(&tcb -> pending_signals, &sig -> signal_list_node);
         if (tcb -> state == THREAD_SIGNAL_BLOCKED || tcb -> state == THREAD_READLINE ||
-                tcb -> state == THREAD_READLINE || tcb -> state == THREAD_SLEEPING)
+                tcb -> state == THREAD_WAITING || tcb -> state == THREAD_SLEEPING)
         {
+            if (tcb -> state != THREAD_SIGNAL_BLOCKED) 
+                tcb -> has_aborted_sys_flag = 1;
             tcb -> state = THREAD_RUNNABLE;
             mutex_lock(&blocked_queue_lock);
             list_delete(&blocked_queue, &tcb -> thread_list_node);

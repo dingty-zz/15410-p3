@@ -34,6 +34,14 @@ extern void sys_vanish();
     // Fill in ureg entries
     cur_ureg -> cause = s -> cause;
     cur_ureg -> signaler = s -> signaler;
+    /* check whether the thread used to be blocked by syscall*/
+    if (current_thread -> has_aborted_sys_flag == 1)
+    {
+        // needs to be changed
+        cur_ureg -> eip = * (unsigned int*)(current_thread -> stack_base +
+                             current_thread -> stack_size - 32);
+        cur_ureg -> eax = -1;
+    }
 
     // Mark the signal as dequeued
     current_thread -> signals[s -> cause - MIN_SIG] = SIGNAL_DEQUEUED;
@@ -60,7 +68,7 @@ extern void sys_vanish();
     current_thread -> swexn_info.newureg = (ureg_t*)NULL;
     current_thread -> swexn_info.installed_flag = 0;
     current_thread -> swexn_info.eflags = cur_ureg -> eflags;
-    
+
     /* copy the ureg; */
     new_esp = new_esp - (sizeof(ureg_t));
     memcpy(new_esp, cur_ureg, sizeof(ureg_t));
@@ -71,6 +79,7 @@ extern void sys_vanish();
     /* push void* arg */
     *(uint32_t *)(now_esp) = (uint32_t) arg;
     now_esp -= 4;
+
     /* Call the signal handler */
     enter_user_mode(current_thread -> registers.edi,
                     current_thread -> registers.esi,
