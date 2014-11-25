@@ -221,6 +221,6 @@ int sys_fork(void)
     // insert child to the list of threads and processes
     list_insert_last(&process_queue, &child_pcb->all_processes_node);
     list_insert_last(&runnable_queue, &child_tcb->thread_list_node);
-
+    lprintf("The child's pid is %d", child_pcb -> pid);
     return child_pcb -> pid;
 }

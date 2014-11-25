@@ -62,13 +62,15 @@ int sys_asignal(int tid, int signum)
 {
     if (signum < MIN_SIG || signum > MAX_SIG)
     {
+        lprintf("no good");
         return -1;
     }
 
     // Can the thread send the signal to itself?
     if (current_thread -> tid == tid)
     {
-        return -1;
+        lprintf("Send signal to itself okaaaaaay???");
+        // return -1;
     }
 
     node *n;
@@ -106,6 +108,8 @@ int sys_asignal(int tid, int signum)
             if (tcb -> tid == tid)
             {
                 mutex_unlock(&runnable_queue_lock);
+                lprintf("Find tid");
+                
                 return sys_real_asignal(tcb, signum);
             }
         }
@@ -168,6 +172,7 @@ int sys_asignal(int tid, int signum)
             return 0;
         }
     }
+    lprintf("Finally, tid doens't exist");
     // When there is no valid condition satisfied, return -1
     return -1;
 }
@@ -190,7 +195,11 @@ int sys_await(sigmask_t mask)
     current_thread -> mask = mask;
     current_thread -> state = THREAD_SIGNAL_BLOCKED;
     lprintf("sys_await will call schedule!");
+    mutex_unlock(&current_thread -> tcb_mutex);
+
     schedule(-1);
+    mutex_lock(&current_thread -> tcb_mutex);
+
     lprintf("After schedule in await");
     current_thread -> mask = old_mask;
     mutex_unlock(&current_thread -> tcb_mutex);
