@@ -24,6 +24,7 @@ extern void sys_vanish();
  	// If this thread has no swexn handler installed, we simply return
     if (current_thread-> swexn_info.installed_flag==0)
     {
+        lprintf("you didn't reistre a handler");
     	return;
     }
 
@@ -34,6 +35,8 @@ extern void sys_vanish();
     // Fill in ureg entries
     cur_ureg -> cause = s -> cause;
     cur_ureg -> signaler = s -> signaler;
+    lprintf("The cause is %d", s -> cause);
+    lprintf("The signeraler is %d", s -> signaler);
 
     // Mark the signal as dequeued
     current_thread -> signals[s -> cause - MIN_SIG] = SIGNAL_DEQUEUED;
@@ -71,6 +74,7 @@ extern void sys_vanish();
     /* push void* arg */
     *(uint32_t *)(now_esp) = (uint32_t) arg;
     now_esp -= 4;
+    lprintf("Call the signal handler");
     /* Call the signal handler */
     enter_user_mode(current_thread -> registers.edi,
                     current_thread -> registers.esi,

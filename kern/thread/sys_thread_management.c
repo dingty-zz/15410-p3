@@ -280,11 +280,8 @@ static int is_valid_newureg(ureg_t *newureg)
                 newureg -> cause != SWEXN_CAUSE_PAGEFAULT   &&
                 newureg -> cause != SWEXN_CAUSE_FPUFAULT    &&
                 newureg -> cause != SWEXN_CAUSE_ALIGNFAULT  &&
-                newureg -> cause != SWEXN_CAUSE_SIMDFAULT)
-        {
-            return 0;
-        }
-        if (newureg -> cause != SIGKILL      &&
+                newureg -> cause != SWEXN_CAUSE_SIMDFAULT   &&
+                newureg -> cause != SIGKILL      &&
                 newureg -> cause != SIGALRM       &&
                 newureg -> cause != SIGVTALRM  &&
                 newureg -> cause != SIGDANGER    &&
@@ -292,26 +289,38 @@ static int is_valid_newureg(ureg_t *newureg)
                 newureg -> cause != SIGUSR2      &&
                 newureg -> cause != SIGUSR3       )
         {
+            lprintf("296");
+
             return 0;
         }
         if (newureg -> cs != SEGSEL_USER_CS)
         {
+            lprintf("302");
+
             return 0;
         }
         if (newureg -> ds != SEGSEL_USER_DS)
         {
+            lprintf("308");
+
             return 0;
         }
         if (newureg -> ebp <= kern_stack_high)
         {
+            lprintf("314");
+
             return 0;
         }
         if (newureg -> esp <= kern_stack_high)
         {
+            lprintf("320");
+
             return 0;
         }
         if (newureg -> eip <= kern_stack_high)
         {
+            lprintf("326");
+
             return 0;
         }
         //check changed bits of eflags are only those allowed
@@ -320,6 +329,8 @@ static int is_valid_newureg(ureg_t *newureg)
         //There is(are) unallowed bit(s) that's been changed;
         if ( (changedbit | mask) != ALLOWED_BITS )
         {
+            lprintf("336");
+
             return 0;
         }
     }
@@ -337,12 +348,13 @@ static int is_valid_newureg(ureg_t *newureg)
  **/
 int sys_swexn(void *esp3, swexn_handler_t eip, void *arg, ureg_t *newureg)
 {
-    lprintf("starting swexn...");
+    lprintf("starting swexn... cause %d, signaler %d", newureg -> cs, newureg -> signaler);
     //newureg not valid;
     if (!is_valid_newureg(newureg)) return -1;
     //deregister a handler if exists;
     if (esp3 == NULL || eip == NULL)
     {
+        lprintf("all null");
         bzero(&current_thread->swexn_info, sizeof(swexninfo));
         return 0;
     }

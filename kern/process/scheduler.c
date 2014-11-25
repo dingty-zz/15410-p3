@@ -167,8 +167,10 @@ void schedule(int tid)
                 n = n -> next)
         {
             signal_t *sig = list_entry(n, signal_t, signal_list_node);
+            lprintf("The mask is %x",(unsigned int) current_thread -> mask);
             if (((current_thread -> mask >> sig -> cause) & 0x1) == 1)
             {
+                lprintf("Let's call signal_handler_wrapper");
                 signal_handler_wrapper(n);
                 break;
             }
