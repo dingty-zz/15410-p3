@@ -304,9 +304,9 @@ int sys_wait(int *status_ptr)
             current_pcb -> children_count--;
 
             // Free page directory and control block
-            sfree(pcb -> PD, 4096);
+            // sfree(pcb -> PD, 4096);
 
-            free(pcb);
+            // free(pcb);
             return pid;
         }
     }

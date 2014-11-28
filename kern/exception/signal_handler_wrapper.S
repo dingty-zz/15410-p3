@@ -14,12 +14,12 @@
 #define 	PUSH_GENERAL_INFO	;\
 			pushl	%ebp			    	;\
 			movl 	%esp, %ebp		        ;\
-			pushl	20(%ebp)       			;\
-			pushl 	16(%ebp)      			;\
-			pushl 	12(%ebp)      			;\
-			pushl 	8(%ebp)            		;\
-			pushl 	4(%ebp)            		;\
-			pushl 	0     					;\
+			pushl	%ss       			;\
+			pushl 	%esp      			;\
+			pushl 	$0      			;\
+			pushl 	%cs            		;\
+			pushl 	4(%ebp)         		;\
+			pushl 	$0     					;\
 			pushl	%eax	 				;\
 			pushl	%ecx	 				;\
 			pushl	%edx     				;\
@@ -51,11 +51,11 @@
 			popl	%ecx	 				;\
 			popl	%eax	 				;\
 			popl 	0     					;\
-			popl 	4(%ebp)            		;\
-			popl 	8(%ebp)            		;\
-			popl 	12(%ebp)      			;\
-			popl 	16(%ebp)      			;\
-			popl	20(%ebp)       			;\
+			popl 	%ebp            		;\
+			popl 	%ebp            		;\
+			popl 	%ebp      			;\
+			popl 	%ebp      			;\
+			popl	%ebp       			;\
 			movl 	%esp, %ebp		        ;\
 			popl	%ebp			    	;\
 

@@ -21,6 +21,12 @@ extern void sys_vanish();
 
  void get_real_signal_handler(node *n,ureg_t* cur_ureg) {
 
+    lprintf("The cause is %d", cur_ureg -> cause);
+    lprintf("The signaler is %d", cur_ureg -> signaler);
+    lprintf("The ds is %d", cur_ureg ->ds);
+    lprintf("The es is %d", cur_ureg -> es);
+    lprintf("The fs is %d", cur_ureg -> fs);
+    lprintf("The gs is %d", cur_ureg -> gs);
  	// If this thread has no swexn handler installed, we simply return
     if (current_thread-> swexn_info.installed_flag==0)
     {
@@ -37,6 +43,8 @@ extern void sys_vanish();
     cur_ureg -> signaler = s -> signaler;
     lprintf("The cause is %d", s -> cause);
     lprintf("The signeraler is %d", s -> signaler);
+    
+
 
     // Mark the signal as dequeued
     current_thread -> signals[s -> cause - MIN_SIG] = SIGNAL_DEQUEUED;
