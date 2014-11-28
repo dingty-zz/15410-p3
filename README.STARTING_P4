@@ -1,0 +1,18 @@
+To get started with P4:
+
+1. Make a copy of your p3/ directory called p4/.
+
+2. Move the update.sh from this directory so it replaces the update.sh
+   present in your newly-made p4/ directory.
+
+3. In your new P4 directory, run "make update".  You should see a
+   handful of updates, mainly in spec/.
+
+4. Now "make" should work.  The resulting system should behave a
+   LOT like your unaltered P3!
+
+See http://www.cs.cmu.edu/~410/p4/ for what you are supposed to do.
+
+Don't forget that your README.dox for P4 should document your P4,
+not your P3!  Please be sure that the documentation includes
+everything we ask for.
