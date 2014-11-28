@@ -28,7 +28,7 @@
 
 // We invoke context switch every 100 ticks
 #define SCHEDULE_INTERVAL 100
-
+extern uint32_t get_esp();
 void tick(unsigned int numTicks)
 {
     // For thread execution time
@@ -154,7 +154,8 @@ void schedule(int tid)
     target = NULL;
     // Do the context switch between two threads
     current_thread = context_switch(current_thread, next_thread);
-    lprintf("Now switch to tid %d", current_thread->tid);
+    lprintf("Now switch to tid %d with the esp is %x", current_thread->tid, (unsigned int)current_thread -> esp);
+    // MAGIC_BREAK;
     lprintf("The pending %p", &current_thread -> pending_signals);
     // Check if the current thread has pending signals
     if (current_thread -> pending_signals.length > 0)
@@ -170,14 +171,24 @@ void schedule(int tid)
             lprintf("The mask is %x",(unsigned int) current_thread -> mask);
             if (((current_thread -> mask >> sig -> cause) & 0x1) == 1)
             {
-                lprintf("Let's call signal_handler_wrapper");
+                MAGIC_BREAK;
+                current_thread -> saved_esp = get_esp();
+                lprintf("Let's call signal_handler_wrapper current esp is %x", (unsigned int)current_thread -> saved_esp);
+                set_esp0((uint32_t)(current_thread -> saved_esp+8));
                 signal_handler_wrapper(n);
+                current_thread -> saved_esp = 0;
+                set_esp0((uint32_t)(current_thread -> stack_base + current_thread -> stack_size));
+
                 break;
             }
         }
         // Assume by calling swexn in handler, we can return here, the
         // thread can run as normal
+        lprintf("Signal handler finished in the scheduler");
+        MAGIC_BREAK;
+
     }
+
     enable_interrupts();
 }
 
@@ -193,7 +204,11 @@ TCB *context_switch(TCB *current, TCB *next)
     set_cr3((uint32_t)next -> pcb -> PD);
     // Set esp0 for the next thread
     set_esp0((uint32_t)(next -> stack_base + next -> stack_size));
+    lprintf("Before do switch");
+    // MAGIC_BREAK;
     do_switch(current, next, next -> state);
+        lprintf("after do switch the esp0 is %x",(unsigned int)get_esp0());
+    // MAGIC_BREAK;
     return current;
 }
 

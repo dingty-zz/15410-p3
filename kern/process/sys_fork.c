@@ -127,6 +127,7 @@ int sys_fork(void)
     }
     child_tcb -> esp = (uint32_t)child_tcb -> stack_base +
                        (uint32_t)child_tcb -> stack_size;
+    child_tcb -> saved_esp = 0;
     child_tcb -> registers = parent_tcb -> registers;
     /* return twice and values are different */
     child_tcb -> registers.eax = 0;
@@ -223,6 +224,6 @@ int sys_fork(void)
     // insert child to the list of threads and processes
     list_insert_last(&process_queue, &child_pcb->all_processes_node);
     list_insert_last(&runnable_queue, &child_tcb->thread_list_node);
-    lprintf("The child's pid is %d", child_pcb -> pid);
+    lprintf("fork: The child's pid is %d", child_pcb -> pid);
     return child_pcb -> pid;
 }

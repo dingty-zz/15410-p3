@@ -143,7 +143,7 @@ locks/atomic_xchange.o locks/mutex.o \
 memory/vm_routines.o memory/memory_management.o memory/sys_memory_management.o \
 process/process.o process/scheduler.o process/sys_exec.o process/sys_fork.o \
 process/sys_life_cycle.o process/do_switch.o process/enter_user_mode.o \
-process/life_cycle.o \
+process/life_cycle.o process/get_esp.o \
 syscall/consoleIO.o syscall/sys_consoleIO.o syscall/misc.o syscall/sys_misc.o \
 thread/thread_basic.o thread/sys_thread_management.o thread/thread_management.o \
 

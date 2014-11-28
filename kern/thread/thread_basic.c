@@ -69,6 +69,7 @@ TCB *thr_create(unsigned int eip, int run)
     tcb -> registers.ecx = 0;
     tcb -> registers.eax = 0;
     tcb -> esp = (uint32_t)tcb -> stack_size + (uint32_t)tcb -> stack_base -4;
+    tcb -> saved_esp = 0;
     tcb -> registers.eip = eip;
 
     tcb -> registers.cs = SEGSEL_USER_CS;

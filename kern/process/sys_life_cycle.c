@@ -64,6 +64,7 @@ int sys_thread_fork(void)
     child_tcb -> stack_base = smemalign(4096, child_tcb -> stack_size);
     child_tcb -> esp =
         (uint32_t)child_tcb->stack_base + (uint32_t)child_tcb->stack_size;
+    child_tcb -> saved_esp = 0;
     child_tcb -> registers = current_thread -> registers;
 
     child_tcb -> registers.eax = 0;

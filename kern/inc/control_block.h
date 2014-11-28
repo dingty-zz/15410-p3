@@ -118,6 +118,9 @@ typedef struct TCB_t
     // switching
     uint32_t esp;
 
+    // The saved esp before calling the signal handler wrapper
+    uint32_t saved_esp;
+    
     // Process the thread belongs to
     PCB *pcb;
 

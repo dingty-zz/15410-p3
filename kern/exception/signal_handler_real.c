@@ -94,7 +94,7 @@ extern void sys_vanish();
     *(uint32_t *)(now_esp) = (uint32_t) arg;
     now_esp -= 4;
 
-    lprintf("Call the signal handler");
+    lprintf("Call the signal handler with esp %p", now_esp);
 
     /* Call the signal handler */
     enter_user_mode(current_thread -> registers.edi,
