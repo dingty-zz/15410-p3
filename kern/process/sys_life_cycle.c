@@ -136,7 +136,7 @@ void sys_vanish(void)
                 list_delete(&runnable_queue, n);
                 // free kernel stack and tcb
                 sfree(tcb -> stack_base, tcb -> stack_size);
-                free(tcb);
+                // free(tcb);
             }
         }
 

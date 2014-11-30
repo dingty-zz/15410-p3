@@ -22,6 +22,7 @@
 #include "locks/mutex_type.h"
 #include "memory/vm_routines.h"
 #include "process/scheduler.h"
+extern void sys_vanish();
 
 
 static int sys_real_asignal(TCB *tcb, int signum)
@@ -70,9 +71,13 @@ int sys_asignal(int tid, int signum)
     }
 
     // Can the thread send the signal to itself?
-    if (current_thread -> tid == tid)
+    if (current_thread -> tid == tid || current_thread -> tid == -tid)
     {
         lprintf("Send signal to itself okaaaaaay???");
+        if (signum == SIGKILL)
+        {
+            sys_vanish();
+        }
         // return -1;
     mutex_lock(&current_thread -> tcb_mutex);
     lprintf("The is %d", current_thread -> signals[signum - MIN_SIG] );

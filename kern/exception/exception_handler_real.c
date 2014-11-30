@@ -34,6 +34,8 @@
  */
 void get_real_handler(ureg_t* cur_ureg)
 {
+    lprintf("Ohoh, bad news");
+    MAGIC_BREAK;
     cur_ureg->cr2 = get_cr2();
     if (current_thread-> swexn_info.installed_flag==0)
     { 

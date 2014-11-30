@@ -144,6 +144,7 @@ void schedule(int tid)
     case THREAD_READLINE:
     case THREAD_SLEEPING:
     case THREAD_SIGNAL_BLOCKED:
+    lprintf("Eneuq blocked wuquu");
         list_insert_last(&blocked_queue, &current_thread->thread_list_node);
         break;
     // The thread is runnable by default, we put it into the runnable queue
@@ -171,7 +172,7 @@ void schedule(int tid)
             lprintf("The mask is %x",(unsigned int) current_thread -> mask);
             if (((current_thread -> mask >> sig -> cause) & 0x1) == 1)
             {
-                MAGIC_BREAK;
+                // MAGIC_BREAK;
                 current_thread -> saved_esp = get_esp();
                 lprintf("Let's call signal_handler_wrapper current esp is %x", (unsigned int)current_thread -> saved_esp);
                 set_esp0((uint32_t)(current_thread -> saved_esp+8));
@@ -185,7 +186,7 @@ void schedule(int tid)
         // Assume by calling swexn in handler, we can return here, the
         // thread can run as normal
         lprintf("Signal handler finished in the scheduler");
-        MAGIC_BREAK;
+        // MAGIC_BREAK;
 
     }
 

@@ -350,7 +350,7 @@ int sys_swexn(void *esp3, swexn_handler_t eip, void *arg, ureg_t *newureg)
 {
     lprintf("starting swexn... cause %d, signaler %d", newureg -> cs, newureg -> signaler);
     //newureg not valid;
-    if (!is_valid_newureg(newureg)) MAGIC_BREAK;
+    if (!is_valid_newureg(newureg)) ;
     //deregister a handler if exists;
     if (esp3 == NULL || eip == NULL)
     {
@@ -374,6 +374,6 @@ int sys_swexn(void *esp3, swexn_handler_t eip, void *arg, ureg_t *newureg)
     // }
     lprintf("The si %x",(unsigned int)get_esp0());
     lprintf("End swexn %x", (unsigned int)newureg -> esp);
-    MAGIC_BREAK;
+    // MAGIC_BREAK;
     return 0;
 }
