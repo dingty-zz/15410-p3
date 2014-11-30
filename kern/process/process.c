@@ -13,6 +13,7 @@
 #include "simics.h"
 #include "malloc.h"
 #include <elf/elf_410.h>
+#include <page.h>
 #include "common_kern.h"
 #include "string.h"
 #include "eflags.h"
@@ -83,6 +84,10 @@ int process_create(const char *filename, int run)
     // Load the program, copy the content to the memory and get the eip
     unsigned int eip = program_loader(se_hdr, process);
 
+    // When the kernel will load a process, it will assume always success
+    // unless run out of memory
+    assert(eip > 0);
+    lprintf("The eip is %x",(unsigned int)eip);
     // Create a single thread for this process
     TCB *thread = thr_create(eip, run); // please see thread_basic.c
     if (thread == NULL)
@@ -125,25 +130,46 @@ int process_create(const char *filename, int run)
 }
 
 
-
+/* >0 on success, 0 fails  */
 unsigned int program_loader(simple_elf_t se_hdr, PCB *process) {
 
 
     /* Allocate memory for every area */
-    allocate_pages(process -> PD,
-                   (uint32_t)se_hdr.e_txtstart, se_hdr.e_txtlen);
-    allocate_pages(process -> PD,
-                   (uint32_t)se_hdr.e_rodatstart, se_hdr.e_rodatlen);
-    allocate_pages(process -> PD,
-                   (uint32_t)se_hdr.e_bssstart, se_hdr.e_bsslen);
-    allocate_pages(process -> PD,
-                   (uint32_t)se_hdr.e_datstart, se_hdr.e_datlen);
-
-    allocate_pages(process -> PD,
-                   (uint32_t)0xffffe000, 8192); 
-
-
     int result = 0;
+    result = allocate_pages(process -> PD,
+                   (uint32_t)se_hdr.e_txtstart, se_hdr.e_txtlen);
+    if (result == -1)
+    {
+        return 0;
+    }
+    result = allocate_pages(process -> PD,
+                   (uint32_t)se_hdr.e_rodatstart, se_hdr.e_rodatlen);
+        if (result == -1)
+    {
+        return 0;
+    }
+    result = allocate_pages(process -> PD,
+                   (uint32_t)se_hdr.e_bssstart, se_hdr.e_bsslen);
+        if (result == -1)
+    {
+        return 0;
+    }
+    result = allocate_pages(process -> PD,
+                   (uint32_t)se_hdr.e_datstart, se_hdr.e_datlen);
+        if (result == -1)
+    {
+        return 0;
+    }
+
+    result = allocate_pages(process -> PD,
+                   (uint32_t)0xffffe000, 2 * PAGE_SIZE); 
+        if (result == -1)
+    {
+        return 0;
+    }
+
+
+ 
     /* copy data from data field */
     result += getbytes(se_hdr.e_fname, se_hdr.e_datoff, se_hdr.e_datlen,
              (char *)se_hdr.e_datstart);
@@ -151,7 +177,10 @@ unsigned int program_loader(simple_elf_t se_hdr, PCB *process) {
              (char *)se_hdr.e_txtstart);
     result += getbytes(se_hdr.e_fname, se_hdr.e_rodatoff, se_hdr.e_rodatlen,
              (char *)se_hdr.e_rodatstart);
-    assert(result > 0);
+    if (result < 0)
+    {
+        return 0;
+    }
     memset((char *)se_hdr.e_bssstart, 0,  se_hdr.e_bsslen);
 
 

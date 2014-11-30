@@ -79,7 +79,7 @@ void mm_init()
  *  Look for a valid physical address in the free frame list
  *
  *  @param page directory address, page directory index, and page table index
- *  @return 0 on success, -1 on failure
+ *  @return 0 on success, -1 on failure, typically means running out of memory
  **/
 int virtual_map_physical(uint32_t *PD, uint32_t pd_index, uint32_t pt_index)
 {
@@ -101,7 +101,7 @@ int virtual_map_physical(uint32_t *PD, uint32_t pd_index, uint32_t pt_index)
             }
             PT[pt_index] = free_frame_addr | 0x7;
         }
-        else return -1;     // Already mapped
+        else return 0;     // Already mapped
 
     }
     else
@@ -134,18 +134,19 @@ int virtual_map_physical(uint32_t *PD, uint32_t pd_index, uint32_t pt_index)
 
 /** @brief Unmap an mapped virtual memory from physical memory
  *
- *  Add back to the physial free frame list
+ *  Add back to the physial free frame list. If the virtual memory is already
+ *  unmapped, we just do nothing.
  *
  *  @param page directory address, page directory index, and page table index
  *  @return 0 on success, -1 on failure
  **/
-int virtual_unmap_physical(uint32_t *PD, uint32_t pd_index, uint32_t pt_index)
+void virtual_unmap_physical(uint32_t *PD, uint32_t pd_index, uint32_t pt_index)
 {
     uint32_t pde = PD[pd_index];
     //This virtual memory is already unmapped
     if (pde == 0)
     {
-        return -1;        
+        return;       
     }
     else
     {
@@ -155,7 +156,7 @@ int virtual_unmap_physical(uint32_t *PD, uint32_t pd_index, uint32_t pt_index)
         /* Already unmapped*/
         if (pte == 0)
         {
-            return -1;   
+            return; 
         }
         else
         {
@@ -165,7 +166,7 @@ int virtual_unmap_physical(uint32_t *PD, uint32_t pd_index, uint32_t pt_index)
             PT[pt_index] = 0;
         }
     }
-    return 0;
+    return;
 }
 
 /** @brief Map this virtual address to a physical pages, for kernel use
@@ -193,23 +194,22 @@ int allocate_pages(uint32_t *pd, uint32_t virtual_addr, size_t size)
         result = virtual_map_physical(pd, pd_index + actual_offset / PAGE_LEN, 
                                  actual_offset % PAGE_LEN);
         // currently we don't use it
-        // if (result == -1123)
-        // {
-        //     lprintf("Error happens in allocate_pages");
-        //     // If the kernel can't give us enough memory, we undo the previous
-        //     // allocationss
-        //     int j=0;
-        //     for (j = i; j >= 0; --j)
-        //     {
-        //         int actual_offset = pt_index + j;
-        //         // Because we can guarantee that previous allocation is
-        //         // successful, we can safely ignore the return value for
-        //         // unmap function
-        //         virtual_unmap_physical(pd, pd_index + actual_offset / PAGE_LEN, 
-        //                          actual_offset % PAGE_LEN);
-        //     }
-        //     return -1;
-        // }
+        if (result == -1)
+        {
+            lprintf("Error happens in allocate_pages, not enough memory");
+            // If the kernel can't give us enough memory, we undo the previous
+            // allocationss
+            int j=0;
+            for (j = i; j >= 0; --j)
+            {
+                int actual_offset = pt_index + j;
+                // Because we can guarantee that previous allocation is
+                // successful, we can safely unmap the mapped pages
+                virtual_unmap_physical(pd, pd_index + actual_offset / PAGE_LEN, 
+                                 actual_offset % PAGE_LEN);
+            }
+            return -1;
+        }
     }
     return 0;
 
@@ -225,7 +225,7 @@ memory system, for kernel use
  *  @param page directory address, virtual address, and size to be freed
  *  @return 0 on success, -1 error
  **/
-int free_pages(uint32_t *pd, uint32_t virtual_addr, size_t size)
+void free_pages(uint32_t *pd, uint32_t virtual_addr, size_t size)
 {
 
     int i = 0;
@@ -237,15 +237,9 @@ int free_pages(uint32_t *pd, uint32_t virtual_addr, size_t size)
     for (i = 0; i < times; ++i)
     {
         int actual_offset = pt_index + i;
-        int result=0;
-        result = virtual_unmap_physical(pd, pd_index + actual_offset / PAGE_LEN, 
+        virtual_unmap_physical(pd, pd_index + actual_offset / PAGE_LEN, 
                                    actual_offset % PAGE_LEN);
-        if (result == -1)
-        {
-            return -1;
-        }
     }
-    return 0;
 }
 
 
@@ -368,9 +362,11 @@ set the next free list to be the struct where refcount = 0;
  **/
 uint32_t acquire_free_frame()
 {
+    // If there is no available free frame, free_frame must be NULL, in this case
+    // we return 0
     if (free_frame == NULL)
     {
-        return -1;
+        return 0;
     }
     uint32_t offset = (uint32_t)free_frame - (uint32_t)frame_base;
     uint32_t index = offset / 8;

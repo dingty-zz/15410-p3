@@ -39,22 +39,22 @@ int handler_install(void (*tickback)(unsigned int))
 {
     /* Initialize the fault handlers */
 
-    // _handler_install(SWEXN_CAUSE_DIVIDE, DE);          //no error code
-    // _handler_install(SWEXN_CAUSE_DEBUG, DB);           //no error code
-    // _handler_install(SWEXN_CAUSE_BREAKPOINT, BP);      //no error code
-    // _handler_install(SWEXN_CAUSE_OVERFLOW, OF);        //no error code
-    // _handler_install(SWEXN_CAUSE_BOUNDCHECK, BR);      //no error code
-    // _handler_install(SWEXN_CAUSE_OPCODE, UD);          //no error code
-    // _handler_install(SWEXN_CAUSE_NOFPU, NM);           //no error code
+    _handler_install(SWEXN_CAUSE_DIVIDE, DE);          //no error code
+    _handler_install(SWEXN_CAUSE_DEBUG, DB);           //no error code
+    _handler_install(SWEXN_CAUSE_BREAKPOINT, BP);      //no error code
+    _handler_install(SWEXN_CAUSE_OVERFLOW, OF);        //no error code
+    _handler_install(SWEXN_CAUSE_BOUNDCHECK, BR);      //no error code
+    _handler_install(SWEXN_CAUSE_OPCODE, UD);          //no error code
+    _handler_install(SWEXN_CAUSE_NOFPU, NM);           //no error code
 
-    // _handler_install(SWEXN_CAUSE_SEGFAULT, NP);        //error code: yes
-    // _handler_install(SWEXN_CAUSE_STACKFAULT, SS);      //error code: yes
-    // _handler_install(SWEXN_CAUSE_PROTFAULT, GP);       //error code: yes
+    _handler_install(SWEXN_CAUSE_SEGFAULT, NP);        //error code: yes
+    _handler_install(SWEXN_CAUSE_STACKFAULT, SS);      //error code: yes
+    _handler_install(SWEXN_CAUSE_PROTFAULT, GP);       //error code: yes
     _handler_install(SWEXN_CAUSE_PAGEFAULT, PF);       //error code: yes
 
-    // _handler_install(SWEXN_CAUSE_FPUFAULT, MF);        //no error code
-    // _handler_install(SWEXN_CAUSE_ALIGNFAULT, AC);      //error code: yes, 0
-    // _handler_install(SWEXN_CAUSE_SIMDFAULT, XF);       //no error code
+    _handler_install(SWEXN_CAUSE_FPUFAULT, MF);        //no error code
+    _handler_install(SWEXN_CAUSE_ALIGNFAULT, AC);      //error code: yes, 0
+    _handler_install(SWEXN_CAUSE_SIMDFAULT, XF);       //no error code
 
     /* Initialize the hardware handlers */
     /* Initialize the timer */
