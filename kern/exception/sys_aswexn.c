@@ -34,6 +34,10 @@ static int sys_real_asignal(TCB *tcb, int signum)
     if (tcb -> signals[signum - MIN_SIG] != SIGNAL_ENQUEUED)
     {
         signal_t *sig = make_signal_node(current_thread -> tid, signum);
+        if (sig == NULL)
+        {
+            return -1;
+        }
         list_insert_last(&tcb -> pending_signals, &sig -> signal_list_node);
         if (tcb -> state == THREAD_SIGNAL_BLOCKED || tcb -> state == THREAD_READLINE ||
                 tcb -> state == THREAD_WAITING || tcb -> state == THREAD_SLEEPING)
@@ -86,6 +90,10 @@ int sys_asignal(int tid, int signum)
 
         lprintf("We make a signal node for zi ji");
                 signal_t *sig = make_signal_node(current_thread -> tid, signum);
+                if (sig ==NULL)
+                {
+                    return -1;
+                }
         list_insert_last(&current_thread -> pending_signals, &sig -> signal_list_node);
     }
     mutex_unlock(&current_thread -> tcb_mutex);
@@ -342,6 +350,10 @@ int sys_atimer(int mode, int period)
 signal_t *make_signal_node(int sender, int signum)
 {
     signal_t *sig = (signal_t *)malloc(sizeof(signal_t));
+    if (sig == NULL)
+    {
+        return NULL;
+    }
     sig -> cause = signum;
     sig -> signaler = sender;
     sig -> signal_list_node.prev = NULL;

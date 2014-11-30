@@ -19,6 +19,8 @@
 #include "locks/mutex_type.h"
 #include "thread_basic.h"
 #include <ureg.h>
+#include <page.h>
+
 /** @brief initialize threads
  *
  *  initialize the global runnable queue and block queue for threads;
@@ -32,6 +34,8 @@ void thr_init()
     list_init(&blocked_queue);
     mutex_init(&blocked_queue_lock);
     mutex_init(&runnable_queue_lock);
+    mutex_init(&deschedule_lock);
+    current_thread = NULL;
     next_tid = 1;
 }
 
@@ -47,13 +51,21 @@ TCB *thr_create(unsigned int eip, int run)
 {
     // set up tcb for this program
     TCB *tcb = (TCB *)malloc(sizeof(TCB));
+    if (tcb == NULL)
+    {
+        return NULL;
+    }
     tcb -> tid = next_tid;
     next_tid++;
     mutex_init(&tcb -> tcb_mutex);
     tcb -> state = THREAD_RUNNING;
     // Allocate kernel stack for this thread
-    tcb -> stack_size = 4096;
-    tcb -> stack_base = smemalign(4096, tcb->stack_size);
+    tcb -> stack_size = PAGE_SIZE;
+    tcb -> stack_base = smemalign(PAGE_SIZE, tcb->stack_size);
+    tcb -> esp = (uint32_t)tcb -> stack_size + (uint32_t)tcb -> stack_base - sizeof(int);
+    
+    tcb -> start_ticks = 0;
+    tcb -> duration = 0;
 
     tcb -> registers.ds = SEGSEL_USER_DS;
     tcb -> registers.es = SEGSEL_USER_DS;
@@ -70,12 +82,13 @@ TCB *thr_create(unsigned int eip, int run)
     tcb -> registers.eax = 0;
     tcb -> esp = (uint32_t)tcb -> stack_size + (uint32_t)tcb -> stack_base -4;
     tcb -> saved_esp = 0;
+
     tcb -> registers.eip = eip;
 
     tcb -> registers.cs = SEGSEL_USER_CS;
     tcb -> registers.eflags = ((get_eflags() | EFL_RESV1) & ~EFL_AC )| EFL_IF;
     // set up user stack pointer
-    tcb -> registers.esp = 0xffffff10; 
+    tcb -> registers.esp = 0xffffff10;  // Predefined stack pointer
     tcb -> registers.ss = SEGSEL_USER_DS;
 
     // Set up the thread signal structure

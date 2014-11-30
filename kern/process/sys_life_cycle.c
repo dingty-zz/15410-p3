@@ -56,12 +56,15 @@ int sys_thread_fork(void)
     child_tcb -> pcb = parent_pcb;
     child_tcb -> tid = next_tid;
     next_tid++;
+    child_tcb -> start_ticks = 0;
+    child_tcb -> duration = 0;
+    mutex_init(&child_tcb->tcb_mutex);
     /* copy thread info*/
     child_tcb -> state = THREAD_INIT;
     /*each thread has its own kernel stack*/
 
     child_tcb -> stack_size = current_thread -> stack_size;
-    child_tcb -> stack_base = smemalign(4096, child_tcb -> stack_size);
+    child_tcb -> stack_base = smemalign(PAGE_SIZE, child_tcb -> stack_size);
     child_tcb -> esp =
         (uint32_t)child_tcb->stack_base + (uint32_t)child_tcb->stack_size;
     child_tcb -> saved_esp = 0;
@@ -134,9 +137,18 @@ void sys_vanish(void)
                 list_delete(&threads, n);
                 list_delete(&blocked_queue, n);
                 list_delete(&runnable_queue, n);
+                // Delete and free all the pending signals
+                while (tcb -> pending_signals.length != 0)
+                {
+                    node *signal_node  = 
+                    list_delete_first(&tcb -> pending_signals);
+                    signal_t *sig = 
+                    list_entry(signal_node, signal_t, signal_list_node);
+                    free(sig);
+                }
                 // free kernel stack and tcb
                 sfree(tcb -> stack_base, tcb -> stack_size);
-                // free(tcb);
+                free(tcb);
             }
         }
 
@@ -156,7 +168,7 @@ void sys_vanish(void)
                     n = n -> next)
             {
                 init = list_entry(n, TCB, thread_list_node);
-                if (init -> tid == 2)
+                if (init -> tid == INIT_PID)
                 {
                     // Find init and make it runnable
                     mutex_lock(&blocked_queue_lock);
@@ -176,10 +188,10 @@ void sys_vanish(void)
         }
         else
         {
-             /* Because the parent is still alive, find the waiting parent
-               from the block queue that wants to reap this process
-               We can ensure that there is only one thread left
-               for this process, so it's safe to do so */
+            /* Because the parent is still alive, find the waiting parent
+              from the block queue that wants to reap this process
+              We can ensure that there is only one thread left
+              for this process, so it's safe to do so */
             list parent_threads = parent -> threads;
             TCB *waiting_thread = NULL;
             for (n = list_begin(&parent_threads);
@@ -187,8 +199,8 @@ void sys_vanish(void)
                     n = n -> next)
             {
                 waiting_thread = list_entry(n, TCB, peer_threads_node);
-                // If we find a thread that is waiting, we delete it from the waiting
-                // queue and make it runnable
+                // If we find a thread that is waiting, we delete it from 
+                // the waiting queue and make it runnable
                 if (waiting_thread -> state == THREAD_WAITING)
                 {
                     mutex_lock(&blocked_queue_lock);
@@ -253,6 +265,13 @@ int sys_wait(int *status_ptr)
             for (temp = list_begin (&child_threads); temp != NULL; temp = temp -> next)
             {
                 TCB *tcb = list_entry(temp, TCB, peer_threads_node);
+                // Delete and free all the pending signals
+                while (tcb -> pending_signals.length != 0)
+                {
+                    node *signal_node  = list_delete_first(&tcb -> pending_signals);
+                    signal_t *sig = list_entry(signal_node, signal_t, signal_list_node);
+                    free(sig);
+                }
                 // Free its kernel stack and tcb
                 sfree(tcb -> stack_base, tcb -> stack_size);
                 free(tcb);
@@ -262,7 +281,8 @@ int sys_wait(int *status_ptr)
             current_pcb -> children_count--;
 
             // Free page directory and pcb
-            sfree(pcb -> PD, 4096);
+            destroy_page_directory(pcb -> PD);
+            sfree(pcb -> PD, PAGE_SIZE);
 
             free(pcb);
             return pid;
@@ -296,6 +316,13 @@ int sys_wait(int *status_ptr)
             for (temp = list_begin (&child_threads); temp != NULL; temp = temp -> next)
             {
                 TCB *tcb = list_entry(temp, TCB, peer_threads_node);
+                // Delete and free all the pending signals
+                while (tcb -> pending_signals.length != 0)
+                {
+                    node *signal_node  = list_delete_first(&tcb -> pending_signals);
+                    signal_t *sig = list_entry(signal_node, signal_t, signal_list_node);
+                    free(sig);
+                }
                 // Free its kernel stack and tcb
                 sfree(tcb -> stack_base, tcb -> stack_size);
                 free(tcb);
@@ -305,9 +332,10 @@ int sys_wait(int *status_ptr)
             current_pcb -> children_count--;
 
             // Free page directory and control block
-            // sfree(pcb -> PD, 4096);
+            destroy_page_directory(pcb -> PD);
+            sfree(pcb -> PD, PAGE_SIZE);
 
-            // free(pcb);
+            free(pcb);
             return pid;
         }
     }

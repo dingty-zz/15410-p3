@@ -61,7 +61,7 @@ int find_free_entry(uint32_t *parent_directory)
 /** @brief The fork implementation, ZFOD
  *
  *  use ZFOD, by using a temporary unmapped entry to copy the old physical
- *  frame to the new allocated physical frame for child, so as not to 
+ *  frame to the new allocated physical frame for child, so as not to
  *  turn off paging.
  *
  *  @param nothing
@@ -72,7 +72,7 @@ int sys_fork(void)
 
     /* step 0 : check if multi threaded; if so, then no permission to fork */
     if (current_thread -> pcb -> threads.length != 1)
-         return -1;
+        return -1;
 
     /* Step 1: update current threads' registers */
     unsigned int *kernel_stack =
@@ -94,11 +94,14 @@ int sys_fork(void)
     PCB *child_pcb = (PCB *)malloc(sizeof(PCB));
     if (child_pcb == NULL)
     {
+        lprintf("Sth bad happend");
         return -1;
     }
     TCB *child_tcb = (TCB *)malloc(sizeof(TCB));
     if (child_tcb == NULL)
     {
+        lprintf("Sth bad happend");
+        free(child_pcb);
         return -1;
     }
     PCB *parent_pcb = current_thread -> pcb;
@@ -109,20 +112,27 @@ int sys_fork(void)
     if (!find_free_entry(parent_directory))
     {
         //didn't successfully find a free entry in current pcb;
+        free(child_tcb);
+        free(child_pcb);
         return -1;
     }
 
     /* Step 3: set up the thread control block */
     mutex_init(&child_tcb -> tcb_mutex);
-    child_pcb -> children_count=0;
+    child_pcb -> children_count = 0;
     child_tcb -> pcb = child_pcb;
     child_tcb -> tid = next_tid;
     next_tid++;
     child_tcb -> state = THREAD_INIT;
-    child_tcb -> stack_size = parent_tcb -> stack_size;
-    child_tcb -> stack_base = memalign(4, child_tcb -> stack_size);
+    child_tcb -> start_ticks = 0;
+    child_tcb -> duration = 0;
+    child_tcb -> stack_size = PAGE_SIZE;
+    child_tcb -> stack_base = smemalign(PAGE_SIZE, child_tcb->stack_size);
     if (child_tcb -> stack_base == NULL)
     {
+        lprintf("Sth bad happend");
+        free(child_tcb);
+        free(child_pcb);
         return -1;
     }
     child_tcb -> esp = (uint32_t)child_tcb -> stack_base +
@@ -147,7 +157,7 @@ int sys_fork(void)
     child_tcb -> real_period = 0;
     child_tcb -> real_tick = 0;
 
-    
+
     list_init(&child_pcb -> threads);
     list_init(&child_pcb -> va);
     list_insert_last(&child_pcb -> threads, &child_tcb->peer_threads_node);
@@ -162,11 +172,17 @@ int sys_fork(void)
     parent_pcb -> children_count++;
 
     /* step 5: create a new page directory for the child */
-    child_pcb -> PD = (uint32_t *) memalign(PD_SIZE * 4, PT_SIZE * 4);
+    child_pcb -> PD = (uint32_t *) smemalign(PAGE_SIZE, PAGE_SIZE);
     if (child_pcb -> PD == NULL)
     {
+        lprintf("Sth bad happend");
+        sfree(child_tcb -> stack_base, child_tcb -> stack_size);
+        free(child_tcb);
+        free(child_pcb);
         return -1;
     }
+    memset((void *)child_pcb -> PD, 0, PAGE_SIZE);
+
     int i, j;
     // copy kernel mappings first
     for (i = 0; i < 4; ++i)
@@ -181,11 +197,18 @@ int sys_fork(void)
         uint32_t pt_addr = DEFLAG_ADDR(parent_de_raw);
         if (pt_addr == 0)  continue;
         //child direcotory entry info
-        uint32_t child_de = (uint32_t)memalign(PT_SIZE * 4, PT_SIZE * 4);
-        if (child_de ==0)
+        uint32_t child_de = (uint32_t)smemalign(PAGE_SIZE, PAGE_SIZE);
+        if (child_de == 0)
         {
+            lprintf("Sth bad happend");
+            destroy_page_directory(child_pcb -> PD);
+            sfree(child_tcb -> stack_base, child_tcb -> stack_size);
+            free(child_tcb);
+            free(child_pcb);
             return -1;
         }
+        memset((void *)child_de, 0, PAGE_SIZE);
+
         uint32_t child_de_raw = ADDFLAG(child_de, (GET_FLAG(parent_de_raw)));
         (child_pcb->PD)[i] = child_de_raw;
         //copy page table enties, and copy frame data
@@ -199,9 +222,13 @@ int sys_fork(void)
 
             uint32_t parent_entry_v_addr = (i << 22) | (j << 12);
             int result = virtual_map_physical(parent_directory, entry.pd_index,
-                                 entry.pt_index);
+                                              entry.pt_index);
             if (result == -1)
             {
+                destroy_page_directory(child_pcb -> PD);
+                sfree(child_tcb -> stack_base, child_tcb -> stack_size);
+                free(child_tcb);
+                free(child_pcb);
                 return -1;
             }
             uint32_t found_table = DEFLAG_ADDR(parent_directory[entry.pd_index]);
@@ -209,7 +236,7 @@ int sys_fork(void)
             uint32_t new_phys_addr = ((uint32_t *)found_table)[entry.pt_index];
             //copy the physical frame using virtual address
             //so that we don't need to turn off paging
-           
+
             memcpy((void *)entry.free_virtual_addr, (void *)parent_entry_v_addr, 4096);
             //demap this new frame from parent pd
             ((uint32_t *)child_de) [j] = ADDFLAG(DEFLAG_ADDR(new_phys_addr), GET_FLAG(phys_addr_raw)) ;

@@ -27,8 +27,10 @@
 #define IDLE_PID 1
 
 // We invoke context switch every 100 ticks
+
 #define SCHEDULE_INTERVAL 100
 extern uint32_t get_esp();
+
 void tick(unsigned int numTicks)
 {
     // For thread execution time
@@ -42,7 +44,11 @@ void tick(unsigned int numTicks)
         {
             /* send it a SIGVTALRM signal */
             signal_t *vtalrm_sig = make_signal_node(0, SIGVTALRM);
-            list_insert_last(&current_thread -> pending_signals, &vtalrm_sig -> signal_list_node);
+            if (vtalrm_sig != NULL)
+            {
+                list_insert_last(&current_thread -> pending_signals, &vtalrm_sig -> signal_list_node);
+            }
+            // If there is unable to make a signal node, we do nothing
         }
     }
 
@@ -59,7 +65,12 @@ void tick(unsigned int numTicks)
         {
             /* send it a SIGALRM signal */
             signal_t *alrm_sig = make_signal_node(0, SIGALRM);
+            if (alrm_sig != NULL)
+            {
             list_insert_last(&tcb -> pending_signals, &alrm_sig -> signal_list_node);
+            }
+            // If there is unable to make a signal node, we do nothing
+
         }
     }
 
@@ -80,6 +91,7 @@ void tick(unsigned int numTicks)
  **/
 void schedule(int tid)
 {
+    // lprintf("Inside schedule");
     disable_interrupts();
     // Before actual context switching, we make sleeping thread to be
     // runnable if it's the time to wake it up
@@ -144,7 +156,7 @@ void schedule(int tid)
     case THREAD_READLINE:
     case THREAD_SLEEPING:
     case THREAD_SIGNAL_BLOCKED:
-    lprintf("Eneuq blocked wuquu");
+        lprintf("Eneuq blocked wuquu");
         list_insert_last(&blocked_queue, &current_thread->thread_list_node);
         break;
     // The thread is runnable by default, we put it into the runnable queue
@@ -169,13 +181,13 @@ void schedule(int tid)
                 n = n -> next)
         {
             signal_t *sig = list_entry(n, signal_t, signal_list_node);
-            lprintf("The mask is %x",(unsigned int) current_thread -> mask);
+            lprintf("The mask is %x", (unsigned int) current_thread -> mask);
             if (((current_thread -> mask >> sig -> cause) & 0x1) == 1)
             {
                 // MAGIC_BREAK;
                 current_thread -> saved_esp = get_esp();
                 lprintf("Let's call signal_handler_wrapper current esp is %x", (unsigned int)current_thread -> saved_esp);
-                set_esp0((uint32_t)(current_thread -> saved_esp+8));
+                set_esp0((uint32_t)(current_thread -> saved_esp + 8));
                 signal_handler_wrapper(n);
                 current_thread -> saved_esp = 0;
                 set_esp0((uint32_t)(current_thread -> stack_base + current_thread -> stack_size));
@@ -208,7 +220,7 @@ TCB *context_switch(TCB *current, TCB *next)
     lprintf("Before do switch");
     // MAGIC_BREAK;
     do_switch(current, next, next -> state);
-        lprintf("after do switch the esp0 is %x",(unsigned int)get_esp0());
+    lprintf("after do switch the esp0 is %x", (unsigned int)get_esp0());
     // MAGIC_BREAK;
     return current;
 }

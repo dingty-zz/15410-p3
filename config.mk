@@ -15,10 +15,6 @@
 # which can't be graded.  If you think the build infrastructure is
 # somehow restricting you from doing something you need to do, contact
 # the course staff--don't just hit it with a hammer and move on.
-#
-# [Once you've read this message, please edit it out of your config.mk]
-# [Once you've read this message, please edit it out of your config.mk]
-# [Once you've read this message, please edit it out of your config.mk]
 ###########################################################################
 
 ###########################################################################
@@ -70,6 +66,7 @@ wait_getpid work mem_permissions make_crash \
 make_crash_helper chow yield_desc_mkrun loader_test1 \
 fork_wait_bomb fork_exit_bomb ack cho_variant fib mem_eat_test \
 kill tv_user_test time_work asrv arcv
+
 
 ###########################################################################
 # Test programs you have written which you wish to run
