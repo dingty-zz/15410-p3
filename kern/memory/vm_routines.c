@@ -17,6 +17,7 @@
 #include "string.h"
 #include <common_kern.h>
 #include "control_block.h"
+#include <assert.h>
 #include <page.h>
 
 #define PAGE_LEN (PAGE_SIZE>>2)             //1024
@@ -24,19 +25,24 @@
 
 static KF *frame_base;      // always fixed
 static KF *free_frame;      // points to the first free frame where refcount = 0
-
+static uint32_t *kern_pd;
 /** @brief Initialize the whole memory system, immediately
  *         called when the kernel enters to enable paging
- *
- *  @param q The pointer to the queue
- *  @return int 1 means not empty and 0 otherwise
+ *         When error occurs, because this happens during the kernel set
+ *         up, there is no way for us to report the error to someone else,
+ *         we choose to panic
+ *  @return nothing
  **/
 void mm_init()
 {
     init_free_frame();
 
     // allocate 4k memory for kernel page directory
-    uint32_t *kern_pd = (uint32_t *)memalign(PAGE_SIZE, 4 * 4);
+    kern_pd = (uint32_t *)smemalign(PAGE_SIZE, PAGE_SIZE);
+    if (kern_pd == NULL)
+    {
+        panic("Could allocate kernel page directory when kernel sets up");
+    }
     set_cr3((uint32_t)kern_pd);
 
     //initialize the first four entries of the kernel pd, note that
@@ -48,7 +54,11 @@ void mm_init()
     int i, j;
     for (i = 0; i < 4; ++i)
     {
-        uint32_t current_pt = (uint32_t)memalign(PAGE_SIZE, PAGE_SIZE);
+        uint32_t current_pt = (uint32_t)smemalign(PAGE_SIZE, PAGE_SIZE);
+        if (current_pt == 0)
+        {
+            panic("Could allocate first page tables");
+        }
         for (j = 0; j < PAGE_LEN; ++j)
         {
             uint32_t k = acquire_free_frame();
@@ -102,7 +112,14 @@ int virtual_map_physical(uint32_t *PD, uint32_t pd_index, uint32_t pt_index)
             return -1;
         }
     
-        uint32_t *PT = (uint32_t *)memalign(PAGE_SIZE, PAGE_SIZE);
+        uint32_t *PT = (uint32_t *)smemalign(PAGE_SIZE, PAGE_SIZE);
+        if (PT == NULL)
+        {
+            // No enough space for allocating a page table, return -1
+            release_free_frame(free_frame_addr);
+            lprintf("Error in virtual_map_physical");
+            return -1;
+        }
         memset((void *)PT, 0, PAGE_SIZE);
 
         PT[pt_index] = free_frame_addr | 0x7;
@@ -135,7 +152,7 @@ int virtual_unmap_physical(uint32_t *PD, uint32_t pd_index, uint32_t pt_index)
         /* Get the page table address*/
         uint32_t *PT = (uint32_t *)DEFLAG_ADDR(pde);
         uint32_t pte = PT[pt_index];
-        /* Already mapped*/
+        /* Already unmapped*/
         if (pte == 0)
         {
             return -1;   
@@ -173,12 +190,26 @@ int allocate_pages(uint32_t *pd, uint32_t virtual_addr, size_t size)
     {
         int actual_offset = pt_index + i;
         int result = 0;
-        virtual_map_physical(pd, pd_index + actual_offset / PAGE_LEN, 
+        result = virtual_map_physical(pd, pd_index + actual_offset / PAGE_LEN, 
                                  actual_offset % PAGE_LEN);
-        if (result == -1)
-        {
-            return -1;
-        }
+        // currently we don't use it
+        // if (result == -1123)
+        // {
+        //     lprintf("Error happens in allocate_pages");
+        //     // If the kernel can't give us enough memory, we undo the previous
+        //     // allocationss
+        //     int j=0;
+        //     for (j = i; j >= 0; --j)
+        //     {
+        //         int actual_offset = pt_index + j;
+        //         // Because we can guarantee that previous allocation is
+        //         // successful, we can safely ignore the return value for
+        //         // unmap function
+        //         virtual_unmap_physical(pd, pd_index + actual_offset / PAGE_LEN, 
+        //                          actual_offset % PAGE_LEN);
+        //     }
+        //     return -1;
+        // }
     }
     return 0;
 
@@ -207,7 +238,7 @@ int free_pages(uint32_t *pd, uint32_t virtual_addr, size_t size)
     {
         int actual_offset = pt_index + i;
         int result=0;
-        virtual_unmap_physical(pd, pd_index + actual_offset / PAGE_LEN, 
+        result = virtual_unmap_physical(pd, pd_index + actual_offset / PAGE_LEN, 
                                    actual_offset % PAGE_LEN);
         if (result == -1)
         {
@@ -228,17 +259,28 @@ int free_pages(uint32_t *pd, uint32_t virtual_addr, size_t size)
  **/
 uint32_t *init_pd()
 {
-    uint32_t *pd = (uint32_t *)memalign(PAGE_SIZE, PAGE_SIZE); // Allocate pd for process
+    uint32_t *pd = (uint32_t *)smemalign(PAGE_SIZE, PAGE_SIZE); // Allocate pd for process
+
+    if (pd == NULL)
+    {
+        return 0;
+    }
     memset(pd, 0, PAGE_SIZE);  // clean
     int i = 0;
     for (i = 0; i < 4; ++i)
     {
         pd[i] = DEFLAG_ADDR((((uint32_t *)get_cr3())[i])) | 0x107;
-
     }
     //memcpy((void *)pd, old_cr3, 4 * 4); // Copy kernel pt mapping
     set_cr3((uint32_t) pd);
 
+    // Calling this function means the initial kern_pd is useless,
+    // we free it and set it to NULL
+    if (kern_pd != NULL)
+    {
+        sfree(kern_pd, PAGE_SIZE);
+        kern_pd = NULL;
+    }
     //lprintf("after calling initpd, the pd is %x", (unsigned int)get_cr3());
 
     return pd;
@@ -306,7 +348,7 @@ void init_free_frame()
     free_frame_num = machine_phys_frames();
     //initizlie the free frame array
     //bunch of pointers that points to pages
-    frame_base = (KF *)memalign(PAGE_SIZE, 8 * TOTAL_PHYS_FRAMES);
+    frame_base = (KF *)smemalign(PAGE_SIZE, 8 * TOTAL_PHYS_FRAMES);
     for (i = 0; i < TOTAL_PHYS_FRAMES; ++i)
     {
         frame_base[i].refcount = 0;

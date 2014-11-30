@@ -38,7 +38,7 @@ void get_real_handler(ureg_t* cur_ureg)
     if (current_thread-> swexn_info.installed_flag==0)
     { 
         sys_set_status(-2);
-        printf("Vanish! CPU registers info: cr2: 0x%x, esp0: 0x%x",
+        lprintf("Vanish! CPU registers info: cr2: 0x%x, esp0: 0x%x",
                 (unsigned int)get_cr2(), (unsigned int)get_esp0());
         /* reap peer threads first before vanishing the thread itself*/
         PCB *current_pcb = current_thread -> pcb;

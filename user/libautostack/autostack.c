@@ -11,7 +11,7 @@
 #include <syscall.h>
 #include "autostack.h"
 #include "thread.h"
-
+#include "simics.h"
 #define NULL 0
 #define WORDSIZE 4
 /*First address of the exception stack*/
@@ -30,6 +30,7 @@ extern int getesp();
  */
 void myhandler(void *arg, ureg_t *ureg)
 {
+    lprintf("Inside my handler");
     int ret;
     unsigned int cr2 = ureg->cr2;
 
@@ -42,16 +43,22 @@ void myhandler(void *arg, ureg_t *ureg)
     /*not a page fault, exit thread*/
     if ((ureg == NULL) || 
         (ureg->cause != SWEXN_CAUSE_PAGEFAULT) || 
-        ((ureg->error_code) & 1) !=0)
+        ((ureg->error_code) & 1) !=0) {
+        set_status(-2);
         vanish();
+    }
+        
     
     /*no more memory to allocate on the stack, exit thread*/
-    if (cr2 < LAST_ADDR) 
+    if (cr2 < LAST_ADDR) {
+        set_status(-2);
         vanish();
+    }
 
     /* exception happened not because of automatic stack growth */
     if (cr2 < ureg->esp)
     {
+        set_status(-2);
         vanish();
     }
 

@@ -48,6 +48,7 @@ void tick(unsigned int numTicks)
  **/
 void schedule(int tid)
 {
+    lprintf("Inside schedule");
     disable_interrupts();
     // Before actual context switching, we make sleeping thread to be
     // runnable if it's the time to wake it up
@@ -75,6 +76,7 @@ void schedule(int tid)
 
     if (current_thread -> tid == IDLE_PID && runnable_queue.length == 0)
     {
+        lprintf("Only idle is running");
         return;
     }
 

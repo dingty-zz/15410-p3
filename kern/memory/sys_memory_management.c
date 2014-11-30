@@ -99,8 +99,8 @@ int sys_remove_pages(void *addr)
         VA_INFO *current_struct = list_entry(current_node, VA_INFO, va_node);
         current_virtual_addr = current_struct -> virtual_addr;
         current_len = current_struct->len;
-        lprintf("wanna remove addr: %x this number: %d,",
-                (unsigned int)current_virtual_addr, current_len);
+        // lprintf("wanna remove addr: %x this number: %d,",
+        //         (unsigned int)current_virtual_addr, current_len);
         if (current_virtual_addr == (uint32_t) addr)
         {
             free_pages(current_thread -> pcb -> PD, (uint32_t)addr, current_len);

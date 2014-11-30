@@ -15,10 +15,6 @@
 # which can't be graded.  If you think the build infrastructure is
 # somehow restricting you from doing something you need to do, contact
 # the course staff--don't just hit it with a hammer and move on.
-#
-# [Once you've read this message, please edit it out of your config.mk]
-# [Once you've read this message, please edit it out of your config.mk]
-# [Once you've read this message, please edit it out of your config.mk]
 ###########################################################################
 
 ###########################################################################
@@ -68,7 +64,7 @@ swexn_stands_for_swextensible swexn_uninstall_test \
 minclone_mem \
 wait_getpid work mem_permissions make_crash \
 make_crash_helper chow yield_desc_mkrun loader_test1 \
-fork_wait_bomb fork_exit_bomb ack cho_variant fib mem_eat_test
+fork_wait_bomb fork_exit_bomb ack cho_variant fib mem_eat_test wild_test1
 
 ###########################################################################
 # Test programs you have written which you wish to run

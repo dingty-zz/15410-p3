@@ -23,7 +23,7 @@
 #include "mem_internals.h"
 /* x86 specific includes */
 #include <x86/asm.h>                /* enable_interrupts() */
-
+#include "assert.h"
 /* Include all related header files in kern/ */
 #include "handler_install.h"
 #include "memory/vm_routines.h"
@@ -72,9 +72,7 @@ int kernel_main(mbinfo_t *mbinfo, int argc, char **argv, char **envp)
     process_create("idle", 0);   // we hang idle
 
     // Load and run init process
-    process_create("init",1);
-
-    // For future use
+    process_create("init",1);    
 
     while (1) continue;
 
