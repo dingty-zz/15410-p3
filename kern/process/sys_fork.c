@@ -120,7 +120,7 @@ int sys_fork(void)
     next_tid++;
     child_tcb -> state = THREAD_INIT;
     child_tcb -> stack_size = parent_tcb -> stack_size;
-    child_tcb -> stack_base = memalign(4, child_tcb -> stack_size);
+    child_tcb -> stack_base = malloc(child_tcb -> stack_size);
     if (child_tcb -> stack_base == NULL)
     {
         return -1;
@@ -148,11 +148,13 @@ int sys_fork(void)
     parent_pcb -> children_count++;
 
     /* step 5: create a new page directory for the child */
-    child_pcb -> PD = (uint32_t *) memalign(PD_SIZE * 4, PT_SIZE * 4);
+    child_pcb -> PD = (uint32_t *) smemalign(PAGE_SIZE, PAGE_SIZE);
     if (child_pcb -> PD == NULL)
     {
         return -1;
     }
+    memset((void *)child_pcb -> PD, 0, PAGE_SIZE);
+
     int i, j;
     // copy kernel mappings first
     for (i = 0; i < 4; ++i)
@@ -167,11 +169,13 @@ int sys_fork(void)
         uint32_t pt_addr = DEFLAG_ADDR(parent_de_raw);
         if (pt_addr == 0)  continue;
         //child direcotory entry info
-        uint32_t child_de = (uint32_t)memalign(PT_SIZE * 4, PT_SIZE * 4);
+        uint32_t child_de = (uint32_t)smemalign(PAGE_SIZE, PAGE_SIZE);
         if (child_de ==0)
         {
             return -1;
         }
+        memset((void *)child_de, 0, PAGE_SIZE);
+
         uint32_t child_de_raw = ADDFLAG(child_de, (GET_FLAG(parent_de_raw)));
         (child_pcb->PD)[i] = child_de_raw;
         //copy page table enties, and copy frame data

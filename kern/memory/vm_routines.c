@@ -296,6 +296,7 @@ void destroy_page_directory(uint32_t *pd)
         {
             continue;
         }
+        // lprintf("The is %x", (unsigned int)pd[i]);
         destroy_page_table(DEFLAG_ADDR(pd[i]));
         pd[i] = 0;
     }
@@ -311,6 +312,10 @@ void destroy_page_directory(uint32_t *pd)
  **/
 void destroy_page_table(uint32_t pt)
 {
+    if (pt == 0)
+    {
+        return ;
+    }
     int i;
     for (i = 0; i < PAGE_LEN; ++i)
     {

@@ -27,7 +27,7 @@
 #define IDLE_PID 1
 
 // We invoke context switch every 100 ticks
-#define SCHEDULE_INTERVAL 100
+#define SCHEDULE_INTERVAL 5
 
 void tick(unsigned int numTicks)
 {
@@ -48,7 +48,7 @@ void tick(unsigned int numTicks)
  **/
 void schedule(int tid)
 {
-    lprintf("Inside schedule");
+    // lprintf("Inside schedule");
     disable_interrupts();
     // Before actual context switching, we make sleeping thread to be
     // runnable if it's the time to wake it up
