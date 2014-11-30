@@ -114,6 +114,10 @@ int sys_exec(char *execname, char *argvec[])
     // Unmap current page directory and free all its address space
     uint32_t *old_pd = (uint32_t*)get_cr3();
     process -> PD = init_pd();
+    if (process -> PD == 0)
+    {
+        return -1;
+    }
     destroy_page_directory(old_pd);
     sfree(old_pd, PAGE_SIZE);
     // Return error when there is unable to allocate a new page directory due to kernel
@@ -132,8 +136,15 @@ int sys_exec(char *execname, char *argvec[])
     {
         current_thread -> registers.eip = eip;
     }
+
     // set up kernel stack pointer
     set_esp0((uint32_t)(current_thread -> stack_base + current_thread -> stack_size));
+
+    // Reinitialize the lock
+    mutex_init(&current_thread -> tcb_mutex);
+
+    current_thread -> start_ticks = 0;
+    current_thread -> duration = 0;
 
     // Copy the content to the new user stack
     char *dest = (char *)USER_STACK_HIGH;

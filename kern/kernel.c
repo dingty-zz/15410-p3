@@ -66,8 +66,6 @@ int kernel_main(mbinfo_t *mbinfo, int argc, char **argv, char **envp)
     // Initialize thread management system
     thr_init();
 
-    enable_interrupts();
-
     lprintf("Hello from a brand new kernel!");
     process_create("idle", 0);   // we hang idle
 

@@ -49,19 +49,22 @@ int sys_thread_fork(void)
     current_thread -> registers.ecx = kernel_stack[5];
     current_thread -> registers.ebx = kernel_stack[4];
     PCB *parent_pcb = current_thread -> pcb;
-    list threads = parent_pcb -> threads;
 
     /* create a new thread*/
     TCB *child_tcb = (TCB *)malloc(sizeof(TCB));
+    mutex_init(&child_tcb->tcb_mutex);
     child_tcb -> pcb = parent_pcb;
     child_tcb -> tid = next_tid;
     next_tid++;
+    child_tcb -> start_ticks = 0;
+    child_tcb -> duration = 0;
+
     /* copy thread info*/
     child_tcb -> state = THREAD_INIT;
     /*each thread has its own kernel stack*/
 
-    child_tcb -> stack_size = current_thread -> stack_size;
-    child_tcb -> stack_base = smemalign(4096, child_tcb -> stack_size);
+    child_tcb -> stack_size = PAGE_SIZE;
+    child_tcb -> stack_base = smemalign(PAGE_SIZE, PAGE_SIZE);
     child_tcb -> esp =
         (uint32_t)child_tcb->stack_base + (uint32_t)child_tcb->stack_size;
     child_tcb -> registers = current_thread -> registers;
@@ -69,7 +72,7 @@ int sys_thread_fork(void)
     child_tcb -> registers.eax = 0;
     current_thread -> registers.eax = child_tcb -> tid;
     /* put into our global list*/
-    list_insert_last(&threads, &child_tcb->peer_threads_node);
+    list_insert_last(&parent_pcb -> threads, &child_tcb->peer_threads_node);
     list_insert_last(&runnable_queue, &child_tcb->thread_list_node);
     return child_tcb -> tid;
 }
@@ -145,7 +148,7 @@ void sys_vanish(void)
                     n = n -> next)
             {
                 init = list_entry(n, TCB, thread_list_node);
-                if (init -> tid == 2)
+                if (init -> tid == INIT_PID)
                 {
                     // Find init and make it runnable
                     mutex_lock(&blocked_queue_lock);
@@ -251,8 +254,9 @@ int sys_wait(int *status_ptr)
             current_pcb -> children_count--;
 
             // Free page directory and pcb
-            sfree(pcb -> PD, 4096);
-
+            destroy_page_directory(pcb -> PD);
+            sfree(pcb -> PD, PAGE_SIZE);
+            
             free(pcb);
             return pid;
         }
@@ -294,7 +298,8 @@ int sys_wait(int *status_ptr)
             current_pcb -> children_count--;
 
             // Free page directory and control block
-            sfree(pcb -> PD, 4096);
+            destroy_page_directory(pcb -> PD);
+            sfree(pcb -> PD, PAGE_SIZE);
 
             free(pcb);
             return pid;

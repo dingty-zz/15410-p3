@@ -94,11 +94,14 @@ int sys_fork(void)
     PCB *child_pcb = (PCB *)malloc(sizeof(PCB));
     if (child_pcb == NULL)
     {
+        lprintf("Sth bad happend");
         return -1;
     }
     TCB *child_tcb = (TCB *)malloc(sizeof(TCB));
     if (child_tcb == NULL)
     {
+        lprintf("Sth bad happend");
+
         return -1;
     }
     PCB *parent_pcb = current_thread -> pcb;
@@ -119,10 +122,14 @@ int sys_fork(void)
     child_tcb -> tid = next_tid;
     next_tid++;
     child_tcb -> state = THREAD_INIT;
-    child_tcb -> stack_size = parent_tcb -> stack_size;
-    child_tcb -> stack_base = malloc(child_tcb -> stack_size);
+    child_tcb -> start_ticks = 0;
+    child_tcb -> duration = 0;
+    child_tcb -> stack_size = PAGE_SIZE;
+    child_tcb -> stack_base = smemalign(PAGE_SIZE, child_tcb->stack_size);
     if (child_tcb -> stack_base == NULL)
     {
+        lprintf("Sth bad happend");
+
         return -1;
     }
     child_tcb -> esp = (uint32_t)child_tcb -> stack_base +
@@ -151,6 +158,8 @@ int sys_fork(void)
     child_pcb -> PD = (uint32_t *) smemalign(PAGE_SIZE, PAGE_SIZE);
     if (child_pcb -> PD == NULL)
     {
+        lprintf("Sth bad happend");
+
         return -1;
     }
     memset((void *)child_pcb -> PD, 0, PAGE_SIZE);
@@ -172,6 +181,8 @@ int sys_fork(void)
         uint32_t child_de = (uint32_t)smemalign(PAGE_SIZE, PAGE_SIZE);
         if (child_de ==0)
         {
+        lprintf("Sth bad happend");
+            
             return -1;
         }
         memset((void *)child_de, 0, PAGE_SIZE);

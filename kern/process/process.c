@@ -13,6 +13,7 @@
 #include "simics.h"
 #include "malloc.h"
 #include <elf/elf_410.h>
+ #include <x86/asm.h>   
 #include <page.h>
 #include "common_kern.h"
 #include "string.h"
@@ -99,7 +100,7 @@ int process_create(const char *filename, int run)
 
     thread -> pcb = process;  // cycle reference :)
 
-    /* We need to do this everytime for a thread to run */
+    /* We need to do this every time for a thread to run */
     current_thread = thread;
     // set up kernel stack pointer possibly bugs here
     set_esp0((uint32_t)(thread -> stack_base + thread -> stack_size));
@@ -114,6 +115,9 @@ int process_create(const char *filename, int run)
     {
         return 0;
     }
+    // Because we know that both idle and init is loaded, we can safely
+    // enable interrupts to enable preemption
+    enable_interrupts();
     enter_user_mode(thread -> registers.edi,
                     thread -> registers.esi,
                     thread -> registers.ebp,
