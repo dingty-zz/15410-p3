@@ -101,7 +101,7 @@ int sys_fork(void)
     if (child_tcb == NULL)
     {
         lprintf("Sth bad happend");
-
+        free(child_pcb);
         return -1;
     }
     PCB *parent_pcb = current_thread -> pcb;
@@ -112,6 +112,8 @@ int sys_fork(void)
     if (!find_free_entry(parent_directory))
     {
         //didn't successfully find a free entry in current pcb;
+        free(child_tcb);
+        free(child_pcb);
         return -1;
     }
 
@@ -129,8 +131,9 @@ int sys_fork(void)
     if (child_tcb -> stack_base == NULL)
     {
         lprintf("Sth bad happend");
-
-        return -1;
+        free(child_tcb);
+        free(child_pcb);
+        return -1;  
     }
     child_tcb -> esp = (uint32_t)child_tcb -> stack_base +
                        (uint32_t)child_tcb -> stack_size;
@@ -159,7 +162,9 @@ int sys_fork(void)
     if (child_pcb -> PD == NULL)
     {
         lprintf("Sth bad happend");
-
+        sfree(child_tcb -> stack_base, child_tcb -> stack_size);
+        free(child_tcb);
+        free(child_pcb);
         return -1;
     }
     memset((void *)child_pcb -> PD, 0, PAGE_SIZE);
@@ -182,7 +187,7 @@ int sys_fork(void)
         if (child_de ==0)
         {
         lprintf("Sth bad happend");
-            
+            destroy_page_directory(child_pcb -> PD);
             return -1;
         }
         memset((void *)child_de, 0, PAGE_SIZE);
