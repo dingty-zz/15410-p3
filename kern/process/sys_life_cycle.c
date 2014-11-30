@@ -49,7 +49,6 @@ int sys_thread_fork(void)
     current_thread -> registers.ecx = kernel_stack[5];
     current_thread -> registers.ebx = kernel_stack[4];
     PCB *parent_pcb = current_thread -> pcb;
-    list threads = parent_pcb -> threads;
 
     /* create a new thread*/
     TCB *child_tcb = (TCB *)malloc(sizeof(TCB));
@@ -83,7 +82,7 @@ int sys_thread_fork(void)
     child_tcb -> real_period = 0;
     child_tcb -> real_tick = 0;
     /* put into our global list*/
-    list_insert_last(&threads, &child_tcb->peer_threads_node);
+    list_insert_last(&parent_pcb -> threads, &child_tcb->peer_threads_node);
     list_insert_last(&runnable_queue, &child_tcb->thread_list_node);
     lprintf("The newly created child tid is %d",child_tcb -> tid);
     return child_tcb -> tid;
@@ -108,23 +107,20 @@ void sys_set_status(int status)
  **/
 void sys_vanish(void)
 {
-        lprintf("VANISH!!");
 
+    lprintf("Thread %d is vanish", current_thread->tid);
     // Get pcb for current process
     mutex_lock(&current_thread -> tcb_mutex);
     PCB *current_pcb = current_thread -> pcb;
 
-    // Get thread list for the current process
-    list threads = current_pcb -> threads;
+    // Get thread list for the current process and count the number of exited thread
     node *n;
 
     // Count how many peers haven't already exited
     int live_count = 0;
-    for (n = list_begin (&threads); n != NULL; n = n -> next)
+    for (n = list_begin (&current_pcb -> threads); n != NULL; n = n -> next)
     {
         TCB *tcb = list_entry(n, TCB, peer_threads_node);
-        lprintf("The tid is %d", tcb -> tid);
-        lprintf("The state is %d", tcb -> state);
 
         if (tcb -> state != THREAD_EXIT)
         {
@@ -134,16 +130,14 @@ void sys_vanish(void)
 
     if (live_count == 1) // if this is the last thread
     {
+
         lprintf("I am the last one");
-        for (n = list_begin(&threads); n != NULL; n = n -> next)
+        for (n = list_begin(&current_pcb -> threads); n != NULL; n = n -> next)
         {
             TCB *tcb = list_entry(n, TCB, peer_threads_node);
             // We only reap threads that is not the current thread
             if (tcb -> tid != current_thread -> tid)
             {
-                list_delete(&threads, n);
-                list_delete(&blocked_queue, n);
-                list_delete(&runnable_queue, n);
                 // Delete and free all the pending signals
                 while (tcb -> pending_signals.length != 0)
                 {
@@ -153,6 +147,8 @@ void sys_vanish(void)
                     list_entry(signal_node, signal_t, signal_list_node);
                     free(sig);
                 }
+                lprintf("Reap %d",tcb->tid);
+                list_delete(&current_pcb -> threads, &tcb -> peer_threads_node);
                 // free kernel stack and tcb
                 sfree(tcb -> stack_base, tcb -> stack_size);
                 free(tcb);
@@ -261,18 +257,17 @@ int sys_wait(int *status_ptr)
         // Found one already exited child
         if (pcb -> state == PROCESS_EXIT)
         {
+            lprintf("Got exited child");
             int pid = pcb -> pid;
             // collects the return status
             if (status_ptr != NULL)
             {
                 *status_ptr = pcb -> return_state;
             }
-            // Reaps all the threads for this child
-            list child_threads = pcb -> threads;
 
-            node *temp = NULL;
-            for (temp = list_begin (&child_threads); temp != NULL; temp = temp -> next)
-            {
+            // Reaps all the threads for this child
+            while (pcb -> threads.length != 0) {
+                node *temp  = list_delete_first(&pcb -> threads);
                 TCB *tcb = list_entry(temp, TCB, peer_threads_node);
                 // Delete and free all the pending signals
                 while (tcb -> pending_signals.length != 0)
@@ -285,8 +280,15 @@ int sys_wait(int *status_ptr)
                 sfree(tcb -> stack_base, tcb -> stack_size);
                 free(tcb);
             }
+
             // Reap this child
             list_delete(child_pros, &pcb -> peer_processes_node);
+
+            // Delete this child out of all process queue
+            mutex_lock(&process_queue_lock);
+            list_delete(&process_queue, &pcb -> all_processes_node);
+            mutex_unlock(&process_queue_lock);
+
             current_pcb -> children_count--;
 
             // Free page directory and pcb
@@ -312,19 +314,20 @@ int sys_wait(int *status_ptr)
         // Found one already exited child
         if (pcb -> state == PROCESS_EXIT)
         {
+            lprintf("Got antoher exited child");
+
             int pid = pcb -> pid;
             // collects the return status
             if (status_ptr != NULL)
             {
                 *status_ptr = pcb -> return_state;
             }
+
             // Reaps all the threads for this child
-            list child_threads = pcb -> threads;
-            //lprintf("child_threads count %d", child_threads.length);
-            node *temp = NULL;
-            for (temp = list_begin (&child_threads); temp != NULL; temp = temp -> next)
-            {
+            while (pcb -> threads.length != 0) {
+                node *temp  = list_delete_first(&pcb -> threads);
                 TCB *tcb = list_entry(temp, TCB, peer_threads_node);
+
                 // Delete and free all the pending signals
                 while (tcb -> pending_signals.length != 0)
                 {
@@ -332,12 +335,19 @@ int sys_wait(int *status_ptr)
                     signal_t *sig = list_entry(signal_node, signal_t, signal_list_node);
                     free(sig);
                 }
+                lprintf("The tid is %d", tcb -> tid);
                 // Free its kernel stack and tcb
                 sfree(tcb -> stack_base, tcb -> stack_size);
                 free(tcb);
             }
             // Reap this child
             list_delete(child_pros, &pcb -> peer_processes_node);
+
+            // Delete this child out of all process queue
+            mutex_lock(&process_queue_lock);
+            list_delete(&process_queue, &pcb -> all_processes_node);
+            mutex_unlock(&process_queue_lock);
+            
             current_pcb -> children_count--;
 
             // Free page directory and control block
@@ -345,6 +355,7 @@ int sys_wait(int *status_ptr)
             sfree(pcb -> PD, PAGE_SIZE);
 
             free(pcb);
+            lprintf("Finally");
             return pid;
         }
     }
