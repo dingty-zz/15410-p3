@@ -46,6 +46,7 @@ extern void sys_vanish();
     if (current_thread -> has_aborted_sys_flag == 1)
     {
         // needs to be changed
+        lprintf("Needs toe be changed");
         cur_ureg -> eip = * (unsigned int*)(current_thread -> stack_base +
                              current_thread -> stack_size - 32);
         cur_ureg -> eax = -1;

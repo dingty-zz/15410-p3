@@ -85,6 +85,7 @@ int sys_thread_fork(void)
     /* put into our global list*/
     list_insert_last(&threads, &child_tcb->peer_threads_node);
     list_insert_last(&runnable_queue, &child_tcb->thread_list_node);
+    lprintf("The newly created child tid is %d",child_tcb -> tid);
     return child_tcb -> tid;
 }
 
@@ -107,6 +108,8 @@ void sys_set_status(int status)
  **/
 void sys_vanish(void)
 {
+        lprintf("VANISH!!");
+
     // Get pcb for current process
     mutex_lock(&current_thread -> tcb_mutex);
     PCB *current_pcb = current_thread -> pcb;
@@ -120,6 +123,9 @@ void sys_vanish(void)
     for (n = list_begin (&threads); n != NULL; n = n -> next)
     {
         TCB *tcb = list_entry(n, TCB, peer_threads_node);
+        lprintf("The tid is %d", tcb -> tid);
+        lprintf("The state is %d", tcb -> state);
+
         if (tcb -> state != THREAD_EXIT)
         {
             live_count++;
@@ -128,6 +134,7 @@ void sys_vanish(void)
 
     if (live_count == 1) // if this is the last thread
     {
+        lprintf("I am the last one");
         for (n = list_begin(&threads); n != NULL; n = n -> next)
         {
             TCB *tcb = list_entry(n, TCB, peer_threads_node);
@@ -170,6 +177,7 @@ void sys_vanish(void)
                 init = list_entry(n, TCB, thread_list_node);
                 if (init -> tid == INIT_PID)
                 {
+                    lprintf("Find init");
                     // Find init and make it runnable
                     mutex_lock(&blocked_queue_lock);
                     list_delete(&blocked_queue, &init->thread_list_node);
@@ -192,6 +200,7 @@ void sys_vanish(void)
               from the block queue that wants to reap this process
               We can ensure that there is only one thread left
               for this process, so it's safe to do so */
+            lprintf("parent alive");
             list parent_threads = parent -> threads;
             TCB *waiting_thread = NULL;
             for (n = list_begin(&parent_threads);
