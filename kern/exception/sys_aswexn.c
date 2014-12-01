@@ -39,8 +39,10 @@ static int sys_real_asignal(TCB *tcb, int signum)
             return -1;
         }
         list_insert_last(&tcb -> pending_signals, &sig -> signal_list_node);
+        lprintf("Send a signal %d to thread %d", signum,tcb ->tid);
         if (tcb -> state == THREAD_SIGNAL_BLOCKED || tcb -> state == THREAD_READLINE ||
-                tcb -> state == THREAD_WAITING || tcb -> state == THREAD_SLEEPING)
+                tcb -> state == THREAD_WAITING || tcb -> state == THREAD_SLEEPING ||
+                tcb -> state == THREAD_BLOCKED)
         {
             if (tcb -> state != THREAD_SIGNAL_BLOCKED)
                 tcb -> has_aborted_sys_flag = 1;
@@ -75,7 +77,7 @@ int sys_asignal(int tid, int signum)
     }
 
     // Can the thread send the signal to itself?
-    if (current_thread -> tid == tid || current_thread -> tid == -tid)
+    if (current_thread -> tid == tid )
     {
         lprintf("Send signal to itself okaaaaaay???");
         if (signum == SIGKILL)
@@ -98,6 +100,25 @@ int sys_asignal(int tid, int signum)
         }
         mutex_unlock(&current_thread -> tcb_mutex);
         return 0;
+    } else if (current_thread -> tid == -tid)
+    {
+        lprintf("Second path");
+        PCB *current_process = current_thread -> pcb;
+        node *n = NULL;
+            for (n = list_begin(&current_process -> threads);
+                    n != NULL;
+                    n = n -> next)
+            {
+                TCB *tcb = list_entry(n, TCB, peer_threads_node);
+                /* send signal to each of the tcb in the process*/
+                sys_real_asignal(tcb, signum);
+            }
+                    if (signum == SIGKILL)
+        {
+            lprintf("Let's VANISH");
+            sys_vanish();
+        }
+            return 0;
     }
 
     node *n;

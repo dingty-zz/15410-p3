@@ -65,6 +65,7 @@ extern void sys_vanish();
     if (s -> cause == SIGKILL)
     {
     	// do something before we vanish
+        lprintf("Signal hander caught SIGKILL!!");
         free(s);
     	sys_vanish();
     }

@@ -74,7 +74,8 @@ kill tv_user_test time_work asrv arcv
 # A list of the test programs you want compiled in from the user/progs
 # directory.
 #
-STUDENTTESTS = mutex_destroy_test cyclone multitest switzerland juggle agility_drill cvar_test paraguay racer nibbles startle join_specific_test excellent thr_exit_join beady_test rwlock_downgrade_read_test misbehave_wrap largetest
+STUDENTTESTS = mutex_destroy_test cyclone multitest switzerland juggle agility_drill cvar_test paraguay racer nibbles startle join_specific_test excellent thr_exit_join beady_test rwlock_downgrade_read_test misbehave_wrap largetest \
+srv rcv f
 
 ###########################################################################
 # Data files provided by course staff to build into the RAM disk

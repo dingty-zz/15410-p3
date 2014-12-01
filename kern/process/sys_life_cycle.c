@@ -121,7 +121,7 @@ void sys_vanish(void)
     for (n = list_begin (&current_pcb -> threads); n != NULL; n = n -> next)
     {
         TCB *tcb = list_entry(n, TCB, peer_threads_node);
-
+        // lprintf("The thread in list is %d with %d",tcb -> tid,tcb -> state);
         if (tcb -> state != THREAD_EXIT)
         {
             live_count++;
@@ -225,13 +225,10 @@ void sys_vanish(void)
             list_entry(signal_node, signal_t, signal_list_node);
         free(sig);
     }
-    lprintf("before");
     if (signal_list_search_tid(&alarm_list, current_thread -> tid) != NULL)
     {
-        lprintf("delete");
         list_delete(&alarm_list, &current_thread -> alarm_list_node);
     }
-    lprintf("after");
     // Set the current state to be exit
     current_thread -> state = THREAD_EXIT;
     mutex_unlock(&current_thread -> tcb_mutex);

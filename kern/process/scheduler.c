@@ -30,7 +30,7 @@
 
 #define SCHEDULE_INTERVAL 100
 extern uint32_t get_esp();
-
+extern void sys_vanish();
 void tick(unsigned int numTicks)
 {
     // For thread execution time
@@ -57,7 +57,7 @@ void tick(unsigned int numTicks)
     for (n = list_begin(&alarm_list); n != NULL; n = n -> next)
     {
         TCB *tcb = list_entry(n, TCB, alarm_list_node);
-        lprintf("The tid for real is %d",tcb -> tid);
+        lprintf("The tid for real is %d", tcb -> tid);
         tcb -> real_tick = \
                            ++tcb -> real_tick % tcb -> real_period;
         if (tcb -> real_tick == 0 && \
@@ -68,7 +68,7 @@ void tick(unsigned int numTicks)
             signal_t *alrm_sig = make_signal_node(0, SIGALRM);
             if (alrm_sig != NULL)
             {
-            list_insert_last(&tcb -> pending_signals, &alrm_sig -> signal_list_node);
+                list_insert_last(&tcb -> pending_signals, &alrm_sig -> signal_list_node);
             }
             // If there is unable to make a signal node, we do nothing
 
@@ -183,7 +183,13 @@ void schedule(int tid)
         {
             signal_t *sig = list_entry(n, signal_t, signal_list_node);
             lprintf("The mask is %x", (unsigned int) current_thread -> mask);
-            if (((current_thread -> mask >> sig -> cause) & 0x1) == 1)
+            if (sig -> cause == SIGKILL)
+            {
+                lprintf("vanish in scheduler!!!!!!!!!!");
+                enable_interrupts();
+                sys_vanish();
+            }
+            else if (((current_thread -> mask >> sig -> cause) & 0x1) == 1)
             {
                 // MAGIC_BREAK;
                 current_thread -> saved_esp = get_esp();
@@ -267,7 +273,7 @@ TCB *list_search_tid(list *l, int tid)
     while (temp)
     {
         TCB *thread = list_entry(temp, TCB, thread_list_node);
-        lprintf("The tid is %d",thread -> tid);
+        lprintf("The tid is %d", thread -> tid);
         if (thread -> tid == tid)
             return thread;
         temp = temp -> next;
@@ -282,7 +288,7 @@ TCB *signal_list_search_tid(list *l, int tid)
     while (temp)
     {
         TCB *thread = list_entry(temp, TCB, alarm_list_node);
-        lprintf("The tid is %d",thread -> tid);
+        lprintf("The tid is %d", thread -> tid);
         if (thread -> tid == tid)
             return thread;
         temp = temp -> next;
