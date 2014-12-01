@@ -289,37 +289,37 @@ static int is_valid_newureg(ureg_t *newureg)
                 newureg -> cause != SIGUSR2      &&
                 newureg -> cause != SIGUSR3       )
         {
-            lprintf("296");
+            // lprintf("296");
 
             return 0;
         }
         if (newureg -> cs != SEGSEL_USER_CS)
         {
-            lprintf("302");
+            // lprintf("302");
 
             return 0;
         }
         if (newureg -> ds != SEGSEL_USER_DS)
         {
-            lprintf("308");
+            // lprintf("308");
 
             return 0;
         }
         if (newureg -> ebp <= kern_stack_high)
         {
-            lprintf("314");
+            // lprintf("314");
 
             return 0;
         }
         if (newureg -> esp <= kern_stack_high)
         {
-            lprintf("320");
+            // lprintf("320");
 
             return 0;
         }
         if (newureg -> eip <= kern_stack_high)
         {
-            lprintf("326");
+            // lprintf("326");
 
             return 0;
         }
@@ -329,7 +329,7 @@ static int is_valid_newureg(ureg_t *newureg)
         //There is(are) unallowed bit(s) that's been changed;
         if ( (changedbit | mask) != ALLOWED_BITS )
         {
-            lprintf("336");
+            // lprintf("336");
 
             return 0;
         }
@@ -348,7 +348,7 @@ static int is_valid_newureg(ureg_t *newureg)
  **/
 int sys_swexn(void *esp3, swexn_handler_t eip, void *arg, ureg_t *newureg)
 {
-    lprintf("starting swexn... cause %d, signaler %d", newureg -> cs, newureg -> signaler);
+    // lprintf("starting swexn... cause %d, signaler %d", newureg -> cs, newureg -> signaler);
     //newureg not valid;
     if (!is_valid_newureg(newureg)) ;
     //deregister a handler if exists;
@@ -359,8 +359,8 @@ int sys_swexn(void *esp3, swexn_handler_t eip, void *arg, ureg_t *newureg)
         return 0;
     }
     //else register;
-    lprintf("installing...esp:%x, arg:%x,newureg:%x,eip:%x",
-            (unsigned int)esp3, (unsigned int)arg, (unsigned int)newureg, (unsigned int)eip);
+    // lprintf("installing...esp:%x, arg:%x,newureg:%x,eip:%x",
+    //         (unsigned int)esp3, (unsigned int)arg, (unsigned int)newureg, (unsigned int)eip);
     current_thread -> swexn_info.esp3 = esp3;
     current_thread -> swexn_info.eip = eip;
     current_thread -> swexn_info.arg = arg;
@@ -372,8 +372,8 @@ int sys_swexn(void *esp3, swexn_handler_t eip, void *arg, ureg_t *newureg)
     //     set_esp0(current_thread -> saved_esp);
     //     
     // }
-    lprintf("The si %x",(unsigned int)get_esp0());
-    lprintf("End swexn %x", (unsigned int)newureg -> esp);
+    // lprintf("The si %x",(unsigned int)get_esp0());
+    // lprintf("End swexn %x", (unsigned int)newureg -> esp);
     // MAGIC_BREAK;
     return 0;
 }

@@ -37,16 +37,17 @@ void tick(unsigned int numTicks)
     if (current_thread -> virtual_period == MODE_ON)
     {
         current_thread -> virtual_tick = \
-                                         ++current_thread -> virtual_tick % current_thread -> virtual_period;
+        ++current_thread -> virtual_tick % current_thread -> virtual_period;
         if (current_thread -> virtual_tick == 0 && \
-                current_thread -> signals[SIGVTALRM - MIN_SIG] != SIGNAL_ENQUEUED && \
-                ((current_thread -> mask >> SIGVTALRM) & 0x1) == 1)
+            current_thread -> signals[SIGVTALRM - MIN_SIG] != SIGNAL_ENQUEUED && \
+            ((current_thread -> mask >> SIGVTALRM) & 0x1) == 1)
         {
             /* send it a SIGVTALRM signal */
             signal_t *vtalrm_sig = make_signal_node(0, SIGVTALRM);
             if (vtalrm_sig != NULL)
             {
-                list_insert_last(&current_thread -> pending_signals, &vtalrm_sig -> signal_list_node);
+                list_insert_last(&current_thread -> pending_signals,
+                    &vtalrm_sig -> signal_list_node);
             }
             // If there is unable to make a signal node, we do nothing
         }
@@ -57,7 +58,7 @@ void tick(unsigned int numTicks)
     for (n = list_begin(&alarm_list); n != NULL; n = n -> next)
     {
         TCB *tcb = list_entry(n, TCB, alarm_list_node);
-        lprintf("The tid for real is %d", tcb -> tid);
+        // lprintf("The tid for real is %d", tcb -> tid);
         tcb -> real_tick = \
                            ++tcb -> real_tick % tcb -> real_period;
         if (tcb -> real_tick == 0 && \
@@ -68,7 +69,8 @@ void tick(unsigned int numTicks)
             signal_t *alrm_sig = make_signal_node(0, SIGALRM);
             if (alrm_sig != NULL)
             {
-                list_insert_last(&tcb -> pending_signals, &alrm_sig -> signal_list_node);
+                list_insert_last(&tcb -> pending_signals, 
+                    &alrm_sig -> signal_list_node);
             }
             // If there is unable to make a signal node, we do nothing
 
@@ -171,17 +173,23 @@ void schedule(int tid)
     lprintf("Now switch to tid %d with the esp is %x", current_thread->tid, (unsigned int)current_thread -> esp);
     // MAGIC_BREAK;
     lprintf("The pending %p", &current_thread -> pending_signals);
+
     // Check if the current thread has pending signals
-    if (current_thread -> pending_signals.length > 0)
+    int length = current_thread -> pending_signals.length;
+    if (length > 0)
     {
         // Invoke the signal handler by calling the wrapper first
         lprintf("scheduler wants to call the signal handler for tid: %d", current_thread->tid);
-        node *n = NULL;
-        for (n = list_begin(&current_thread -> pending_signals);
-                n != NULL;
-                n = n -> next)
+        int i = 0;
+        lprintf("The length is %d", length);
+        // MAGIC_BREAK;
+        for (i = 0; i < length; ++i)
         {
-            signal_t *sig = list_entry(n, signal_t, signal_list_node);
+            node *signal_node  =
+                list_delete_first(&current_thread -> pending_signals);
+            signal_t *sig =
+                list_entry(signal_node, signal_t, signal_list_node);
+
             lprintf("The mask is %x", (unsigned int) current_thread -> mask);
             if (sig -> cause == SIGKILL)
             {
@@ -193,13 +201,16 @@ void schedule(int tid)
             {
                 // MAGIC_BREAK;
                 current_thread -> saved_esp = get_esp();
-                lprintf("Let's call signal_handler_wrapper current esp is %x", (unsigned int)current_thread -> saved_esp);
+                // lprintf("Let's call signal_handler_wrapper current esp is %x", (unsigned int)current_thread -> saved_esp);
                 set_esp0((uint32_t)(current_thread -> saved_esp + 8));
-                signal_handler_wrapper(n);
+                signal_handler_wrapper(signal_node);
                 current_thread -> saved_esp = 0;
                 set_esp0((uint32_t)(current_thread -> stack_base + current_thread -> stack_size));
-
-                break;
+            }
+            else
+            {
+                lprintf("This can't be delievered");
+                list_insert_last(&current_thread -> pending_signals, &sig -> signal_list_node);
             }
         }
         // Assume by calling swexn in handler, we can return here, the
@@ -244,7 +255,7 @@ void prepare_init_thread(TCB *next)
     next -> state = THREAD_RUNNING;
     current_thread = next;
     enable_interrupts();
-    lprintf("we init %d", next -> tid);
+    // lprintf("we init %d", next -> tid);
     // Enter user space
     enter_user_mode(next -> registers.edi,
                     next -> registers.esi,
@@ -273,7 +284,7 @@ TCB *list_search_tid(list *l, int tid)
     while (temp)
     {
         TCB *thread = list_entry(temp, TCB, thread_list_node);
-        lprintf("The tid is %d", thread -> tid);
+        // lprintf("The tid is %d", thread -> tid);
         if (thread -> tid == tid)
             return thread;
         temp = temp -> next;
@@ -288,7 +299,7 @@ TCB *signal_list_search_tid(list *l, int tid)
     while (temp)
     {
         TCB *thread = list_entry(temp, TCB, alarm_list_node);
-        lprintf("The tid is %d", thread -> tid);
+        // lprintf("The tid is %d", thread -> tid);
         if (thread -> tid == tid)
             return thread;
         temp = temp -> next;

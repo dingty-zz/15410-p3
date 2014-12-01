@@ -1,6 +1,6 @@
 /** @file signal_handler_real.c
  *
- *  @brief This file defines the function to 
+ *  @brief This file defines the function to
  *         call the user defined exception handler
  *
  *  @author Xianqi Zeng (xianqiz)
@@ -19,23 +19,23 @@
 #include "process/enter_user_mode.h"
 extern void sys_vanish();
 
- void get_real_signal_handler(node *n,ureg_t* cur_ureg) {
+void get_real_signal_handler(node *n, ureg_t *cur_ureg)
+{
 
-    lprintf("The cause is %d", cur_ureg -> cause);
-    lprintf("The signaler is %d", cur_ureg -> signaler);
-    lprintf("The ds is %d", cur_ureg ->ds);
-    lprintf("The es is %d", cur_ureg -> es);
-    lprintf("The fs is %d", cur_ureg -> fs);
-    lprintf("The gs is %d", cur_ureg -> gs);
- 	// If this thread has no swexn handler installed, we simply return
-    if (current_thread-> swexn_info.installed_flag==0)
+    // lprintf("The cause is %d", cur_ureg -> cause);
+    // lprintf("The signaler is %d", cur_ureg -> signaler);
+    // lprintf("The ds is %d", cur_ureg ->ds);
+    // lprintf("The es is %d", cur_ureg -> es);
+    // lprintf("The fs is %d", cur_ureg -> fs);
+    // lprintf("The gs is %d", cur_ureg -> gs);
+    // If this thread has no swexn handler installed, we simply return
+    if (current_thread-> swexn_info.installed_flag == 0)
     {
         lprintf("you didn't reistre a handler");
-    	return;
+        return;
     }
 
-	// Get this signal 
-    list_delete(&current_thread -> pending_signals,n );
+    // Get this signal
     signal_t *s = list_entry(n, signal_t, signal_list_node);
 
     // Fill in ureg entries
@@ -47,41 +47,33 @@ extern void sys_vanish();
     {
         // needs to be changed
         lprintf("Needs toe be changed");
-        cur_ureg -> eip = * (unsigned int*)(current_thread -> stack_base +
-                             current_thread -> stack_size - 32);
+        cur_ureg -> eip = * (unsigned int *)(current_thread -> stack_base +
+                                             current_thread -> stack_size - 32);
         cur_ureg -> eax = -1;
     }
 
-    lprintf("The cause is %d", s -> cause);
-    lprintf("The signeraler is %d", s -> signaler);
-    
+    // lprintf("The cause is %d", s -> cause);
+    // lprintf("The signeraler is %d", s -> signaler);
+
 
 
 
     // Mark the signal as dequeued
     current_thread -> signals[s -> cause - MIN_SIG] = SIGNAL_DEQUEUED;
 
-    // If this signal is SIGKILL, we do ... before vanish
-    if (s -> cause == SIGKILL)
-    {
-    	// do something before we vanish
-        lprintf("Signal hander caught SIGKILL!!");
-        free(s);
-    	sys_vanish();
-    }
     free(s);
 
     /* if installed, try to call the real handler; */
-    void* new_esp = current_thread -> swexn_info.esp3;
-    void* new_eip = current_thread -> swexn_info.eip;
-    void* arg = current_thread -> swexn_info.arg;
-    void* now_esp;
-    
+    void *new_esp = current_thread -> swexn_info.esp3;
+    void *new_eip = current_thread -> swexn_info.eip;
+    void *arg = current_thread -> swexn_info.arg;
+    void *now_esp;
+
     /* deregister this handler since it will be called;*/
     current_thread -> swexn_info.esp3 = NULL;
     current_thread -> swexn_info.eip = NULL;
     current_thread -> swexn_info.arg = NULL;
-    current_thread -> swexn_info.newureg = (ureg_t*)NULL;
+    current_thread -> swexn_info.newureg = (ureg_t *)NULL;
     current_thread -> swexn_info.installed_flag = 0;
     current_thread -> swexn_info.eflags = cur_ureg -> eflags;
 
@@ -96,7 +88,7 @@ extern void sys_vanish();
     *(uint32_t *)(now_esp) = (uint32_t) arg;
     now_esp -= 4;
 
-    lprintf("Call the signal handler with esp %p", now_esp);
+    // lprintf("Call the signal handler with esp %p", now_esp);
 
     /* Call the signal handler */
     enter_user_mode(current_thread -> registers.edi,
@@ -112,6 +104,6 @@ extern void sys_vanish();
                     (uint32_t)now_esp,
                     current_thread -> registers.ss);
 
-    return;  
+    return;
 
- }
+}

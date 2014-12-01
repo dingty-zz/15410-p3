@@ -70,6 +70,7 @@ static int sys_real_asignal(TCB *tcb, int signum)
  **/
 int sys_asignal(int tid, int signum)
 {
+    lprintf("asignal is called by %d, to %d with %d",current_thread->tid, tid, signum);
     if (signum < MIN_SIG || signum > MAX_SIG)
     {
         lprintf("no good");
