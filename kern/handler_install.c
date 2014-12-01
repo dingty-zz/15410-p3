@@ -115,14 +115,14 @@ void _handler_install(int idt_entry, void (*handler)())
 
     unsigned int offset = (unsigned int)handler;
     unsigned int reserved = 0xef00;   // P = 1, DPL = 1 1 , reserved = 0;
-    unsigned int offset3116 = offset & 0xFFFF0000;
-    unsigned int offset150 = offset & 0x0000FFFF;
+    unsigned int offset_31_16 = offset & 0xFFFF0000;
+    unsigned int offset_15_00 = offset & 0x0000FFFF;
 
     /* Fill in the idt entry. The idt_base is the unsigned int pointer but
      * each gate is 8 bytes long, so we have to time 2 to get the correct
      * position */
-    idtbase[idt_entry * 2] = (SEGSEL_KERNEL_CS << 16) | offset150;
-    idtbase[idt_entry * 2 + 1] = offset3116 | reserved;
+    idtbase[idt_entry * 2] = (SEGSEL_KERNEL_CS << 16) | offset_15_00;
+    idtbase[idt_entry * 2 + 1] = offset_31_16 | reserved;
 }
 
 
@@ -142,12 +142,12 @@ void _interrupt_install(int idt_entry, void (*handler)())
 
     unsigned int offset = (unsigned int)handler;
     unsigned int reserved = 0x8e00;  // P = 1, DPL = 0 0, reserved = 0;
-    unsigned int offset3116 = offset & 0xFFFF0000;
-    unsigned int offset150 = offset & 0x0000FFFF;
+    unsigned int offset_31_16 = offset & 0xFFFF0000;
+    unsigned int offset_15_00 = offset & 0x0000FFFF;
 
     /* Fill in the idt entry. The idt_base is the unsigned int pointer but
      * each gate is 8 bytes long, so we have to time 2 to get the correct
      * position */
-    idtbase[idt_entry * 2] = (SEGSEL_KERNEL_CS << 16) | offset150;
-    idtbase[idt_entry * 2 + 1] = offset3116 | reserved;
+    idtbase[idt_entry * 2] = (SEGSEL_KERNEL_CS << 16) | offset_15_00;
+    idtbase[idt_entry * 2 + 1] = offset_31_16 | reserved;
 }
