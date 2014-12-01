@@ -188,6 +188,7 @@ int sys_fork(void)
         {
             lprintf("Sth bad happend");
             destroy_page_directory(child_pcb -> PD);
+            sfree(child_pcb -> PD, PAGE_SIZE);
             sfree(child_tcb -> stack_base, child_tcb -> stack_size);
             free(child_tcb);
             free(child_pcb);
@@ -212,6 +213,7 @@ int sys_fork(void)
             if (result == -1)
             {
                 destroy_page_directory(child_pcb -> PD);
+                sfree(child_pcb -> PD, PAGE_SIZE);
                 sfree(child_tcb -> stack_base, child_tcb -> stack_size);
                 free(child_tcb);
                 free(child_pcb);

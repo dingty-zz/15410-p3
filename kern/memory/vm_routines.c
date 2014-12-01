@@ -345,9 +345,13 @@ void init_free_frame()
 {
     int i ;
     free_frame_num = machine_phys_frames();
-    //initizlie the free frame array
+    //initialize the free frame array
     //bunch of pointers that points to pages
     frame_base = (KF *)smemalign(PAGE_SIZE, 8 * TOTAL_PHYS_FRAMES);
+    if (frame_base == NULL)
+    {
+        panic("Could allocate memory when initializing the kernel");
+    }
     for (i = 0; i < TOTAL_PHYS_FRAMES; ++i)
     {
         frame_base[i].refcount = 0;
