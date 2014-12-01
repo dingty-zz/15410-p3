@@ -57,6 +57,7 @@ int sys_exec(char *execname, char *argvec[])
     if (!is_user_addr(argvec) || !addr_has_mapping(argvec)) return -1;
     // Allocate the name pointer to store execname onto kernel stack
     char *name = (char *)malloc(strlen(execname) + 1);
+    if (name == NULL) return -1;
     strncpy(name, execname, strlen(execname) + 1);
 
     // Load the process
@@ -66,6 +67,7 @@ int sys_exec(char *execname, char *argvec[])
     if (result == NOT_PRESENT || result == ELF_NOTELF)
     {
         // error, the file doesn't exist
+        free(name);
         return -1;
     }
 
@@ -79,6 +81,7 @@ int sys_exec(char *execname, char *argvec[])
     // Error when there are many arguments
     if (argc > MAX_ARG_NUM)
     {
+        free(name);
         return -1;
     }
     // Count the length of total number of char to be copied
@@ -90,6 +93,7 @@ int sys_exec(char *execname, char *argvec[])
         // Error when all the vectors need to occupy a large space
         if (total_len > MAX_VEC_TOTAL_LEN)
         {
+            free(name);
             return -1;
         }
     }
@@ -116,6 +120,7 @@ int sys_exec(char *execname, char *argvec[])
     process -> PD = init_pd();
     if (process -> PD == 0)
     {
+        free(name);
         return -1;
     }
     destroy_page_directory(old_pd);
@@ -124,12 +129,14 @@ int sys_exec(char *execname, char *argvec[])
     // menory failure
     if (process -> PD == 0)
     {
+        free(name);
         return -1;
     }
 
     uint32_t eip = program_loader(se_hdr, process);
     if (eip == 0)
     {
+        free(name);
         return -1;
     }
     else

@@ -52,6 +52,7 @@ int sys_thread_fork(void)
 
     /* create a new thread*/
     TCB *child_tcb = (TCB *)malloc(sizeof(TCB));
+    if (child_tcb == NULL) return -1;
     child_tcb -> pcb = parent_pcb;
     child_tcb -> tid = next_tid;
     next_tid++;
@@ -64,6 +65,11 @@ int sys_thread_fork(void)
 
     child_tcb -> stack_size = current_thread -> stack_size;
     child_tcb -> stack_base = smemalign(PAGE_SIZE, child_tcb -> stack_size);
+    if (child_tcb -> stack_base == NULL)
+    {
+        free(child_tcb);
+        return -1;
+    }
     child_tcb -> esp =
         (uint32_t)child_tcb->stack_base + (uint32_t)child_tcb->stack_size;
     child_tcb -> registers = current_thread -> registers;
