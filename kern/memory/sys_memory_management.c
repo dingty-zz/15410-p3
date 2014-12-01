@@ -19,7 +19,7 @@
  *  check if this new pages request is valid first
  *
  *  @param the address to be allocated and its length
- *  @return 1 on success, 0 on failure
+ *  @return 0 on success, -1 on failure
  **/
 int sys_new_pages(void *addr, int len)
 {
@@ -52,13 +52,20 @@ int sys_new_pages(void *addr, int len)
         if (phys_adddr != 0) return -1;
     }
     /* step 2: allocate*/
-
-    allocate_pages(PD, (uint32_t)addr, len);
-    //Lastly, insert the va node into the list
-    VA_INFO *current_va_info = malloc(sizeof(VA_INFO));
+    VA_INFO *current_va_info = (VA_INFO*)malloc(sizeof(VA_INFO));
+    if (current_va_info == NULL)
+    {
+        return -1;
+    }
     current_va_info -> virtual_addr = (uint32_t)addr;
     current_va_info -> len = len;
-
+    //fail and recyle if -1
+    if ((allocate_pages(PD, (uint32_t)addr, len)) == -1)
+    {
+        free(current_va_info);
+        return -1;
+    }
+    //Lastly, insert the va node into the list
     list_insert_last(&current_thread->pcb->va, &current_va_info->va_node);
     return 0;
 }
