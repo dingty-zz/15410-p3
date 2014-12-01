@@ -61,6 +61,10 @@ TCB *thr_create(unsigned int eip, int run)
     // Allocate kernel stack for this thread
     tcb -> stack_size = PAGE_SIZE;
     tcb -> stack_base = smemalign(PAGE_SIZE, tcb->stack_size);
+    if (tcb -> stack_base == NULL)
+    {
+        return NULL;
+    }
     tcb -> esp = (uint32_t)tcb -> stack_size + (uint32_t)tcb -> stack_base - sizeof(int);
     
     tcb -> start_ticks = 0;
