@@ -57,6 +57,7 @@ void tick(unsigned int numTicks)
     for (n = list_begin(&alarm_list); n != NULL; n = n -> next)
     {
         TCB *tcb = list_entry(n, TCB, alarm_list_node);
+        lprintf("The tid for real is %d",tcb -> tid);
         tcb -> real_tick = \
                            ++tcb -> real_tick % tcb -> real_period;
         if (tcb -> real_tick == 0 && \
@@ -266,6 +267,22 @@ TCB *list_search_tid(list *l, int tid)
     while (temp)
     {
         TCB *thread = list_entry(temp, TCB, thread_list_node);
+        lprintf("The tid is %d",thread -> tid);
+        if (thread -> tid == tid)
+            return thread;
+        temp = temp -> next;
+    }
+    return NULL;
+}
+
+TCB *signal_list_search_tid(list *l, int tid)
+{
+    if (l == NULL) return NULL;
+    node *temp = l -> head;
+    while (temp)
+    {
+        TCB *thread = list_entry(temp, TCB, alarm_list_node);
+        lprintf("The tid is %d",thread -> tid);
         if (thread -> tid == tid)
             return thread;
         temp = temp -> next;

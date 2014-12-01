@@ -32,6 +32,8 @@ void thr_init()
 {
     list_init(&runnable_queue);
     list_init(&blocked_queue);
+    list_init(&alarm_list);
+    
     mutex_init(&blocked_queue_lock);
     mutex_init(&runnable_queue_lock);
     mutex_init(&deschedule_lock);

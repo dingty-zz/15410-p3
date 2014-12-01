@@ -29,7 +29,7 @@ static int sys_real_asignal(TCB *tcb, int signum)
 {
     // If the signal is not in the queue and the 1<<signum bit in
     // the mask is turned on, we enqueue this signal
-        mutex_lock(&tcb -> tcb_mutex);
+    mutex_lock(&tcb -> tcb_mutex);
 
     if (tcb -> signals[signum - MIN_SIG] != SIGNAL_ENQUEUED)
     {
@@ -42,7 +42,7 @@ static int sys_real_asignal(TCB *tcb, int signum)
         if (tcb -> state == THREAD_SIGNAL_BLOCKED || tcb -> state == THREAD_READLINE ||
                 tcb -> state == THREAD_WAITING || tcb -> state == THREAD_SLEEPING)
         {
-            if (tcb -> state != THREAD_SIGNAL_BLOCKED) 
+            if (tcb -> state != THREAD_SIGNAL_BLOCKED)
                 tcb -> has_aborted_sys_flag = 1;
             tcb -> state = THREAD_RUNNABLE;
             mutex_lock(&blocked_queue_lock);
@@ -55,7 +55,7 @@ static int sys_real_asignal(TCB *tcb, int signum)
 
         }
     }
-        mutex_unlock(&tcb -> tcb_mutex);
+    mutex_unlock(&tcb -> tcb_mutex);
 
     return 0;
 }
@@ -83,25 +83,25 @@ int sys_asignal(int tid, int signum)
             sys_vanish();
         }
         // return -1;
-    mutex_lock(&current_thread -> tcb_mutex);
-    lprintf("The is %d", current_thread -> signals[signum - MIN_SIG] );
- if (current_thread -> signals[signum - MIN_SIG] != SIGNAL_ENQUEUED)
-    {
+        mutex_lock(&current_thread -> tcb_mutex);
+        lprintf("The is %d", current_thread -> signals[signum - MIN_SIG] );
+        if (current_thread -> signals[signum - MIN_SIG] != SIGNAL_ENQUEUED)
+        {
 
-        lprintf("We make a signal node for zi ji");
-                signal_t *sig = make_signal_node(current_thread -> tid, signum);
-                if (sig ==NULL)
-                {
-                    return -1;
-                }
-        list_insert_last(&current_thread -> pending_signals, &sig -> signal_list_node);
-    }
-    mutex_unlock(&current_thread -> tcb_mutex);
-    return 0;
+            lprintf("We make a signal node for zi ji");
+            signal_t *sig = make_signal_node(current_thread -> tid, signum);
+            if (sig == NULL)
+            {
+                return -1;
+            }
+            list_insert_last(&current_thread -> pending_signals, &sig -> signal_list_node);
+        }
+        mutex_unlock(&current_thread -> tcb_mutex);
+        return 0;
     }
 
     node *n;
-        lprintf("The tid is %d and signum is %d", tid, signum);
+    lprintf("The tid is %d and signum is %d", tid, signum);
 
     if (tid > 0)
     {
@@ -140,8 +140,8 @@ int sys_asignal(int tid, int signum)
                 return sys_real_asignal(tcb, signum);
             }
         }
-                mutex_unlock(&runnable_queue_lock);
-        
+        mutex_unlock(&runnable_queue_lock);
+
     }
     // Since our implementation rejects process make syscalls like fork or exec when
     // it's already multi-threaded, we will assume
@@ -220,11 +220,12 @@ int sys_await(sigmask_t mask)
     mutex_lock(&current_thread -> tcb_mutex);
     sigmask_t old_mask = current_thread -> mask;
     current_thread -> mask = mask;
-if (current_thread -> pending_signals.length == 0) {
-    lprintf("the length is 0 so we block");
-    current_thread -> state = THREAD_SIGNAL_BLOCKED;
+    if (current_thread -> pending_signals.length == 0)
+    {
+        lprintf("the length is 0 so we block");
+        current_thread -> state = THREAD_SIGNAL_BLOCKED;
 
-}
+    }
     lprintf("sys_await will call schedule!");
     mutex_unlock(&current_thread -> tcb_mutex);
 
@@ -326,7 +327,9 @@ int sys_atimer(int mode, int period)
             break;
 
         case ASWEXN_REAL:
+            lprintf("wanna %d", current_thread->tid);
             list_insert_last(&alarm_list, &current_thread -> alarm_list_node);
+            signal_list_search_tid(&alarm_list, current_thread->tid);
             current_thread -> real_period = period;
             current_thread -> real_tick = 0;
             break;
