@@ -27,7 +27,7 @@
 #define IDLE_PID 1
 
 // We invoke context switch every 100 ticks
-#define SCHEDULE_INTERVAL 100
+#define SCHEDULE_INTERVAL 1
 
 void tick(unsigned int numTicks)
 {
