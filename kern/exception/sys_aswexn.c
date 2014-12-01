@@ -242,12 +242,9 @@ int sys_await(sigmask_t mask)
     mutex_lock(&current_thread -> tcb_mutex);
     sigmask_t old_mask = current_thread -> mask;
     current_thread -> mask = mask;
-    if (current_thread -> pending_signals.length == 0)
-    {
-        lprintf("the length is 0 so we block");
         current_thread -> state = THREAD_SIGNAL_BLOCKED;
 
-    }
+    
     lprintf("sys_await will call schedule!");
     mutex_unlock(&current_thread -> tcb_mutex);
 
